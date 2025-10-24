@@ -32,7 +32,7 @@ async def get_tenants(
     """Get all tenants"""
     tenants = db.query(Tenant).all()
     return {
-        "tenants": [TenantResponse.model_validate(tenant) for tenant in tenants]
+        "tenants": [tenant.to_dict() for tenant in tenants]
     }
 
 
@@ -51,7 +51,7 @@ async def get_tenant(
             detail="Tenant not found"
         )
 
-    return {"tenant": TenantResponse.model_validate(tenant)}
+    return {"tenant": tenant.to_dict()}
 
 
 @router.post("", response_model=dict, status_code=status.HTTP_201_CREATED)
@@ -99,7 +99,7 @@ async def create_tenant(
 
     return {
         "message": "Tenant created",
-        "tenant": TenantResponse.model_validate(tenant)
+        "tenant": tenant.to_dict()
     }
 
 
@@ -171,7 +171,7 @@ async def update_tenant(
 
     return {
         "message": "Tenant updated",
-        "tenant": TenantResponse.model_validate(tenant)
+        "tenant": tenant.to_dict()
     }
 
 

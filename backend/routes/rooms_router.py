@@ -31,7 +31,7 @@ async def get_rooms(
     """Get all rooms"""
     rooms = db.query(Room).all()
     return {
-        "rooms": [RoomResponse.model_validate(room) for room in rooms]
+        "rooms": [room.to_dict() for room in rooms]
     }
 
 
@@ -50,7 +50,7 @@ async def get_room(
             detail="Room not found"
         )
 
-    return {"room": RoomResponse.model_validate(room)}
+    return {"room": room.to_dict()}
 
 
 @router.post("", response_model=dict, status_code=status.HTTP_201_CREATED)
@@ -83,7 +83,7 @@ async def create_room(
 
     return {
         "message": "Room created",
-        "room": RoomResponse.model_validate(room)
+        "room": room.to_dict()
     }
 
 
@@ -121,7 +121,7 @@ async def update_room(
 
     return {
         "message": "Room updated",
-        "room": RoomResponse.model_validate(room)
+        "room": room.to_dict()
     }
 
 

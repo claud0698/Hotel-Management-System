@@ -41,7 +41,7 @@ async def get_payments(
 
     payments = query.all()
     return {
-        "payments": [PaymentResponse.model_validate(payment) for payment in payments]
+        "payments": [payment.to_dict() for payment in payments]
     }
 
 
@@ -60,7 +60,7 @@ async def get_payment(
             detail="Payment not found"
         )
 
-    return {"payment": PaymentResponse.model_validate(payment)}
+    return {"payment": payment.to_dict()}
 
 
 @router.post("", response_model=dict, status_code=status.HTTP_201_CREATED)
@@ -90,7 +90,7 @@ async def create_payment(
 
     return {
         "message": "Payment created",
-        "payment": PaymentResponse.model_validate(payment)
+        "payment": payment.to_dict()
     }
 
 
@@ -130,7 +130,7 @@ async def update_payment(
 
     return {
         "message": "Payment updated",
-        "payment": PaymentResponse.model_validate(payment)
+        "payment": payment.to_dict()
     }
 
 
@@ -162,7 +162,7 @@ async def mark_payment_paid(
 
     return {
         "message": "Payment marked as paid",
-        "payment": PaymentResponse.model_validate(payment)
+        "payment": payment.to_dict()
     }
 
 

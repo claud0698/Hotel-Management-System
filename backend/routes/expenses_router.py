@@ -46,7 +46,7 @@ async def get_expenses(
 
     expenses = query.all()
     return {
-        "expenses": [ExpenseResponse.model_validate(expense) for expense in expenses]
+        "expenses": [expense.to_dict() for expense in expenses]
     }
 
 
@@ -65,7 +65,7 @@ async def get_expense(
             detail="Expense not found"
         )
 
-    return {"expense": ExpenseResponse.model_validate(expense)}
+    return {"expense": expense.to_dict()}
 
 
 @router.post("", response_model=dict, status_code=status.HTTP_201_CREATED)
@@ -93,7 +93,7 @@ async def create_expense(
 
     return {
         "message": "Expense created",
-        "expense": ExpenseResponse.model_validate(expense)
+        "expense": expense.to_dict()
     }
 
 
@@ -129,7 +129,7 @@ async def update_expense(
 
     return {
         "message": "Expense updated",
-        "expense": ExpenseResponse.model_validate(expense)
+        "expense": expense.to_dict()
     }
 
 
