@@ -9,6 +9,13 @@ from typing import List
 from models import Room
 from schemas import RoomCreate, RoomUpdate, RoomResponse
 from security import get_current_user
+from validators import (
+    validate_room_number,
+    validate_floor,
+    validate_price,
+    validate_room_type,
+    validate_room_status
+)
 
 router = APIRouter()
 
@@ -60,8 +67,18 @@ async def create_room(
     db: Session = Depends(get_db)
 ):
     """Create a new room"""
+    # Validate inputs
+    try:
+        validated_room_number = validate_room_number(room_data.room_number)
+        validated_floor = validate_floor(room_data.floor)
+        validated_price = validate_price(room_data.monthly_rate)
+        validated_room_type = validate_room_type(room_data.room_type)
+        validated_status = validate_room_status(room_data.status)
+    except HTTPException as e:
+        raise e
+
     # Check if room number already exists
-    if db.query(Room).filter(Room.room_number == room_data.room_number).first():
+    if db.query(Room).filter(Room.room_number == validated_room_number).first():
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Room number already exists"
@@ -69,11 +86,11 @@ async def create_room(
 
     # Create room
     room = Room(
-        room_number=room_data.room_number,
-        floor=room_data.floor,
-        room_type=room_data.room_type,
-        monthly_rate=room_data.monthly_rate,
-        status=room_data.status,
+        room_number=validated_room_number,
+        floor=validated_floor,
+        room_type=validated_room_type,
+        monthly_rate=validated_price,
+        status=validated_status,
         amenities=room_data.amenities
     )
 
@@ -82,7 +99,7 @@ async def create_room(
     db.refresh(room)
 
     return {
-        "message": "Room created",
+        "message": "Room created successfully",
         "room": room.to_dict()
     }
 
@@ -103,16 +120,36 @@ async def update_room(
             detail="Room not found"
         )
 
+    # Validate only provided fields
+    try:
+        update_data = room_data.model_dump(exclude_unset=True)
+
+        if "room_number" in update_data and update_data["room_number"]:
+            update_data["room_number"] = validate_room_number(update_data["room_number"])
+
+        if "floor" in update_data:
+            update_data["floor"] = validate_floor(update_data["floor"])
+
+        if "monthly_rate" in update_data:
+            update_data["monthly_rate"] = validate_price(update_data["monthly_rate"])
+
+        if "room_type" in update_data:
+            update_data["room_type"] = validate_room_type(update_data["room_type"])
+
+        if "status" in update_data:
+            update_data["status"] = validate_room_status(update_data["status"])
+    except HTTPException as e:
+        raise e
+
     # Check if new room number conflicts
-    if room_data.room_number and room_data.room_number != room.room_number:
-        if db.query(Room).filter(Room.room_number == room_data.room_number).first():
+    if "room_number" in update_data and update_data["room_number"] != room.room_number:
+        if db.query(Room).filter(Room.room_number == update_data["room_number"]).first():
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Room number already exists"
             )
 
     # Update fields
-    update_data = room_data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(room, field, value)
 
@@ -120,7 +157,7 @@ async def update_room(
     db.refresh(room)
 
     return {
-        "message": "Room updated",
+        "message": "Room updated successfully",
         "room": room.to_dict()
     }
 

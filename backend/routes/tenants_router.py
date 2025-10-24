@@ -4,12 +4,19 @@ Tenant management routes
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from models import Tenant, Room, RoomHistory
 from schemas import TenantCreate, TenantUpdate, TenantResponse
 from security import get_current_user
+from validators import (
+    validate_tenant_name,
+    validate_tenant_status,
+    validate_email,
+    validate_phone,
+    validate_date
+)
 
 router = APIRouter()
 
@@ -61,20 +68,25 @@ async def create_tenant(
     db: Session = Depends(get_db)
 ):
     """Create a new tenant"""
-    # Parse move_in_date
-    move_in_date = None
-    if tenant_data.move_in_date:
-        move_in_date = datetime.fromisoformat(tenant_data.move_in_date)
+    # Validate inputs
+    try:
+        validated_name = validate_tenant_name(tenant_data.name)
+        validated_status = validate_tenant_status(tenant_data.status)
+        validated_email = validate_email(tenant_data.email)
+        validated_phone = validate_phone(tenant_data.phone)
+        validated_move_in = validate_date(tenant_data.move_in_date, "Move-in date") if tenant_data.move_in_date else None
+    except HTTPException as e:
+        raise e
 
     # Create tenant
     tenant = Tenant(
-        name=tenant_data.name,
-        phone=tenant_data.phone,
-        email=tenant_data.email,
+        name=validated_name,
+        phone=validated_phone,
+        email=validated_email,
         id_number=tenant_data.id_number,
-        move_in_date=move_in_date,
+        move_in_date=validated_move_in,
         current_room_id=tenant_data.current_room_id,
-        status=tenant_data.status,
+        status=validated_status,
         notes=tenant_data.notes
     )
 
@@ -83,22 +95,28 @@ async def create_tenant(
 
     # Create room history and update room status if room is assigned
     if tenant.current_room_id:
+        # Verify room exists
+        room = db.query(Room).filter(Room.id == tenant.current_room_id).first()
+        if not room:
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Room with ID {tenant.current_room_id} not found"
+            )
+
         room_history = RoomHistory(
             room_id=tenant.current_room_id,
             tenant_id=tenant.id,
-            move_in_date=move_in_date or datetime.utcnow()
+            move_in_date=validated_move_in or datetime.now(timezone.utc)
         )
         db.add(room_history)
-
-        room = db.query(Room).filter(Room.id == tenant.current_room_id).first()
-        if room:
-            room.status = 'occupied'
+        room.status = 'occupied'
 
     db.commit()
     db.refresh(tenant)
 
     return {
-        "message": "Tenant created",
+        "message": "Tenant created successfully",
         "tenant": tenant.to_dict()
     }
 
@@ -119,8 +137,26 @@ async def update_tenant(
             detail="Tenant not found"
         )
 
-    # Update fields
-    update_data = tenant_data.model_dump(exclude_unset=True)
+    # Validate only provided fields
+    try:
+        update_data = tenant_data.model_dump(exclude_unset=True)
+
+        if "name" in update_data:
+            update_data["name"] = validate_tenant_name(update_data["name"])
+
+        if "status" in update_data:
+            update_data["status"] = validate_tenant_status(update_data["status"])
+
+        if "email" in update_data:
+            update_data["email"] = validate_email(update_data["email"])
+
+        if "phone" in update_data:
+            update_data["phone"] = validate_phone(update_data["phone"])
+
+        if "move_in_date" in update_data and update_data["move_in_date"]:
+            update_data["move_in_date"] = validate_date(update_data["move_in_date"], "Move-in date")
+    except HTTPException as e:
+        raise e
 
     # Handle room assignment changes
     if 'current_room_id' in update_data and update_data['current_room_id'] != tenant.current_room_id:
@@ -139,7 +175,7 @@ async def update_tenant(
                     RoomHistory.move_out_date == None
                 ).first()
                 if old_history:
-                    old_history.move_out_date = datetime.utcnow()
+                    old_history.move_out_date = datetime.now(timezone.utc)
 
         # Update new room status
         if new_room_id:
@@ -149,28 +185,19 @@ async def update_tenant(
                 new_history = RoomHistory(
                     room_id=new_room_id,
                     tenant_id=tenant_id,
-                    move_in_date=datetime.utcnow()
+                    move_in_date=datetime.now(timezone.utc)
                 )
                 db.add(new_history)
 
-    # Handle date fields
-    if 'move_in_date' in update_data and update_data['move_in_date']:
-        update_data['move_in_date'] = datetime.fromisoformat(update_data['move_in_date'])
-
     # Update tenant
     for field, value in update_data.items():
-        if field not in ['move_in_date', 'current_room_id']:
-            setattr(tenant, field, value)
-        elif field == 'move_in_date':
-            tenant.move_in_date = value
-        elif field == 'current_room_id':
-            tenant.current_room_id = value
+        setattr(tenant, field, value)
 
     db.commit()
     db.refresh(tenant)
 
     return {
-        "message": "Tenant updated",
+        "message": "Tenant updated successfully",
         "tenant": tenant.to_dict()
     }
 

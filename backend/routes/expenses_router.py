@@ -4,12 +4,17 @@ Expense management routes
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from models import Expense
 from schemas import ExpenseCreate, ExpenseUpdate, ExpenseResponse
 from security import get_current_user
+from validators import (
+    validate_expense_category,
+    validate_amount,
+    validate_date
+)
 
 router = APIRouter()
 
@@ -75,14 +80,19 @@ async def create_expense(
     db: Session = Depends(get_db)
 ):
     """Create a new expense"""
-    # Parse date
-    date = datetime.fromisoformat(expense_data.date)
+    # Validate inputs
+    try:
+        validated_category = validate_expense_category(expense_data.category)
+        validated_amount = validate_amount(expense_data.amount, "Expense amount")
+        validated_date = validate_date(expense_data.date, "Expense date")
+    except HTTPException as e:
+        raise e
 
     # Create expense
     expense = Expense(
-        date=date,
-        category=expense_data.category,
-        amount=expense_data.amount,
+        date=validated_date,
+        category=validated_category,
+        amount=validated_amount,
         description=expense_data.description,
         receipt_url=expense_data.receipt_url
     )
@@ -92,7 +102,7 @@ async def create_expense(
     db.refresh(expense)
 
     return {
-        "message": "Expense created",
+        "message": "Expense created successfully",
         "expense": expense.to_dict()
     }
 
@@ -113,12 +123,20 @@ async def update_expense(
             detail="Expense not found"
         )
 
-    # Update fields
-    update_data = expense_data.model_dump(exclude_unset=True)
+    # Validate only provided fields
+    try:
+        update_data = expense_data.model_dump(exclude_unset=True)
 
-    # Handle date parsing
-    if 'date' in update_data and update_data['date']:
-        update_data['date'] = datetime.fromisoformat(update_data['date'])
+        if "category" in update_data:
+            update_data["category"] = validate_expense_category(update_data["category"])
+
+        if "amount" in update_data:
+            update_data["amount"] = validate_amount(update_data["amount"], "Expense amount")
+
+        if "date" in update_data and update_data["date"]:
+            update_data["date"] = validate_date(update_data["date"], "Expense date")
+    except HTTPException as e:
+        raise e
 
     # Update expense
     for field, value in update_data.items():
@@ -128,7 +146,7 @@ async def update_expense(
     db.refresh(expense)
 
     return {
-        "message": "Expense updated",
+        "message": "Expense updated successfully",
         "expense": expense.to_dict()
     }
 
