@@ -68,17 +68,28 @@ def create_app():
         openapi_url="/api/openapi.json"
     )
 
-    # CORS Configuration - allow configurable origins
-    cors_origins = os.getenv('CORS_ORIGINS', 'http://localhost:3000,http://localhost:5173')
-    origins = [origin.strip() for origin in cors_origins.split(',')]
+    # CORS Configuration - allow all origins for testing (disable for production)
+    cors_origins = os.getenv('CORS_ORIGINS', '*')  # Allow all origins for testing
 
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+    if cors_origins == '*':
+        # Allow all origins for testing
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+    else:
+        # Restrict to specific origins in production
+        origins = [origin.strip() for origin in cors_origins.split(',')]
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=origins,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
 
     # Health check endpoint
     @app.get('/health')
@@ -136,7 +147,7 @@ app = create_app()
 if __name__ == "__main__":
     import uvicorn
 
-    port = int(os.getenv('PORT', 5000))
+    port = int(os.getenv('PORT', 8001))
     debug = os.getenv('DEBUG', 'False').lower() == 'true'
 
     uvicorn.run(
