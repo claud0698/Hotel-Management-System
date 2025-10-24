@@ -4,16 +4,32 @@ Creates sample data for testing and development
 """
 
 from datetime import datetime, timedelta
-from app import app, db
-from models import User, Room, Tenant, Payment, Expense, RoomHistory
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+import os
+from dotenv import load_dotenv
+
+from models import Base, User, Room, Tenant, Payment, Expense, RoomHistory
+
+load_dotenv()
+
+# Database configuration
+DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///./kos.db')
+
+# Create engine and session
+engine = create_engine(
+    DATABASE_URL,
+    connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {},
+)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-def seed_users():
+def seed_users(db):
     """Create sample user accounts."""
     print("Seeding users...")
 
     # Check if admin user exists
-    admin = User.query.filter_by(username='admin').first()
+    admin = db.query(User).filter(User.username == 'admin').first()
     if admin:
         print("  - Admin user already exists, skipping")
         return
@@ -24,17 +40,17 @@ def seed_users():
     )
     admin.set_password('admin123')
 
-    db.session.add(admin)
-    db.session.commit()
+    db.add(admin)
+    db.commit()
     print(f"  ✓ Created admin user (username: admin, password: admin123)")
 
 
-def seed_rooms():
+def seed_rooms(db):
     """Create sample rooms."""
     print("Seeding rooms...")
 
     # Check if rooms exist
-    existing = Room.query.count()
+    existing = db.query(Room).count()
     if existing > 0:
         print(f"  - {existing} rooms already exist, skipping")
         return
@@ -61,18 +77,18 @@ def seed_rooms():
             status=status,
             amenities=amenities
         )
-        db.session.add(room)
+        db.add(room)
 
-    db.session.commit()
+    db.commit()
     print(f"  ✓ Created {len(rooms_data)} sample rooms")
 
 
-def seed_tenants():
+def seed_tenants(db):
     """Create sample tenants."""
     print("Seeding tenants...")
 
     # Check if tenants exist
-    existing = Tenant.query.count()
+    existing = db.query(Tenant).count()
     if existing > 0:
         print(f"  - {existing} tenants already exist, skipping")
         return
@@ -99,23 +115,23 @@ def seed_tenants():
             status=status,
             notes=f"Tenant {name} - Registered in database"
         )
-        db.session.add(tenant)
+        db.add(tenant)
 
-    db.session.commit()
+    db.commit()
     print(f"  ✓ Created {len(tenants_data)} sample tenants")
 
 
-def seed_room_history():
+def seed_room_history(db):
     """Create sample room history."""
     print("Seeding room history...")
 
     # Check if history exists
-    existing = RoomHistory.query.count()
+    existing = db.query(RoomHistory).count()
     if existing > 0:
         print(f"  - {existing} room history records already exist, skipping")
         return
 
-    tenants = Tenant.query.filter(Tenant.current_room_id.isnot(None)).all()
+    tenants = db.query(Tenant).filter(Tenant.current_room_id != None).all()
 
     for tenant in tenants:
         history = RoomHistory(
@@ -123,30 +139,30 @@ def seed_room_history():
             tenant_id=tenant.id,
             move_in_date=tenant.move_in_date or datetime.utcnow(),
         )
-        db.session.add(history)
+        db.add(history)
 
-    db.session.commit()
+    db.commit()
     print(f"  ✓ Created {len(tenants)} room history records")
 
 
-def seed_payments():
+def seed_payments(db):
     """Create sample payments."""
     print("Seeding payments...")
 
     # Check if payments exist
-    existing = Payment.query.count()
+    existing = db.query(Payment).count()
     if existing > 0:
         print(f"  - {existing} payments already exist, skipping")
         return
 
-    tenants = Tenant.query.filter(Tenant.current_room_id.isnot(None)).all()
+    tenants = db.query(Tenant).filter(Tenant.current_room_id != None).all()
     today = datetime.utcnow()
 
     payment_count = 0
 
     for tenant in tenants:
         # Get tenant's room rate
-        room = Room.query.get(tenant.current_room_id)
+        room = db.query(Room).filter(Room.id == tenant.current_room_id).first()
         if not room:
             continue
 
@@ -174,19 +190,19 @@ def seed_payments():
                 receipt_number=f"RCP-{tenant.id}-{due_date.strftime('%Y%m')}" if status == 'paid' else None,
                 notes=f"Monthly rent for {due_date.strftime('%B %Y')}"
             )
-            db.session.add(payment)
+            db.add(payment)
             payment_count += 1
 
-    db.session.commit()
+    db.commit()
     print(f"  ✓ Created {payment_count} sample payments")
 
 
-def seed_expenses():
+def seed_expenses(db):
     """Create sample expenses."""
     print("Seeding expenses...")
 
     # Check if expenses exist
-    existing = Expense.query.count()
+    existing = db.query(Expense).count()
     if existing > 0:
         print(f"  - {existing} expenses already exist, skipping")
         return
@@ -215,25 +231,25 @@ def seed_expenses():
             description=description,
             receipt_url=None
         )
-        db.session.add(expense)
+        db.add(expense)
 
-    db.session.commit()
+    db.commit()
     print(f"  ✓ Created {len(expenses_data)} sample expenses")
 
 
-def clear_database():
+def clear_database(db):
     """Clear all data from database."""
     print("\n⚠️  Clearing all data from database...")
 
     # Delete in order of dependencies
-    db.session.query(Payment).delete()
-    db.session.query(RoomHistory).delete()
-    db.session.query(Tenant).delete()
-    db.session.query(Room).delete()
-    db.session.query(User).delete()
-    db.session.query(Expense).delete()
+    db.query(Payment).delete()
+    db.query(RoomHistory).delete()
+    db.query(Tenant).delete()
+    db.query(Room).delete()
+    db.query(User).delete()
+    db.query(Expense).delete()
 
-    db.session.commit()
+    db.commit()
     print("  ✓ Database cleared")
 
 
@@ -243,13 +259,17 @@ def seed_database():
     print("DATABASE SEEDING")
     print("=" * 60 + "\n")
 
-    with app.app_context():
-        seed_users()
-        seed_rooms()
-        seed_tenants()
-        seed_room_history()
-        seed_payments()
-        seed_expenses()
+    # Create tables
+    Base.metadata.create_all(bind=engine)
+
+    db = SessionLocal()
+    try:
+        seed_users(db)
+        seed_rooms(db)
+        seed_tenants(db)
+        seed_room_history(db)
+        seed_payments(db)
+        seed_expenses(db)
 
         print("\n" + "=" * 60)
         print("✓ Database seeding complete!")
@@ -259,14 +279,20 @@ def seed_database():
         print("  Password: admin123")
         print("\nYou can now start the server with: python app.py")
         print("")
+    finally:
+        db.close()
 
 
 if __name__ == '__main__':
     import sys
 
     if len(sys.argv) > 1 and sys.argv[1] == '--clear':
-        with app.app_context():
-            clear_database()
+        Base.metadata.create_all(bind=engine)
+        db = SessionLocal()
+        try:
+            clear_database(db)
             seed_database()
+        finally:
+            db.close()
     else:
         seed_database()
