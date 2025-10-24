@@ -266,6 +266,27 @@ class PaymentMarkPaid(BaseModel):
         }
 
 
+class ManualPaymentCreate(BaseModel):
+    """Manual payment creation schema - admin inputs period, system calculates amount and dates"""
+    tenant_id: int
+    period_months: int = Field(..., ge=1, le=12)  # 1-12 months
+    status: Optional[str] = Field(default="pending", max_length=20)  # pending, paid, etc
+    payment_method: Optional[str] = None
+    receipt_number: Optional[str] = None
+    notes: Optional[str] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "tenant_id": 1,
+                "period_months": 2,
+                "status": "pending",
+                "payment_method": "cash",
+                "notes": "Payment for 2 months"
+            }
+        }
+
+
 class PaymentResponse(BaseModel):
     """Payment response schema"""
     id: int
@@ -276,6 +297,7 @@ class PaymentResponse(BaseModel):
     status: str
     payment_method: Optional[str] = None
     receipt_number: Optional[str] = None
+    period_months: Optional[int] = None
     notes: Optional[str] = None
     created_at: Optional[str] = None
     updated_at: Optional[str] = None

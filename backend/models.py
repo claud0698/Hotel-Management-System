@@ -162,6 +162,7 @@ class Payment(Base):
     status = Column(String(20), default='pending')  # pending, paid, overdue
     payment_method = Column(String(50))  # cash, transfer, etc
     receipt_number = Column(String(100))
+    period_months = Column(Integer, default=1)  # Number of months this payment covers
     notes = Column(Text)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
@@ -176,6 +177,7 @@ class Payment(Base):
             'status': self.status,
             'payment_method': self.payment_method,
             'receipt_number': self.receipt_number,
+            'period_months': self.period_months,
             'notes': self.notes,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
