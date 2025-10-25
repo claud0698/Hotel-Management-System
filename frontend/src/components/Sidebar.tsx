@@ -3,22 +3,24 @@
  */
 
 import { Link, useLocation } from 'react-router-dom';
-
-const menuItems = [
-  { label: 'Dashboard', icon: '📊', path: '/' },
-  { label: 'Rooms', icon: '🏘️', path: '/rooms' },
-  { label: 'Tenants', icon: '👥', path: '/tenants' },
-  { label: 'Payments', icon: '💰', path: '/payments' },
-  { label: 'Expenses', icon: '💸', path: '/expenses' },
-];
+import { useTranslation } from 'react-i18next';
 
 export function Sidebar() {
   const location = useLocation();
+  const { t } = useTranslation();
+
+  const menuItems = [
+    { label: t('nav.dashboard'), icon: '📊', path: '/' },
+    { label: t('nav.rooms'), icon: '🏘️', path: '/rooms' },
+    { label: t('nav.tenants'), icon: '👥', path: '/tenants' },
+    { label: t('nav.payments'), icon: '💰', path: '/payments' },
+    { label: t('nav.expenses'), icon: '💸', path: '/expenses' },
+  ];
 
   return (
     <aside className="w-64 bg-gray-900 text-white h-screen sticky top-0 overflow-y-auto">
       <div className="p-6">
-        <h2 className="text-lg font-bold mb-8">Management</h2>
+        <h2 className="text-lg font-bold mb-8">{t('nav.management')}</h2>
 
         <nav className="space-y-2">
           {menuItems.map((item) => (

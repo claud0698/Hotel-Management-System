@@ -32,7 +32,7 @@ export interface User {
 export interface Room {
   id: number;
   room_number: string;
-  floor: number;
+  floor: number;  // Floor 2 = A (Atas/Upper), Floor 1 = B (Bawah/Lower)
   room_type: string;
   monthly_rate: number;
   status: 'available' | 'occupied' | 'maintenance';

@@ -207,6 +207,3 @@ marimo/_lsp/
 __marimo__/
 kos.db
 *.db
-# i18n work in progress - not yet integrated
-frontend/src/locales/
-frontend/src/stores/languageStore.ts

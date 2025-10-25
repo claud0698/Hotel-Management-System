@@ -3,10 +3,12 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Expense } from '../services/api';
 import { apiClient } from '../services/api';
 
 export function ExpensesPage() {
+  const { t } = useTranslation();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -20,12 +22,17 @@ export function ExpensesPage() {
     receipt_url: '',
   });
 
+  // Helper function to translate category
+  const translateCategory = (category: string) => {
+    return t(`expenses.${category}`);
+  };
+
   const expenseCategories = [
-    { value: 'utilities', label: '⚡ Utilities (Electricity, Water, Internet)' },
-    { value: 'maintenance', label: '🔧 Maintenance & Repairs' },
-    { value: 'supplies', label: '📦 Supplies (Office, Cleaning)' },
-    { value: 'cleaning', label: '🧹 Cleaning Services' },
-    { value: 'other', label: '📌 Other' },
+    { value: 'utilities', emoji: '⚡' },
+    { value: 'maintenance', emoji: '🔧' },
+    { value: 'supplies', emoji: '📦' },
+    { value: 'cleaning', emoji: '🧹' },
+    { value: 'other', emoji: '📌' },
   ];
 
   useEffect(() => {
@@ -122,7 +129,8 @@ export function ExpensesPage() {
   };
 
   const getCategoryLabel = (category: string) => {
-    return expenseCategories.find((c) => c.value === category)?.label || category;
+    const cat = expenseCategories.find((c) => c.value === category);
+    return cat ? `${cat.emoji} ${translateCategory(category)}` : category;
   };
 
   const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
@@ -132,8 +140,8 @@ export function ExpensesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Expenses Management</h1>
-          <p className="text-gray-600 mt-1">Track business expenses</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t('expenses.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('nav.management')}</p>
         </div>
         <button
           onClick={() => {
@@ -149,7 +157,7 @@ export function ExpensesPage() {
           }}
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition"
         >
-          {showForm ? '✕ Cancel' : '+ Add Expense'}
+          {showForm ? `✕ ${t('common.cancel')}` : `+ ${t('expenses.addExpense')}`}
         </button>
       </div>
 
@@ -164,13 +172,13 @@ export function ExpensesPage() {
       {showForm && (
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            {editingId ? 'Edit Expense' : 'Add New Expense'}
+            {editingId ? t('expenses.updateExpense') : t('expenses.addExpense')}
           </h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Date */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date *
+                {t('expenses.date')} *
               </label>
               <input
                 type="date"
@@ -184,7 +192,7 @@ export function ExpensesPage() {
             {/* Category */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category *
+                {t('expenses.category')} *
               </label>
               <select
                 name="category"
@@ -194,7 +202,7 @@ export function ExpensesPage() {
               >
                 {expenseCategories.map((cat) => (
                   <option key={cat.value} value={cat.value}>
-                    {cat.label}
+                    {cat.emoji} {translateCategory(cat.value)}
                   </option>
                 ))}
               </select>
@@ -203,14 +211,14 @@ export function ExpensesPage() {
             {/* Amount */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Amount (IDR) *
+                {t('expenses.amount')} (IDR) *
               </label>
               <input
                 type="number"
                 name="amount"
                 value={formData.amount}
                 onChange={handleInputChange}
-                placeholder="100000"
+                placeholder={t('expenses.placeholders.amount')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -218,14 +226,14 @@ export function ExpensesPage() {
             {/* Receipt URL */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Receipt URL (optional)
+                {t('expenses.receiptUrl')} ({t('tenants.optional')})
               </label>
               <input
                 type="url"
                 name="receipt_url"
                 value={formData.receipt_url}
                 onChange={handleInputChange}
-                placeholder="https://example.com/receipt.jpg"
+                placeholder={t('expenses.placeholders.receiptUrl')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -233,13 +241,13 @@ export function ExpensesPage() {
             {/* Description */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
+                {t('expenses.description')}
               </label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
-                placeholder="Details about this expense..."
+                placeholder={t('expenses.placeholders.description')}
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
@@ -251,7 +259,7 @@ export function ExpensesPage() {
               disabled={isLoading}
               className="md:col-span-2 py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition"
             >
-              {isLoading ? (editingId ? 'Updating...' : 'Creating...') : editingId ? 'Update Expense' : 'Add Expense'}
+              {isLoading ? (editingId ? t('expenses.updating') : t('expenses.creating')) : editingId ? t('expenses.updateExpense') : t('expenses.createExpense')}
             </button>
           </form>
         </div>
@@ -260,7 +268,7 @@ export function ExpensesPage() {
       {/* Total Expenses Card */}
       {expenses.length > 0 && (
         <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg shadow p-6 border-l-4 border-orange-600">
-          <p className="text-orange-700 text-sm font-medium">Total Expenses</p>
+          <p className="text-orange-700 text-sm font-medium">{t('dashboard.totalExpenses')}</p>
           <p className="text-3xl font-bold text-orange-600 mt-2">
             {formatCurrency(totalExpenses)}
           </p>
@@ -270,11 +278,11 @@ export function ExpensesPage() {
       {/* Expenses Table */}
       {isLoading && expenses.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-600">Loading expenses...</p>
+          <p className="text-gray-600">{t('common.loading')}</p>
         </div>
       ) : expenses.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-12 text-center">
-          <p className="text-gray-600 text-lg">No expenses recorded yet.</p>
+          <p className="text-gray-600 text-lg">{t('expenses.noExpenses')}</p>
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -282,11 +290,11 @@ export function ExpensesPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-gray-50">
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">Category</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">Description</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">{t('expenses.date')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">{t('expenses.category')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">{t('expenses.amount')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">{t('expenses.description')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">{t('expenses.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -309,13 +317,13 @@ export function ExpensesPage() {
                         onClick={() => handleEdit(expense)}
                         className="px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 font-medium rounded text-xs transition"
                       >
-                        Edit
+                        {t('common.edit')}
                       </button>
                       <button
                         onClick={() => handleDelete(expense.id)}
                         className="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 font-medium rounded text-xs transition"
                       >
-                        Delete
+                        {t('common.delete')}
                       </button>
                     </td>
                   </tr>

@@ -3,11 +3,13 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Tenant } from '../services/api';
 import { useTenantStore } from '../stores/tenantStore';
 import { useRoomStore } from '../stores/roomStore';
 
 export function TenantsPage() {
+  const { t } = useTranslation();
   const { tenants, isLoading, fetchTenants, createTenant, updateTenant, deleteTenant } = useTenantStore();
   const { rooms, fetchRooms } = useRoomStore();
   const [showForm, setShowForm] = useState(false);
@@ -28,6 +30,12 @@ export function TenantsPage() {
     fetchTenants();
     fetchRooms();
   }, []);
+
+  // Helper function to translate status
+  const translateStatus = (status: string) => {
+    if (status === 'moved_out') return t('tenants.inactive'); // Map moved_out to inactive translation
+    return t(`tenants.${status}`);
+  };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -89,9 +97,9 @@ export function TenantsPage() {
   };
 
   const getRoomName = (roomId?: number) => {
-    if (!roomId) return 'Not assigned';
+    if (!roomId) return t('tenants.notAssigned');
     const room = rooms.find((r) => r.id === roomId);
-    return room ? `Room ${room.room_number}` : 'Unknown';
+    return room ? `${t('rooms.title')} ${room.room_number}` : t('tenants.notAssigned');
   };
 
   const getStatusColor = (status: string) => {
@@ -110,8 +118,8 @@ export function TenantsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Tenants Management</h1>
-          <p className="text-gray-600 mt-1">Manage your tenants</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t('tenants.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('nav.management')}</p>
         </div>
         <button
           onClick={() => {
@@ -130,7 +138,7 @@ export function TenantsPage() {
           }}
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition"
         >
-          {showForm ? '✕ Cancel' : '+ Add Tenant'}
+          {showForm ? `✕ ${t('common.cancel')}` : `+ ${t('tenants.addTenant')}`}
         </button>
       </div>
 
@@ -145,20 +153,20 @@ export function TenantsPage() {
       {showForm && (
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            {editingId ? 'Edit Tenant' : 'Add New Tenant'}
+            {editingId ? t('tenants.editTenant') : t('tenants.addTenant')}
           </h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Full Name *
+                {t('tenants.name')} *
               </label>
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                placeholder="e.g., John Doe"
+                placeholder={t('tenants.placeholders.name')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -166,14 +174,14 @@ export function TenantsPage() {
             {/* Phone */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Phone Number
+                {t('tenants.phone')}
               </label>
               <input
                 type="tel"
                 name="phone"
                 value={formData.phone}
                 onChange={handleInputChange}
-                placeholder="e.g., 081234567890"
+                placeholder={t('tenants.placeholders.phone')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -181,14 +189,14 @@ export function TenantsPage() {
             {/* Email */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email
+                {t('tenants.email')}
               </label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                placeholder="e.g., john@example.com"
+                placeholder={t('tenants.placeholders.email')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -196,14 +204,14 @@ export function TenantsPage() {
             {/* ID Number */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                ID Number (KTP/Passport)
+                {t('tenants.idNumber')}
               </label>
               <input
                 type="text"
                 name="id_number"
                 value={formData.id_number}
                 onChange={handleInputChange}
-                placeholder="e.g., 1234567890123456"
+                placeholder={t('tenants.placeholders.idNumber')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -211,7 +219,7 @@ export function TenantsPage() {
             {/* Move-in Date */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Move-in Date
+                {t('tenants.moveInDate')}
               </label>
               <input
                 type="date"
@@ -225,7 +233,7 @@ export function TenantsPage() {
             {/* Room Assignment */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Assign Room
+                {t('tenants.currentRoom')}
               </label>
               <select
                 name="current_room_id"
@@ -233,12 +241,12 @@ export function TenantsPage() {
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">Select a room</option>
+                <option value="">{t('tenants.selectRoom')}</option>
                 {rooms
                   .filter((r) => r.status === 'available' || r.id === formData.current_room_id)
                   .map((room) => (
                     <option key={room.id} value={room.id}>
-                      Room {room.room_number} ({room.status})
+                      {t('rooms.title')} {room.room_number} ({t(`rooms.${room.status}`)})
                     </option>
                   ))}
               </select>
@@ -247,7 +255,7 @@ export function TenantsPage() {
             {/* Status */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Status
+                {t('tenants.status')}
               </label>
               <select
                 name="status"
@@ -255,22 +263,22 @@ export function TenantsPage() {
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="moved_out">Moved Out</option>
+                <option value="active">{t('tenants.active')}</option>
+                <option value="inactive">{t('tenants.inactive')}</option>
+                <option value="moved_out">{t('tenants.inactive')}</option>
               </select>
             </div>
 
             {/* Notes */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Notes
+                {t('tenants.notes')}
               </label>
               <textarea
                 name="notes"
                 value={formData.notes}
                 onChange={handleInputChange}
-                placeholder="Additional information about the tenant..."
+                placeholder={t('tenants.placeholders.notes')}
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
@@ -282,7 +290,7 @@ export function TenantsPage() {
               disabled={isLoading}
               className="md:col-span-2 py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition"
             >
-              {isLoading ? (editingId ? 'Updating...' : 'Creating...') : editingId ? 'Update Tenant' : 'Create Tenant'}
+              {isLoading ? (editingId ? t('tenants.updating') : t('tenants.creating')) : editingId ? t('tenants.updateTenant') : t('tenants.createTenant')}
             </button>
           </form>
         </div>
@@ -291,11 +299,11 @@ export function TenantsPage() {
       {/* Tenants Table */}
       {isLoading ? (
         <div className="text-center py-12">
-          <p className="text-gray-600">Loading tenants...</p>
+          <p className="text-gray-600">{t('common.loading')}</p>
         </div>
       ) : tenants.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-12 text-center">
-          <p className="text-gray-600 text-lg">No tenants yet. Add your first tenant to get started!</p>
+          <p className="text-gray-600 text-lg">{t('tenants.noTenants')}</p>
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -303,12 +311,12 @@ export function TenantsPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-gray-50">
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">Room</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">Phone</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">Move-in Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">{t('tenants.name')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">{t('tenants.currentRoom')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">{t('tenants.phone')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">{t('tenants.moveInDate')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">{t('tenants.status')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">{t('tenants.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -330,7 +338,7 @@ export function TenantsPage() {
                           tenant.status
                         )}`}
                       >
-                        {tenant.status}
+                        {translateStatus(tenant.status)}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm flex gap-2">
@@ -338,13 +346,13 @@ export function TenantsPage() {
                         onClick={() => handleEdit(tenant)}
                         className="px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 font-medium rounded text-xs transition"
                       >
-                        Edit
+                        {t('common.edit')}
                       </button>
                       <button
                         onClick={() => handleDelete(tenant.id)}
                         className="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 font-medium rounded text-xs transition"
                       >
-                        Delete
+                        {t('common.delete')}
                       </button>
                     </td>
                   </tr>

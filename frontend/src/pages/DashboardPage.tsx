@@ -3,16 +3,24 @@
  * Shows key metrics and summary information
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useDashboardStore } from '../stores/dashboardStore';
 
 export function DashboardPage() {
+  const { t } = useTranslation();
   const { metrics, summary, isLoading, fetchMetrics, fetchSummary } = useDashboardStore();
+  const [selectedMonth, setSelectedMonth] = useState('2025-07'); // Default to July 2025 (our seeded data)
 
   useEffect(() => {
-    fetchMetrics();
+    // Parse selected month and create date range
+    const [year, month] = selectedMonth.split('-').map(Number);
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 1);
+
+    fetchMetrics(startDate.toISOString(), endDate.toISOString());
     fetchSummary();
-  }, []);
+  }, [selectedMonth]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -33,7 +41,7 @@ export function DashboardPage() {
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <div className="animate-spin text-4xl mb-2">⏳</div>
-          <p className="text-gray-600">Loading dashboard...</p>
+          <p className="text-gray-600">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -42,9 +50,22 @@ export function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-1">Welcome back! Here's your property overview.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">{t('dashboard.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('common.welcome')}! {t('dashboard.subtitle')}</p>
+        </div>
+
+        {/* Month Selector */}
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-gray-700">{t('dashboard.month')}:</label>
+          <input
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+          />
+        </div>
       </div>
 
       {/* Key Metrics Cards */}
@@ -54,12 +75,12 @@ export function DashboardPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Occupancy Rate</p>
+                <p className="text-gray-600 text-sm font-medium">{t('dashboard.occupancyRate')}</p>
                 <p className={`text-3xl font-bold mt-2 ${getOccupancyColor(metrics.occupancy_rate)}`}>
                   {Math.round(metrics.occupancy_rate)}%
                 </p>
                 <p className="text-gray-600 text-xs mt-2">
-                  {metrics.occupied_rooms}/{metrics.total_rooms} rooms occupied
+                  {metrics.occupied_rooms}/{metrics.total_rooms} {t('nav.rooms').toLowerCase()}
                 </p>
               </div>
               <div className="text-4xl">🏘️</div>
@@ -70,11 +91,11 @@ export function DashboardPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Monthly Revenue</p>
+                <p className="text-gray-600 text-sm font-medium">{t('dashboard.totalRevenue')}</p>
                 <p className="text-2xl font-bold text-green-600 mt-2">
                   {formatCurrency(metrics.total_income)}
                 </p>
-                <p className="text-gray-600 text-xs mt-2">From paid rent</p>
+                <p className="text-gray-600 text-xs mt-2">{t('dashboard.fromPaidRent')}</p>
               </div>
               <div className="text-4xl">💚</div>
             </div>
@@ -84,11 +105,11 @@ export function DashboardPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Monthly Expenses</p>
+                <p className="text-gray-600 text-sm font-medium">{t('dashboard.totalExpenses')}</p>
                 <p className="text-2xl font-bold text-orange-600 mt-2">
                   {formatCurrency(metrics.total_expenses)}
                 </p>
-                <p className="text-gray-600 text-xs mt-2">Utilities, maintenance, etc</p>
+                <p className="text-gray-600 text-xs mt-2">{t('dashboard.thisMonth')}</p>
               </div>
               <div className="text-4xl">💸</div>
             </div>
@@ -98,11 +119,11 @@ export function DashboardPage() {
           <div className={`rounded-lg shadow p-6 ${metrics.net_profit >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Net Profit</p>
+                <p className="text-gray-600 text-sm font-medium">{t('dashboard.netIncome')}</p>
                 <p className={`text-2xl font-bold mt-2 ${metrics.net_profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {formatCurrency(metrics.net_profit)}
                 </p>
-                <p className="text-gray-600 text-xs mt-2">Revenue - Expenses</p>
+                <p className="text-gray-600 text-xs mt-2">{t('dashboard.revenueMinusExpenses')}</p>
               </div>
               <div className="text-4xl">{metrics.net_profit >= 0 ? '📈' : '📉'}</div>
             </div>
@@ -167,7 +188,7 @@ export function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recent Payments */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Payments</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('dashboard.recentPayments')}</h3>
             {summary.recent_payments.length > 0 ? (
               <div className="space-y-2">
                 {summary.recent_payments.map((payment) => (
@@ -193,7 +214,7 @@ export function DashboardPage() {
 
           {/* Recent Expenses */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Expenses</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('dashboard.recentExpenses')}</h3>
             {summary.recent_expenses.length > 0 ? (
               <div className="space-y-2">
                 {summary.recent_expenses.map((expense) => (

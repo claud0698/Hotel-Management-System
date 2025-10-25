@@ -4,10 +4,12 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Payment, Tenant, Room } from '../services/api';
 import { apiClient } from '../services/api';
 
 export function PaymentsPage() {
+  const { t } = useTranslation();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -114,6 +116,11 @@ export function PaymentsPage() {
     return tenants.find((t) => t.id === tenantId)?.name || 'Unknown';
   };
 
+  // Helper function to translate status
+  const translateStatus = (status: string) => {
+    return t(`payments.${status}`);
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'paid':
@@ -143,14 +150,14 @@ export function PaymentsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Payments Management</h1>
-          <p className="text-gray-600 mt-1">Record and track tenant payments</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t('payments.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('nav.management')}</p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition"
         >
-          {showForm ? '✕ Cancel' : '+ Record Payment'}
+          {showForm ? `✕ ${t('common.cancel')}` : `+ ${t('payments.addPayment')}`}
         </button>
       </div>
 
@@ -164,12 +171,12 @@ export function PaymentsPage() {
       {/* Create Payment Form */}
       {showForm && (
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Record Payment</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('payments.recordPayment')}</h2>
           <form onSubmit={handleCreatePayment} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Tenant Selection */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Select Tenant *
+                {t('payments.tenant')} *
               </label>
               <select
                 name="tenant_id"
@@ -177,14 +184,14 @@ export function PaymentsPage() {
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">-- Choose Tenant --</option>
+                <option value="">{t('payments.chooseTenant')}</option>
                 {tenants
                   .filter((t) => t.status === 'active')
                   .map((tenant) => {
                     const room = rooms.find((r) => r.id === tenant.current_room_id);
                     return (
                       <option key={tenant.id} value={tenant.id}>
-                        {tenant.name} - {room ? `Room ${room.room_number}` : 'No Room'} (Rp{room?.monthly_rate.toLocaleString('id-ID') || 0})
+                        {tenant.name} - {room ? `${t('rooms.title')} ${room.room_number}` : t('payments.noRoom')} (Rp{room?.monthly_rate.toLocaleString('id-ID') || 0})
                       </option>
                     );
                   })}
@@ -194,7 +201,7 @@ export function PaymentsPage() {
             {/* Number of Months */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Number of Months *
+                {t('payments.numberOfMonths')} *
               </label>
               <input
                 type="number"
@@ -204,13 +211,13 @@ export function PaymentsPage() {
                 min="1"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
-              <p className="text-xs text-gray-500 mt-1">How many months of rent is being paid</p>
+              <p className="text-xs text-gray-500 mt-1">{t('payments.monthsHelp')}</p>
             </div>
 
             {/* Payment Date */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Payment Date
+                {t('payments.paymentDate')}
               </label>
               <input
                 type="date"
@@ -224,7 +231,7 @@ export function PaymentsPage() {
             {/* Payment Method */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Payment Method
+                {t('payments.paymentMethod')}
               </label>
               <select
                 name="payment_method"
@@ -232,23 +239,23 @@ export function PaymentsPage() {
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               >
-                <option value="cash">Cash</option>
-                <option value="transfer">Bank Transfer</option>
-                <option value="check">Check</option>
-                <option value="other">Other</option>
+                <option value="cash">{t('payments.cash')}</option>
+                <option value="transfer">{t('payments.bankTransfer')}</option>
+                <option value="check">{t('payments.check')}</option>
+                <option value="other">{t('payments.other')}</option>
               </select>
             </div>
 
             {/* Notes */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Notes (optional)
+                {t('payments.notes')} ({t('tenants.optional')})
               </label>
               <textarea
                 name="notes"
                 value={formData.notes}
                 onChange={handleInputChange}
-                placeholder="Additional notes about this payment..."
+                placeholder={t('tenants.placeholders.notes')}
                 rows={2}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
@@ -260,7 +267,7 @@ export function PaymentsPage() {
               disabled={isLoading}
               className="md:col-span-2 py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition"
             >
-              {isLoading ? 'Recording...' : 'Record Payment'}
+              {isLoading ? t('payments.recording') : t('payments.recordPayment')}
             </button>
           </form>
         </div>
@@ -278,7 +285,7 @@ export function PaymentsPage() {
                 : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
             }`}
           >
-            {status === 'all' ? 'All Payments' : status.charAt(0).toUpperCase() + status.slice(1)}
+            {status === 'all' ? t('payments.allPayments') : t(`payments.${status}`)}
           </button>
         ))}
       </div>
@@ -286,7 +293,7 @@ export function PaymentsPage() {
       {/* Payments Table */}
       {payments.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-12 text-center">
-          <p className="text-gray-600 text-lg">No payments recorded yet.</p>
+          <p className="text-gray-600 text-lg">{t('payments.noPayments')}</p>
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -294,11 +301,11 @@ export function PaymentsPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-gray-50">
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">Tenant</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">Due Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">Method</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">{t('payments.tenant')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">{t('payments.amount')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">{t('payments.dueDate')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">{t('payments.status')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">{t('payments.paymentMethod')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -319,7 +326,7 @@ export function PaymentsPage() {
                           payment.status
                         )}`}
                       >
-                        {payment.status}
+                        {translateStatus(payment.status)}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
