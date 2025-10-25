@@ -207,5 +207,25 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Database files
 kos.db
 *.db
+*.sqlite
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.tmp
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Environment files with secrets
+*.env.supabase-pooler
+.env.local
+.env.production
