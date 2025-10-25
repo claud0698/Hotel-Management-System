@@ -3,6 +3,8 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+backend/kontrakan-project-ad65978622b8.json
+
 # C extensions
 *.so
 

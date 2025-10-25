@@ -44,18 +44,20 @@ Open http://localhost:8002 and login with:
 
 ## 📚 Documentation
 
-### Getting Started
-- **[QUICK_START.md](./QUICK_START.md)** - Start in 3 steps (you are here)
-- **[IMPLEMENTATION_COMPLETE.md](./IMPLEMENTATION_COMPLETE.md)** - What was delivered
+**📖 Complete Documentation**: See [docs/README.md](./docs/README.md) for the full documentation index
 
-### Detailed Guides
-- **[frontend/SETUP.md](./frontend/SETUP.md)** - Frontend setup & configuration
-- **[frontend/COMPONENTS.md](./frontend/COMPONENTS.md)** - Component reference guide
-- **[FRONTEND_SUMMARY.md](./FRONTEND_SUMMARY.md)** - Implementation details
+### Quick Access
+- **Quick Start**: [docs/setup/QUICK_START.md](./docs/setup/QUICK_START.md)
+- **Backend Setup**: [docs/setup/BACKEND_SETUP.md](./docs/setup/BACKEND_SETUP.md)
+- **Frontend Setup**: [frontend/README.md](./frontend/README.md)
+- **Database Scripts**: [backend/scripts/README.md](./backend/scripts/README.md)
 
-### Project Documentation
-- **[PRD.md](./PRD.md)** - Product Requirements Document (features, requirements)
-- **[PROJECT_OVERVIEW.md](./PROJECT_OVERVIEW.md)** - Project structure & timeline
+### Documentation Categories
+- **📚 Setup & Installation**: [docs/setup/](./docs/setup/) - Installation and configuration guides
+- **🚀 Deployment**: [docs/deployment/](./docs/deployment/) - Production deployment guides
+- **🏗️ Architecture**: [docs/architecture/](./docs/architecture/) - System design and structure
+- **✨ Features**: [docs/features/](./docs/features/) - Feature documentation and roadmap
+- **📋 Planning**: [docs/planning/](./docs/planning/) - Requirements and project planning
 
 ---
 
@@ -203,6 +205,11 @@ kos-database/
 │   ├── app.py                        # Main app
 │   ├── models.py                     # Database models
 │   ├── routes/                       # API endpoints
+│   ├── scripts/                      # Database scripts (15 scripts)
+│   │   ├── README.md                 # Scripts documentation
+│   │   ├── seed*.py                  # Data seeding scripts
+│   │   ├── migrate*.py               # Migration scripts
+│   │   └── setup*.py                 # Setup utilities
 │   ├── requirements.txt              # Python dependencies
 │   └── .env                          # Config
 │
@@ -217,13 +224,15 @@ kos-database/
 │   ├── package.json                 # Dependencies
 │   ├── vite.config.ts              # Build config
 │   ├── tailwind.config.js           # CSS config
-│   └── SETUP.md                     # Setup guide
+│   └── README.md                    # Frontend docs
 │
-├── docs/
-│   ├── PRD.md                       # Product requirements
-│   ├── PROJECT_OVERVIEW.md          # Overview
-│   ├── QUICK_START.md               # Quick start
-│   └── FRONTEND_SUMMARY.md          # Frontend details
+├── docs/                            # 📚 Documentation hub
+│   ├── README.md                    # Documentation index
+│   ├── setup/                       # Setup guides (5 docs)
+│   ├── deployment/                  # Deployment guides (6 docs)
+│   ├── architecture/                # System design (3 docs)
+│   ├── features/                    # Features & roadmap (5 docs)
+│   └── planning/                    # Requirements & tasks (2 docs)
 │
 └── README.md                         # This file
 ```
@@ -347,13 +356,14 @@ python app.py  # Creates fresh database
 
 ### Questions?
 Check these files:
-1. **Quick start**: [QUICK_START.md](./QUICK_START.md)
-2. **Setup**: [frontend/SETUP.md](./frontend/SETUP.md)
-3. **Components**: [frontend/COMPONENTS.md](./frontend/COMPONENTS.md)
-4. **Details**: [FRONTEND_SUMMARY.md](./FRONTEND_SUMMARY.md)
+1. **Documentation Index**: [docs/README.md](./docs/README.md)
+2. **Quick start**: [docs/setup/QUICK_START.md](./docs/setup/QUICK_START.md)
+3. **Setup**: [frontend/README.md](./frontend/README.md)
+4. **Components**: [frontend/COMPONENTS.md](./frontend/COMPONENTS.md)
+5. **Database Scripts**: [backend/scripts/README.md](./backend/scripts/README.md)
 
 ### Common Issues?
-See [QUICK_START.md](./QUICK_START.md#-troubleshooting)
+See [docs/setup/QUICK_START.md](./docs/setup/QUICK_START.md#-troubleshooting)
 
 ---
 
@@ -443,7 +453,7 @@ This dashboard achieves that goal through:
 
 ---
 
-**Last Updated**: October 24, 2025
+**Last Updated**: October 26, 2025
 **Status**: ✅ Complete & Ready
 
-🚀 **Ready to get started?** → [QUICK_START.md](./QUICK_START.md)
+🚀 **Ready to get started?** → [docs/README.md](./docs/README.md) | [Quick Start](./docs/setup/QUICK_START.md)
