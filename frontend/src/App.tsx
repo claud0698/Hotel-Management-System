@@ -11,6 +11,7 @@ import { Layout } from './components/Layout';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { RoomsPage } from './pages/RoomsPage';
+import { RoomDetailPage } from './pages/RoomDetailPage';
 import { TenantsPage } from './pages/TenantsPage';
 import { PaymentsPage } from './pages/PaymentsPage';
 import { ExpensesPage } from './pages/ExpensesPage';
@@ -71,6 +72,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <RoomsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/rooms/:id"
+          element={
+            <ProtectedRoute>
+              <RoomDetailPage />
             </ProtectedRoute>
           }
         />
