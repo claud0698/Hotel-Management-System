@@ -5,12 +5,13 @@ Utility functions for Kos Management Dashboard
 from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
+from sqlalchemy import and_, or_
 
-from models import Payment, Room, Tenant
+from models import Payment, Room, Tenant, RoomHistory
 
 
 def calculate_occupancy_rate(db: Session) -> float:
-    """Calculate overall occupancy rate"""
+    """Calculate overall occupancy rate (current/real-time)"""
     total_rooms = db.query(Room).count()
     if total_rooms == 0:
         return 0.0
@@ -19,22 +20,83 @@ def calculate_occupancy_rate(db: Session) -> float:
     return round((occupied_rooms / total_rooms) * 100, 2)
 
 
-def get_room_occupancy_details(db: Session) -> Dict[str, Any]:
-    """Get detailed room occupancy statistics"""
-    total = db.query(Room).count()
-    available = db.query(Room).filter(Room.status == 'available').count()
-    occupied = db.query(Room).filter(Room.status == 'occupied').count()
-    maintenance = db.query(Room).filter(Room.status == 'maintenance').count()
-    reserved = db.query(Room).filter(Room.status == 'reserved').count()
+def calculate_historical_occupancy_rate(db: Session, start_date: datetime, end_date: datetime) -> float:
+    """
+    Calculate historical occupancy rate for a specific date range.
 
-    return {
-        'total_rooms': total,
-        'available_rooms': available,
-        'occupied_rooms': occupied,
-        'maintenance_rooms': maintenance,
-        'reserved_rooms': reserved,
-        'occupancy_rate': calculate_occupancy_rate(db)
-    }
+    A room is considered occupied during the period if there's a room_history record where:
+    - move_in_date <= end_date
+    - AND (move_out_date is NULL OR move_out_date >= start_date)
+
+    This captures all rooms that were occupied at any point during the period.
+    """
+    total_rooms = db.query(Room).count()
+    if total_rooms == 0:
+        return 0.0
+
+    # Count distinct rooms that were occupied during this period
+    occupied_rooms = db.query(RoomHistory.room_id).distinct().filter(
+        and_(
+            RoomHistory.move_in_date <= end_date,
+            or_(
+                RoomHistory.move_out_date.is_(None),
+                RoomHistory.move_out_date >= start_date
+            )
+        )
+    ).count()
+
+    return round((occupied_rooms / total_rooms) * 100, 2)
+
+
+def get_room_occupancy_details(db: Session, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None) -> Dict[str, Any]:
+    """
+    Get detailed room occupancy statistics.
+
+    If start_date and end_date are provided, calculates historical occupancy.
+    Otherwise, returns current/real-time occupancy.
+    """
+    total = db.query(Room).count()
+
+    # If date range provided, use historical calculation
+    if start_date and end_date:
+        # Count distinct rooms occupied during the period
+        occupied = db.query(RoomHistory.room_id).distinct().filter(
+            and_(
+                RoomHistory.move_in_date <= end_date,
+                or_(
+                    RoomHistory.move_out_date.is_(None),
+                    RoomHistory.move_out_date >= start_date
+                )
+            )
+        ).count()
+
+        # For historical data, available = total - occupied
+        available = total - occupied
+        occupancy_rate = calculate_historical_occupancy_rate(db, start_date, end_date)
+
+        return {
+            'total_rooms': total,
+            'available_rooms': available,
+            'occupied_rooms': occupied,
+            'maintenance_rooms': 0,  # Historical data doesn't track maintenance
+            'reserved_rooms': 0,  # Historical data doesn't track reserved
+            'occupancy_rate': occupancy_rate
+        }
+    else:
+        # Current/real-time occupancy
+        available = db.query(Room).filter(Room.status == 'available').count()
+        occupied = db.query(Room).filter(Room.status == 'occupied').count()
+        maintenance = db.query(Room).filter(Room.status == 'maintenance').count()
+        reserved = db.query(Room).filter(Room.status == 'reserved').count()
+
+        return {
+            'total_rooms': total,
+            'available_rooms': available,
+            'occupied_rooms': occupied,
+            'maintenance_rooms': maintenance,
+            'reserved_rooms': reserved,
+            'occupancy_rate': calculate_occupancy_rate(db)
+        }
 
 
 def get_payment_statistics(db: Session, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None) -> Dict[str, Any]:

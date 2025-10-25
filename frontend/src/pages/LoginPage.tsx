@@ -14,7 +14,7 @@ export function LoginPage() {
   const { language, toggleLanguage } = useLanguageStore();
   const { t } = useTranslation();
   const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('password');
+  const [password, setPassword] = useState('admin123');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,7 +89,7 @@ export function LoginPage() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 disabled={isLoading}
               />
-              <p className="text-xs text-gray-500 mt-1">Demo: password</p>
+              <p className="text-xs text-gray-500 mt-1">Demo: admin123</p>
             </div>
 
             {/* Submit Button */}

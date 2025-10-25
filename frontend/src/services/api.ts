@@ -3,7 +3,7 @@
  * Centralized API communication for all backend endpoints
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
 
 // Types for API responses
 export interface ApiResponse<T> {
@@ -17,7 +17,6 @@ export interface LoginResponse {
   user: {
     id: number;
     username: string;
-    email: string;
     created_at: string;
   };
 }
@@ -25,7 +24,6 @@ export interface LoginResponse {
 export interface User {
   id: number;
   username: string;
-  email: string;
   created_at: string;
 }
 
@@ -145,6 +143,14 @@ class ApiClient {
       });
 
       if (!response.ok) {
+        // Handle 401 Unauthorized - token expired or invalid
+        if (response.status === 401) {
+          this.clearToken();
+          // Redirect to login page
+          window.location.href = '/login';
+          throw new Error('Session expired. Please login again.');
+        }
+
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
           errorData.detail || `HTTP ${response.status}: ${response.statusText}`
@@ -183,6 +189,36 @@ class ApiClient {
 
   async getCurrentUser(): Promise<{ user: User }> {
     return this.request('/auth/me');
+  }
+
+  // ==================== USERS ====================
+
+  async getUsers(): Promise<{ users: User[] }> {
+    return this.request('/users');
+  }
+
+  async getUser(userId: number): Promise<{ user: User }> {
+    return this.request(`/users/${userId}`);
+  }
+
+  async createUser(data: { username: string; password: string }): Promise<{ message: string; user: User }> {
+    return this.request('/users', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateUser(userId: number, data: { username?: string; password?: string }): Promise<{ message: string; user: User }> {
+    return this.request(`/users/${userId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteUser(userId: number): Promise<{ message: string }> {
+    return this.request(`/users/${userId}`, {
+      method: 'DELETE',
+    });
   }
 
   // ==================== ROOMS ====================

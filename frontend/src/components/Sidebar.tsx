@@ -15,6 +15,7 @@ export function Sidebar() {
     { label: t('nav.tenants'), icon: '👥', path: '/tenants' },
     { label: t('nav.payments'), icon: '💰', path: '/payments' },
     { label: t('nav.expenses'), icon: '💸', path: '/expenses' },
+    { label: t('nav.users'), icon: '👤', path: '/users' },
   ];
 
   return (

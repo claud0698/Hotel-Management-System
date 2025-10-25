@@ -37,7 +37,7 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     username = Column(String(80), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
-    email = Column(String(120), unique=True, nullable=False)
+    email = Column(String(120), nullable=True)  # Optional, for backwards compatibility
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     def set_password(self, password: str):
@@ -52,7 +52,6 @@ class User(Base):
         return {
             'id': self.id,
             'username': self.username,
-            'email': self.email,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
 

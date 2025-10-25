@@ -9,17 +9,43 @@ from datetime import datetime
 
 # ============== AUTH SCHEMAS ==============
 
-class UserRegister(BaseModel):
-    """User registration schema"""
+class UserCreate(BaseModel):
+    """User creation schema"""
     username: str = Field(..., min_length=3, max_length=80)
-    email: EmailStr
-    password: str = Field(..., min_length=8)
+    password: str = Field(..., min_length=4)
 
     class Config:
         json_schema_extra = {
             "example": {
                 "username": "claudio",
-                "email": "claudio@example.com",
+                "password": "secure123"
+            }
+        }
+
+
+class UserUpdate(BaseModel):
+    """User update schema"""
+    username: Optional[str] = Field(None, min_length=3, max_length=80)
+    password: Optional[str] = Field(None, min_length=4)
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "username": "claudio_updated",
+                "password": "newsecure123"
+            }
+        }
+
+
+class UserRegister(BaseModel):
+    """User registration schema (deprecated - use UserCreate)"""
+    username: str = Field(..., min_length=3, max_length=80)
+    password: str = Field(..., min_length=4)
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "username": "claudio",
                 "password": "secure123"
             }
         }
@@ -43,7 +69,6 @@ class UserResponse(BaseModel):
     """User response schema"""
     id: int
     username: str
-    email: str
     created_at: Optional[str] = None
 
     class Config:
@@ -64,7 +89,6 @@ class TokenResponse(BaseModel):
                 "user": {
                     "id": 1,
                     "username": "claudio",
-                    "email": "claudio@example.com",
                     "created_at": "2024-10-24T00:00:00"
                 }
             }

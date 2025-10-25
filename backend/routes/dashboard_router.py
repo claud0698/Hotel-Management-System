@@ -54,8 +54,8 @@ async def get_metrics(
     else:
         end = datetime.fromisoformat(end_date)
 
-    # Use utility functions for calculations
-    room_details = get_room_occupancy_details(db)
+    # Use utility functions for calculations (pass date range for historical occupancy)
+    room_details = get_room_occupancy_details(db, start, end)
     payment_stats = get_payment_statistics(db, start, end)
 
     # Expenses

@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from models import Base, db
-from routes import auth_router, rooms_router, tenants_router, payments_router, expenses_router, dashboard_router
+from routes import auth_router, users_router, rooms_router, tenants_router, payments_router, expenses_router, dashboard_router
 
 load_dotenv()
 
@@ -116,6 +116,7 @@ def create_app():
 
     # Include routers
     app.include_router(auth_router.router, prefix="/api/auth", tags=["Authentication"])
+    app.include_router(users_router.router, prefix="/api/users", tags=["Users"])
     app.include_router(rooms_router.router, prefix="/api/rooms", tags=["Rooms"])
     app.include_router(tenants_router.router, prefix="/api/tenants", tags=["Tenants"])
     app.include_router(payments_router.router, prefix="/api/payments", tags=["Payments"])

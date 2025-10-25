@@ -1,0 +1,38 @@
+# Google App Engine Configuration
+# Alternative to Cloud Run - More expensive but simpler setup
+# Estimated cost: $25-50/month (always-on instance)
+
+runtime: python311
+entrypoint: uvicorn app:app --host 0.0.0.0 --port $PORT
+
+# Instance class (F1 is cheapest at ~$0.05/hour = ~$36/month)
+instance_class: F1
+
+# Automatic scaling (to minimize costs)
+automatic_scaling:
+  target_cpu_utilization: 0.65
+  min_instances: 1
+  max_instances: 3
+  min_idle_instances: 1
+  max_idle_instances: 1
+
+# Environment variables (set these in Cloud Console or gcloud)
+env_variables:
+  FLASK_ENV: 'production'
+  # DATABASE_URL: Set via gcloud or Cloud Console for security
+  # SECRET_KEY: Set via Secret Manager for security
+  # CORS_ORIGINS: Set to your frontend URL
+
+# Health checks
+liveness_check:
+  path: "/health"
+  check_interval_sec: 30
+  timeout_sec: 4
+  failure_threshold: 2
+
+readiness_check:
+  path: "/health"
+  check_interval_sec: 5
+  timeout_sec: 4
+  failure_threshold: 2
+  app_start_timeout_sec: 300

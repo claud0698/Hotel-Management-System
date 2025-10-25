@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 
 export function Navbar() {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user, logout, isAuthenticated } = useAuthStore();
   const { language, toggleLanguage } = useLanguageStore();
   const { t } = useTranslation();
 
@@ -41,10 +41,11 @@ export function Navbar() {
               <span>{language === 'en' ? 'ID' : 'EN'}</span>
             </button>
 
-            {user && (
+            {/* User info and logout - show if authenticated */}
+            {isAuthenticated && (
               <div className="flex items-center gap-4">
                 <span className="text-sm text-gray-300">
-                  {t('common.welcome')}, <strong className="text-white">{user.username}</strong>
+                  {t('common.welcome')}, <strong className="text-white">{user?.username || 'User'}</strong>
                 </span>
                 <button
                   onClick={handleLogout}

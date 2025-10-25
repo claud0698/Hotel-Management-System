@@ -15,6 +15,7 @@ import { RoomDetailPage } from './pages/RoomDetailPage';
 import { TenantsPage } from './pages/TenantsPage';
 import { PaymentsPage } from './pages/PaymentsPage';
 import { ExpensesPage } from './pages/ExpensesPage';
+import UsersPage from './pages/UsersPage';
 
 /**
  * Protected Route Component
@@ -104,6 +105,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ExpensesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users"
+          element={
+            <ProtectedRoute>
+              <UsersPage />
             </ProtectedRoute>
           }
         />

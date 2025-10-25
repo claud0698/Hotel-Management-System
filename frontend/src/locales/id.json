@@ -30,7 +30,8 @@
     "rooms": "Kamar",
     "tenants": "Penyewa",
     "payments": "Pembayaran",
-    "expenses": "Pengeluaran"
+    "expenses": "Pengeluaran",
+    "users": "Pengguna"
   },
   "auth": {
     "username": "Nama Pengguna",
@@ -195,5 +196,26 @@
       "amount": "mis., 500000",
       "receiptUrl": "URL kuitansi (opsional)"
     }
+  },
+  "users": {
+    "title": "Manajemen Pengguna",
+    "addUser": "Tambah Pengguna",
+    "editUser": "Ubah Pengguna",
+    "createUser": "Buat Pengguna",
+    "updateUser": "Perbarui Pengguna",
+    "username": "Nama Pengguna",
+    "password": "Kata Sandi",
+    "createdAt": "Dibuat Pada",
+    "actions": "Aksi",
+    "noUsers": "Tidak ada pengguna ditemukan. Klik \"Tambah Pengguna\" untuk membuat satu.",
+    "confirmDelete": "Apakah Anda yakin ingin menghapus pengguna ini?",
+    "cannotDeleteSelf": "Tidak dapat menghapus akun Anda sendiri",
+    "userCreated": "Pengguna berhasil dibuat",
+    "userUpdated": "Pengguna berhasil diperbarui",
+    "userDeleted": "Pengguna berhasil dihapus",
+    "passwordRequired": "Kata sandi diperlukan untuk pengguna baru",
+    "passwordOptional": "(kosongkan untuk tetap gunakan saat ini)",
+    "creating": "Membuat...",
+    "updating": "Memperbarui..."
   }
 }
