@@ -76,7 +76,7 @@ class TokenResponse(BaseModel):
 class RoomCreate(BaseModel):
     """Room creation schema"""
     room_number: str = Field(..., max_length=20)
-    floor: int = Field(default=1, ge=0)
+    floor: int = Field(default=2, ge=1, le=2)  # Floor 2 = A (Atas), Floor 1 = B (Bawah)
     room_type: str = Field(default="single", max_length=50)
     monthly_rate: float = Field(..., gt=0)
     status: Optional[str] = Field(default="available", max_length=20)
@@ -85,8 +85,8 @@ class RoomCreate(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
-                "room_number": "401",
-                "floor": 4,
+                "room_number": "A1",
+                "floor": 2,
                 "room_type": "single",
                 "monthly_rate": 1500000,
                 "status": "available",
@@ -98,7 +98,7 @@ class RoomCreate(BaseModel):
 class RoomUpdate(BaseModel):
     """Room update schema"""
     room_number: Optional[str] = None
-    floor: Optional[int] = None
+    floor: Optional[int] = Field(None, ge=1, le=2)  # Floor 2 = A (Atas), Floor 1 = B (Bawah)
     room_type: Optional[str] = None
     monthly_rate: Optional[float] = None
     status: Optional[str] = None
@@ -107,6 +107,7 @@ class RoomUpdate(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
+                "floor": 1,
                 "status": "occupied",
                 "amenities": "WiFi, AC"
             }

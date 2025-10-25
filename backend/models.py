@@ -63,7 +63,7 @@ class Room(Base):
 
     id = Column(Integer, primary_key=True)
     room_number = Column(String(20), unique=True, nullable=False)
-    floor = Column(Integer, nullable=False)
+    floor = Column(Integer, nullable=False)  # Floor 2 = A (Atas/Upper), Floor 1 = B (Bawah/Lower)
     room_type = Column(String(50), nullable=False)  # single, double, suite
     monthly_rate = Column(Float, nullable=False)
     status = Column(String(20), default='available')  # available, occupied, maintenance
