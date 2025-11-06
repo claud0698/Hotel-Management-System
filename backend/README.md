@@ -10,6 +10,8 @@ Flask-based REST API for managing Kos (boarding house) operations, including roo
 **Region:** Asia Southeast 1 (Singapore)
 **Platform:** Google Cloud Run
 **Database:** Supabase PostgreSQL (Tokyo region)
+**Architecture:** Docker container (linux/amd64)
+**Free Tier:** $0/month (within limits)
 
 ## Quick Links
 
@@ -158,44 +160,279 @@ api.interceptors.request.use(config => {
 const rooms = await api.get('/api/rooms');
 ```
 
+## Table of Contents
+
+- [Local Development](#local-development)
+- [Building the Application](#building-the-application)
+- [Deployment to GCP Cloud Run](#deployment-to-gcp-cloud-run)
+- [API Endpoints](#api-endpoints)
+- [Environment Variables](#environment-variables)
+- [Database Management](#database-management)
+- [Troubleshooting](#troubleshooting)
+
+---
+
 ## Local Development
 
 ### Prerequisites
 - Python 3.11+
-- PostgreSQL (or use Supabase)
-- pip
+- Docker (for containerized development)
+- PostgreSQL or Supabase account
+- pip and virtualenv
 
-### Setup
+### Quick Start
 
-1. Clone the repository:
+1. **Clone the repository:**
 ```bash
-git clone <repository-url>
-cd backend
+git clone https://github.com/claud0698/kos-database.git
+cd kos-database/backend
 ```
 
-2. Create virtual environment:
+2. **Create and activate virtual environment:**
 ```bash
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-3. Install dependencies:
+3. **Install dependencies:**
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Configure environment variables:
+4. **Set up environment variables:**
 ```bash
 cp .env.example .env
 # Edit .env with your configuration
 ```
 
-5. Run the application:
+Required variables in `.env`:
+```env
+# Database
+DATABASE_URL=postgresql://user:password@host:5432/database
+
+# Security
+SECRET_KEY=your-secret-key-min-32-chars
+JWT_SECRET_KEY=your-jwt-secret-key-min-32-chars
+
+# App Config
+FLASK_ENV=development
+DEBUG=True
+PORT=8001
+CORS_ORIGINS=*
+```
+
+5. **Run the application:**
 ```bash
 python app.py
 ```
 
 The API will be available at http://localhost:8001
+
+### Testing Locally
+
+```bash
+# Test health endpoint
+curl http://localhost:8001/health
+
+# Test login
+curl -X POST http://localhost:8001/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123"}'
+```
+
+---
+
+## Building the Application
+
+### Build Docker Image Locally
+
+1. **Build for local testing (ARM/M1 Macs):**
+```bash
+docker build -t kos-backend:latest .
+```
+
+2. **Build for production (amd64 for Cloud Run):**
+```bash
+docker buildx build \
+  --platform linux/amd64 \
+  -t kos-backend:latest \
+  --load \
+  .
+```
+
+3. **Test the Docker image:**
+```bash
+# Run container locally
+docker run -p 8080:8080 \
+  -e DATABASE_URL="your_postgres_url" \
+  -e SECRET_KEY="your_secret_key" \
+  -e JWT_SECRET_KEY="your_jwt_secret_key" \
+  kos-backend:latest
+
+# Test in another terminal
+curl http://localhost:8080/health
+```
+
+### Docker Image Details
+
+- **Base Image:** python:3.11-slim
+- **Port:** 8080 (Cloud Run requirement)
+- **User:** appuser (non-root for security)
+- **Size:** ~700MB
+- **Architecture:** linux/amd64 (Cloud Run compatible)
+
+---
+
+## Deployment to GCP Cloud Run
+
+### Prerequisites
+- GCP Account with billing enabled
+- `gcloud` CLI installed and configured
+- Docker installed locally
+- Project ID: `kontrakan-project`
+
+### Step-by-Step Deployment
+
+#### 1. Configure GCP
+
+```bash
+# Login to GCP
+gcloud auth login
+
+# Set project
+gcloud config set project kontrakan-project
+
+# Set region
+gcloud config set run/region asia-southeast1
+
+# Enable required APIs
+gcloud services enable run.googleapis.com
+gcloud services enable artifactregistry.googleapis.com
+gcloud services enable cloudbuild.googleapis.com
+```
+
+#### 2. Create Artifact Registry Repository
+
+```bash
+# Create Docker repository
+gcloud artifacts repositories create kos-backend \
+  --repository-format=docker \
+  --location=asia-southeast1 \
+  --description="Kos Management System Backend"
+
+# Configure Docker authentication
+gcloud auth configure-docker asia-southeast1-docker.pkg.dev
+```
+
+#### 3. Build and Push Image
+
+```bash
+# Navigate to backend directory
+cd backend
+
+# Build image for amd64
+docker buildx build \
+  --platform linux/amd64 \
+  -t kos-backend:latest \
+  --load \
+  .
+
+# Tag for Artifact Registry
+docker tag kos-backend:latest \
+  asia-southeast1-docker.pkg.dev/kontrakan-project/kos-backend/kos-backend:latest
+
+# Push to Artifact Registry
+docker push \
+  asia-southeast1-docker.pkg.dev/kontrakan-project/kos-backend/kos-backend:latest
+```
+
+#### 4. Deploy to Cloud Run
+
+```bash
+# Deploy with free tier settings
+gcloud run deploy kos-backend \
+  --image=asia-southeast1-docker.pkg.dev/kontrakan-project/kos-backend/kos-backend:latest \
+  --platform managed \
+  --region asia-southeast1 \
+  --allow-unauthenticated \
+  --memory=256Mi \
+  --cpu=1 \
+  --timeout=60 \
+  --max-instances=3 \
+  --min-instances=0 \
+  --cpu-throttling \
+  --concurrency=80 \
+  --set-env-vars="DATABASE_URL=your_supabase_url,FLASK_ENV=production,DEBUG=False,SECRET_KEY=your_secret,JWT_SECRET_KEY=your_jwt_secret,CORS_ORIGINS=*"
+```
+
+#### 5. Verify Deployment
+
+```bash
+# Get service URL
+gcloud run services describe kos-backend \
+  --region asia-southeast1 \
+  --format='value(status.url)'
+
+# Test the deployment
+curl https://kos-backend-228057609267.asia-southeast1.run.app/health
+```
+
+### Update Deployment
+
+To update the deployed application:
+
+```bash
+# 1. Make your code changes
+
+# 2. Rebuild and push
+docker buildx build --platform linux/amd64 -t kos-backend:latest --load .
+docker tag kos-backend:latest asia-southeast1-docker.pkg.dev/kontrakan-project/kos-backend/kos-backend:latest
+docker push asia-southeast1-docker.pkg.dev/kontrakan-project/kos-backend/kos-backend:latest
+
+# 3. Redeploy (Cloud Run will automatically use the new image)
+gcloud run deploy kos-backend \
+  --image=asia-southeast1-docker.pkg.dev/kontrakan-project/kos-backend/kos-backend:latest \
+  --region asia-southeast1
+```
+
+### Deployment Configuration
+
+**Free Tier Optimized Settings:**
+- Memory: 256Mi (minimum)
+- CPU: 1 vCPU with throttling
+- Min Instances: 0 (scales to zero)
+- Max Instances: 3 (cost control)
+- Timeout: 60 seconds
+- Concurrency: 80 requests/instance
+
+**Monthly Costs:** $0 (within free tier limits)
+
+### View Logs
+
+```bash
+# Real-time logs
+gcloud run services logs read kos-backend --region asia-southeast1 --tail
+
+# Recent logs
+gcloud run services logs read kos-backend --region asia-southeast1 --limit 100
+
+# Filter errors
+gcloud run services logs read kos-backend --region asia-southeast1 --limit 100 | grep -i error
+```
+
+### Rollback Deployment
+
+```bash
+# List revisions
+gcloud run revisions list --service=kos-backend --region=asia-southeast1
+
+# Rollback to specific revision
+gcloud run services update-traffic kos-backend \
+  --region=asia-southeast1 \
+  --to-revisions=REVISION_NAME=100
+```
+
+---
 
 ### Environment Variables
 

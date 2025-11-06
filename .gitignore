@@ -229,3 +229,4 @@ kos.db
 *.env.supabase-pooler
 .env.local
 .env.production
+.vercel
