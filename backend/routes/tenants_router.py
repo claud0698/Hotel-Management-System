@@ -10,6 +10,7 @@ from typing import Optional
 from models import Tenant, Room, RoomHistory
 from schemas import TenantCreate, TenantUpdate, TenantResponse
 from security import get_current_user
+from database import get_db
 from validators import (
     validate_tenant_name,
     validate_tenant_status,
@@ -21,25 +22,25 @@ from validators import (
 router = APIRouter()
 
 
-def get_db():
-    """Get database session"""
-    from app import SessionLocal
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
 @router.get("", response_model=dict)
 async def get_tenants(
+    skip: int = Query(0, ge=0, description="Number of records to skip"),
+    limit: int = Query(100, ge=1, le=1000, description="Maximum number of records to return"),
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Get all tenants"""
-    tenants = db.query(Tenant).all()
+    """Get all tenants with pagination"""
+    # Get total count
+    total = db.query(Tenant).count()
+
+    # Apply pagination
+    tenants = db.query(Tenant).offset(skip).limit(limit).all()
+
     return {
-        "tenants": [tenant.to_dict() for tenant in tenants]
+        "tenants": [tenant.to_dict() for tenant in tenants],
+        "total": total,
+        "skip": skip,
+        "limit": limit
     }
 
 

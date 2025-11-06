@@ -4,12 +4,14 @@ Dashboard and analytics routes
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from datetime import datetime, timezone
 from typing import Optional
 
 from models import Room, Tenant, Payment, Expense
 from schemas import DashboardMetrics, DashboardSummary
 from security import get_current_user
+from database import get_db
 from utils import (
     calculate_occupancy_rate,
     get_room_occupancy_details,
@@ -19,16 +21,6 @@ from utils import (
 )
 
 router = APIRouter()
-
-
-def get_db():
-    """Get database session"""
-    from app import SessionLocal
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 @router.get("/metrics", response_model=DashboardMetrics)
@@ -58,20 +50,23 @@ async def get_metrics(
     room_details = get_room_occupancy_details(db, start, end)
     payment_stats = get_payment_statistics(db, start, end)
 
-    # Expenses
-    expenses = db.query(Expense).filter(
+    # Expenses - use database aggregation instead of loading all records
+    total_expenses = db.query(func.coalesce(func.sum(Expense.amount), 0)).filter(
         Expense.date >= start,
         Expense.date < end
-    ).all()
-    total_expenses = sum(e.amount for e in expenses)
+    ).scalar() or 0.0
 
-    # Overdue payments
-    overdue_payments = db.query(Payment).filter(
+    # Overdue payments - use database aggregation
+    overdue_stats = db.query(
+        func.count(Payment.id).label('count'),
+        func.coalesce(func.sum(Payment.amount), 0).label('total')
+    ).filter(
         Payment.status == 'pending',
         Payment.due_date < datetime.now(timezone.utc)
-    ).all()
-    overdue_count = len(overdue_payments)
-    overdue_amount = sum(p.amount for p in overdue_payments)
+    ).first()
+
+    overdue_count = overdue_stats.count if overdue_stats else 0
+    overdue_amount = float(overdue_stats.total) if overdue_stats else 0.0
 
     # Calculate net profit
     net_profit = payment_stats['paid_amount'] - total_expenses
@@ -104,20 +99,21 @@ async def get_summary(
     # Recent expenses
     recent_expenses = db.query(Expense).order_by(Expense.created_at.desc()).limit(5).all()
 
-    # Overdue tenants
-    overdue_payments = db.query(Payment).filter(
+    # Overdue tenants - Use JOIN to avoid N+1 query problem
+    overdue_data = db.query(Payment, Tenant).join(
+        Tenant, Payment.tenant_id == Tenant.id
+    ).filter(
         Payment.status == 'pending',
-        Payment.due_date < datetime.utcnow()
+        Payment.due_date < datetime.now(timezone.utc)
     ).all()
 
-    overdue_tenants = []
-    for payment in overdue_payments:
-        tenant = db.query(Tenant).filter(Tenant.id == payment.tenant_id).first()
-        if tenant:
-            overdue_tenants.append({
-                'tenant': tenant.to_dict(),
-                'payment': payment.to_dict()
-            })
+    overdue_tenants = [
+        {
+            'tenant': tenant.to_dict(),
+            'payment': payment.to_dict()
+        }
+        for payment, tenant in overdue_data
+    ]
 
     return DashboardSummary(
         recent_payments=[p.to_dict() for p in recent_payments],

@@ -8,17 +8,7 @@ from sqlalchemy.orm import Session
 from models import User
 from schemas import UserLogin
 from security import get_current_user, create_access_token
-
-
-def get_db():
-    """Get database session"""
-    from app import SessionLocal
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
+from database import get_db
 
 router = APIRouter()
 

@@ -7,48 +7,27 @@ import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from typing import Optional
 
-from models import Base, db
+from models import Base
+from database import engine, get_db
 from routes import auth_router, users_router, rooms_router, tenants_router, payments_router, expenses_router, dashboard_router
 
 load_dotenv()
 
-# Database configuration
-DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///./kos.db')
-
-# Create engine and session factory
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {},
-    pool_pre_ping=True,
-    pool_recycle=3600,
-)
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 # Create tables
 Base.metadata.create_all(bind=engine)
-
-
-def get_db():
-    """Dependency to get database session"""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan context manager for app startup/shutdown"""
     # Startup
+    from database import DATABASE_URL
     Base.metadata.create_all(bind=engine)
     print(f"Database: {DATABASE_URL}")
     print(f"Environment: {os.getenv('FLASK_ENV', 'development')}")
@@ -67,6 +46,9 @@ def create_app():
         docs_url="/api/docs",
         openapi_url="/api/openapi.json"
     )
+
+    # GZip Compression Middleware - compress responses larger than 1KB
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
 
     # CORS Configuration - allow all origins for testing (disable for production)
     cors_origins = os.getenv('CORS_ORIGINS', '*')  # Allow all origins for testing
@@ -95,6 +77,7 @@ def create_app():
     @app.get('/health')
     async def health():
         """Health check endpoint for deployment monitoring"""
+        from database import DATABASE_URL
         return {
             'status': 'ok',
             'environment': os.getenv('FLASK_ENV', 'development'),

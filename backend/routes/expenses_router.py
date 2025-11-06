@@ -10,6 +10,7 @@ from typing import Optional
 from models import Expense
 from schemas import ExpenseCreate, ExpenseUpdate, ExpenseResponse
 from security import get_current_user
+from database import get_db
 from validators import (
     validate_expense_category,
     validate_amount,
@@ -19,25 +20,17 @@ from validators import (
 router = APIRouter()
 
 
-def get_db():
-    """Get database session"""
-    from app import SessionLocal
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
 @router.get("", response_model=dict)
 async def get_expenses(
     category: Optional[str] = Query(None),
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
+    skip: int = Query(0, ge=0, description="Number of records to skip"),
+    limit: int = Query(100, ge=1, le=1000, description="Maximum number of records to return"),
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Get all expenses with optional filtering"""
+    """Get all expenses with optional filtering and pagination"""
     query = db.query(Expense)
 
     if category:
@@ -49,9 +42,17 @@ async def get_expenses(
         end = datetime.fromisoformat(end_date)
         query = query.filter(Expense.date <= end)
 
-    expenses = query.all()
+    # Get total count with filters applied
+    total = query.count()
+
+    # Apply pagination
+    expenses = query.offset(skip).limit(limit).all()
+
     return {
-        "expenses": [expense.to_dict() for expense in expenses]
+        "expenses": [expense.to_dict() for expense in expenses],
+        "total": total,
+        "skip": skip,
+        "limit": limit
     }
 
 

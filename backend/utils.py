@@ -5,7 +5,7 @@ Utility functions for Kos Management Dashboard
 from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, or_, func
 
 from models import Payment, Room, Tenant, RoomHistory
 
@@ -100,29 +100,72 @@ def get_room_occupancy_details(db: Session, start_date: Optional[datetime] = Non
 
 
 def get_payment_statistics(db: Session, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None) -> Dict[str, Any]:
-    """Get payment statistics"""
-    query = db.query(Payment)
+    """
+    Get payment statistics using optimized database aggregations.
+    This avoids loading all payment objects into memory.
+    """
+    # Base query with date filters
+    base_query = db.query(Payment)
+    if start_date:
+        base_query = base_query.filter(Payment.due_date >= start_date)
+    if end_date:
+        base_query = base_query.filter(Payment.due_date <= end_date)
+
+    # Use database aggregations instead of loading all records into memory
+    # Get counts by status
+    paid_stats = db.query(
+        func.count(Payment.id).label('count'),
+        func.coalesce(func.sum(Payment.amount), 0).label('total')
+    ).filter(Payment.status == 'paid')
 
     if start_date:
-        query = query.filter(Payment.due_date >= start_date)
+        paid_stats = paid_stats.filter(Payment.due_date >= start_date)
     if end_date:
-        query = query.filter(Payment.due_date <= end_date)
+        paid_stats = paid_stats.filter(Payment.due_date <= end_date)
+    paid_result = paid_stats.first()
 
-    all_payments = query.all()
-    paid = [p for p in all_payments if p.status == 'paid']
-    pending = [p for p in all_payments if p.status == 'pending']
-    overdue = [p for p in all_payments if p.status == 'overdue']
+    pending_stats = db.query(
+        func.count(Payment.id).label('count'),
+        func.coalesce(func.sum(Payment.amount), 0).label('total')
+    ).filter(Payment.status == 'pending')
 
-    total_amount = sum(p.amount for p in all_payments)
-    paid_amount = sum(p.amount for p in paid)
-    pending_amount = sum(p.amount for p in pending)
-    overdue_amount = sum(p.amount for p in overdue)
+    if start_date:
+        pending_stats = pending_stats.filter(Payment.due_date >= start_date)
+    if end_date:
+        pending_stats = pending_stats.filter(Payment.due_date <= end_date)
+    pending_result = pending_stats.first()
+
+    overdue_stats = db.query(
+        func.count(Payment.id).label('count'),
+        func.coalesce(func.sum(Payment.amount), 0).label('total')
+    ).filter(Payment.status == 'overdue')
+
+    if start_date:
+        overdue_stats = overdue_stats.filter(Payment.due_date >= start_date)
+    if end_date:
+        overdue_stats = overdue_stats.filter(Payment.due_date <= end_date)
+    overdue_result = overdue_stats.first()
+
+    # Total payments and amount
+    total_stats = base_query.with_entities(
+        func.count(Payment.id).label('count'),
+        func.coalesce(func.sum(Payment.amount), 0).label('total')
+    ).first()
+
+    paid_count = paid_result.count if paid_result else 0
+    paid_amount = float(paid_result.total) if paid_result else 0.0
+    pending_count = pending_result.count if pending_result else 0
+    pending_amount = float(pending_result.total) if pending_result else 0.0
+    overdue_count = overdue_result.count if overdue_result else 0
+    overdue_amount = float(overdue_result.total) if overdue_result else 0.0
+    total_count = total_stats.count if total_stats else 0
+    total_amount = float(total_stats.total) if total_stats else 0.0
 
     return {
-        'total_payments': len(all_payments),
-        'paid_count': len(paid),
-        'pending_count': len(pending),
-        'overdue_count': len(overdue),
+        'total_payments': total_count,
+        'paid_count': paid_count,
+        'pending_count': pending_count,
+        'overdue_count': overdue_count,
         'total_amount': total_amount,
         'paid_amount': paid_amount,
         'pending_amount': pending_amount,

@@ -9,17 +9,7 @@ from typing import List
 from models import User
 from schemas import UserCreate, UserResponse, UserUpdate
 from security import get_current_user
-
-
-def get_db():
-    """Get database session"""
-    from app import SessionLocal
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
+from database import get_db
 
 router = APIRouter()
 

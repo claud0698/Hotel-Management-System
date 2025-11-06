@@ -65,7 +65,7 @@ class Room(Base):
     floor = Column(Integer, nullable=False)  # Floor 2 = A (Atas/Upper), Floor 1 = B (Bawah/Lower)
     room_type = Column(String(50), nullable=False)  # single, double, suite
     monthly_rate = Column(Float, nullable=False)
-    status = Column(String(20), default='available')  # available, occupied, maintenance
+    status = Column(String(20), default='available', index=True)  # available, occupied, maintenance - indexed for fast filtering
     amenities = Column(Text)  # JSON or comma-separated
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
@@ -74,8 +74,15 @@ class Room(Base):
     tenants = relationship('Tenant', backref='room', lazy=True)
     room_history = relationship('RoomHistory', backref='room', lazy=True)
 
-    def to_dict(self):
-        return {
+    def to_dict(self, include_tenant=False):
+        """
+        Convert room to dictionary.
+
+        Args:
+            include_tenant: If True and tenants are already loaded, include current tenant.
+                          This prevents N+1 queries by making it opt-in.
+        """
+        result = {
             'id': self.id,
             'room_number': self.room_number,
             'floor': self.floor,
@@ -83,10 +90,20 @@ class Room(Base):
             'monthly_rate': self.monthly_rate,
             'status': self.status,
             'amenities': self.amenities,
-            'current_tenant': self.tenants[0].to_dict() if self.tenants else None,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
+
+        # Only include tenant if explicitly requested AND relationship is already loaded
+        if include_tenant:
+            # Check if tenants relationship is loaded to avoid triggering a query
+            from sqlalchemy import inspect
+            if 'tenants' not in inspect(self).unloaded:
+                result['current_tenant'] = self.tenants[0].to_dict() if self.tenants else None
+            else:
+                result['current_tenant'] = None
+
+        return result
 
 
 class Tenant(Base):
@@ -100,8 +117,8 @@ class Tenant(Base):
     id_number = Column(String(50))  # KTP, passport, etc
     move_in_date = Column(DateTime)
     move_out_date = Column(DateTime)
-    current_room_id = Column(Integer, ForeignKey('rooms.id'))
-    status = Column(String(20), default='active')  # active, inactive, moved_out
+    current_room_id = Column(Integer, ForeignKey('rooms.id'), index=True)
+    status = Column(String(20), default='active', index=True)  # active, inactive, moved_out - indexed for fast filtering
     notes = Column(Text)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
@@ -132,10 +149,10 @@ class RoomHistory(Base):
     __tablename__ = 'room_history'
 
     id = Column(Integer, primary_key=True)
-    room_id = Column(Integer, ForeignKey('rooms.id'), nullable=False)
-    tenant_id = Column(Integer, ForeignKey('tenants.id'), nullable=False)
-    move_in_date = Column(DateTime, nullable=False)
-    move_out_date = Column(DateTime)
+    room_id = Column(Integer, ForeignKey('rooms.id'), nullable=False, index=True)
+    tenant_id = Column(Integer, ForeignKey('tenants.id'), nullable=False, index=True)
+    move_in_date = Column(DateTime, nullable=False, index=True)
+    move_out_date = Column(DateTime, index=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     def to_dict(self):
@@ -154,11 +171,11 @@ class Payment(Base):
     __tablename__ = 'payments'
 
     id = Column(Integer, primary_key=True)
-    tenant_id = Column(Integer, ForeignKey('tenants.id'), nullable=False)
+    tenant_id = Column(Integer, ForeignKey('tenants.id'), nullable=False, index=True)
     amount = Column(Float, nullable=False)
-    due_date = Column(DateTime, nullable=False)
-    paid_date = Column(DateTime)
-    status = Column(String(20), default='pending')  # pending, paid, overdue
+    due_date = Column(DateTime, nullable=False, index=True)  # indexed for date range queries
+    paid_date = Column(DateTime, index=True)  # indexed for date range queries
+    status = Column(String(20), default='pending', index=True)  # pending, paid, overdue - indexed for fast filtering
     payment_method = Column(String(50))  # cash, transfer, etc
     receipt_number = Column(String(100))
     period_months = Column(Integer, default=1)  # Number of months this payment covers
@@ -188,8 +205,8 @@ class Expense(Base):
     __tablename__ = 'expenses'
 
     id = Column(Integer, primary_key=True)
-    date = Column(DateTime, nullable=False)
-    category = Column(String(50), nullable=False)  # utilities, maintenance, supplies, etc
+    date = Column(DateTime, nullable=False, index=True)  # indexed for date range queries
+    category = Column(String(50), nullable=False, index=True)  # utilities, maintenance, supplies, etc - indexed for filtering
     amount = Column(Float, nullable=False)
     description = Column(Text)
     receipt_url = Column(String(255))

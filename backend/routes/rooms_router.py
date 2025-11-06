@@ -2,13 +2,14 @@
 Room management routes
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, status, Query
+from sqlalchemy.orm import Session, joinedload
 from typing import List
 
 from models import Room
 from schemas import RoomCreate, RoomUpdate, RoomResponse
 from security import get_current_user
+from database import get_db
 from validators import (
     validate_room_number,
     validate_floor,
@@ -20,25 +21,28 @@ from validators import (
 router = APIRouter()
 
 
-def get_db():
-    """Get database session"""
-    from app import SessionLocal
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
 @router.get("", response_model=dict)
 async def get_rooms(
+    skip: int = Query(0, ge=0, description="Number of records to skip"),
+    limit: int = Query(100, ge=1, le=1000, description="Maximum number of records to return"),
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Get all rooms"""
-    rooms = db.query(Room).all()
+    """Get all rooms with pagination and eager loading for performance"""
+    # Eager load tenants to avoid N+1 queries
+    query = db.query(Room).options(joinedload(Room.tenants))
+
+    # Get total count for pagination metadata
+    total = db.query(Room).count()
+
+    # Apply pagination
+    rooms = query.offset(skip).limit(limit).all()
+
     return {
-        "rooms": [room.to_dict() for room in rooms]
+        "rooms": [room.to_dict(include_tenant=True) for room in rooms],
+        "total": total,
+        "skip": skip,
+        "limit": limit
     }
 
 
@@ -48,8 +52,8 @@ async def get_room(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Get a specific room"""
-    room = db.query(Room).filter(Room.id == room_id).first()
+    """Get a specific room with eager loading"""
+    room = db.query(Room).options(joinedload(Room.tenants)).filter(Room.id == room_id).first()
 
     if not room:
         raise HTTPException(
@@ -57,7 +61,7 @@ async def get_room(
             detail="Room not found"
         )
 
-    return {"room": room.to_dict()}
+    return {"room": room.to_dict(include_tenant=True)}
 
 
 @router.post("", response_model=dict, status_code=status.HTTP_201_CREATED)

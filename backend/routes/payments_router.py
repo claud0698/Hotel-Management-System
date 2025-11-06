@@ -10,6 +10,7 @@ from typing import Optional
 from models import Payment
 from schemas import PaymentCreate, PaymentUpdate, PaymentMarkPaid, ManualPaymentCreate, PaymentResponse
 from security import get_current_user
+from database import get_db
 from validators import (
     validate_payment_status,
     validate_amount,
@@ -19,24 +20,16 @@ from validators import (
 router = APIRouter()
 
 
-def get_db():
-    """Get database session"""
-    from app import SessionLocal
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
 @router.get("", response_model=dict)
 async def get_payments(
     tenant_id: Optional[int] = Query(None),
     status_filter: Optional[str] = Query(None, alias="status"),
+    skip: int = Query(0, ge=0, description="Number of records to skip"),
+    limit: int = Query(100, ge=1, le=1000, description="Maximum number of records to return"),
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Get all payments with optional filtering"""
+    """Get all payments with optional filtering and pagination"""
     query = db.query(Payment)
 
     if tenant_id:
@@ -44,9 +37,17 @@ async def get_payments(
     if status_filter:
         query = query.filter(Payment.status == status_filter)
 
-    payments = query.all()
+    # Get total count with filters applied
+    total = query.count()
+
+    # Apply pagination
+    payments = query.offset(skip).limit(limit).all()
+
     return {
-        "payments": [payment.to_dict() for payment in payments]
+        "payments": [payment.to_dict() for payment in payments],
+        "total": total,
+        "skip": skip,
+        "limit": limit
     }
 
 
