@@ -136,17 +136,17 @@ export function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Payment Status */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Status</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('dashboard.paymentStatus')}</h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 bg-yellow-50 rounded">
-                <span className="text-yellow-700 font-medium">Pending Payments</span>
+                <span className="text-yellow-700 font-medium">{t('dashboard.pendingPayments')}</span>
                 <span className="bg-yellow-200 text-yellow-800 px-3 py-1 rounded-full font-bold">
                   {metrics.pending_count}
                 </span>
               </div>
               <div className="flex items-center justify-between p-3 bg-red-50 rounded">
                 <div>
-                  <span className="text-red-700 font-medium">Overdue Payments</span>
+                  <span className="text-red-700 font-medium">{t('dashboard.overduePayments')}</span>
                   <p className="text-red-600 text-sm">{formatCurrency(metrics.overdue_amount)}</p>
                 </div>
                 <span className="bg-red-200 text-red-800 px-3 py-1 rounded-full font-bold">
@@ -158,22 +158,22 @@ export function DashboardPage() {
 
           {/* Room Status */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Room Status</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('dashboard.roomStatus')}</h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 bg-green-50 rounded">
-                <span className="text-green-700 font-medium">Occupied Rooms</span>
+                <span className="text-green-700 font-medium">{t('dashboard.occupiedRooms')}</span>
                 <span className="bg-green-200 text-green-800 px-3 py-1 rounded-full font-bold">
                   {metrics.occupied_rooms}
                 </span>
               </div>
               <div className="flex items-center justify-between p-3 bg-blue-50 rounded">
-                <span className="text-blue-700 font-medium">Available Rooms</span>
+                <span className="text-blue-700 font-medium">{t('dashboard.availableRooms')}</span>
                 <span className="bg-blue-200 text-blue-800 px-3 py-1 rounded-full font-bold">
                   {metrics.available_rooms}
                 </span>
               </div>
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
-                <span className="text-gray-700 font-medium">Total Rooms</span>
+                <span className="text-gray-700 font-medium">{t('dashboard.totalRooms')}</span>
                 <span className="bg-gray-200 text-gray-800 px-3 py-1 rounded-full font-bold">
                   {metrics.total_rooms}
                 </span>
@@ -208,7 +208,7 @@ export function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-600 text-sm">No recent payments</p>
+              <p className="text-gray-600 text-sm">{t('dashboard.noRecentPayments')}</p>
             )}
           </div>
 
@@ -232,7 +232,7 @@ export function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-600 text-sm">No recent expenses</p>
+              <p className="text-gray-600 text-sm">{t('dashboard.noRecentExpenses')}</p>
             )}
           </div>
         </div>

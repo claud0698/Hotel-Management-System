@@ -41,7 +41,7 @@ export function PaymentsPage() {
       setTenants(tenantsRes.tenants || []);
       setRooms(roomsRes.rooms || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load data');
+      setError(err instanceof Error ? err.message : t('payments.loadFailed'));
     }
   };
 
@@ -60,7 +60,7 @@ export function PaymentsPage() {
     setError(null);
 
     if (!formData.tenant_id || formData.months <= 0) {
-      setError('Please select a tenant and number of months');
+      setError(t('payments.selectTenantAndMonths'));
       return;
     }
 
@@ -71,7 +71,7 @@ export function PaymentsPage() {
       const room = rooms.find((r) => r.id === tenant?.current_room_id);
 
       if (!room) {
-        throw new Error('Tenant is not assigned to any room');
+        throw new Error(t('payments.tenantNotAssignedToRoom'));
       }
 
       // Create payment record for each month
@@ -88,7 +88,7 @@ export function PaymentsPage() {
           status: 'paid',
           paid_date: new Date(formData.payment_date).toISOString(),
           payment_method: formData.payment_method,
-          notes: `${formData.months} month(s) payment - ${formData.notes || ''}`,
+          notes: `${t('payments.monthsPaymentNote', { months: formData.months })} - ${formData.notes || ''}`,
         });
       }
 
@@ -106,14 +106,14 @@ export function PaymentsPage() {
       });
       setShowForm(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create payment');
+      setError(err instanceof Error ? err.message : t('payments.createFailed'));
     } finally {
       setIsLoading(false);
     }
   };
 
   const getTenantName = (tenantId: number) => {
-    return tenants.find((t) => t.id === tenantId)?.name || 'Unknown';
+    return tenants.find((t) => t.id === tenantId)?.name || t('common.unknown');
   };
 
   // Helper function to translate status

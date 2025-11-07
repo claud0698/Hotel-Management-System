@@ -21,7 +21,19 @@
     "yes": "Ya",
     "no": "Tidak",
     "status": "Status",
-    "requiredFields": "Harap isi semua bidang yang diperlukan"
+    "requiredFields": "Harap isi semua bidang yang diperlukan",
+    "unknown": "Tidak Diketahui",
+    "saveChanges": "Simpan Perubahan",
+    "backTo": "Kembali ke",
+    "failedToLoad": "Gagal memuat",
+    "failedToSave": "Gagal menyimpan",
+    "failedToDelete": "Gagal menghapus",
+    "failedToUpdate": "Gagal memperbarui",
+    "failedToCreate": "Gagal membuat",
+    "failedToFetch": "Gagal mengambil",
+    "metadata": "Metadata",
+    "created": "Dibuat",
+    "lastUpdated": "Terakhir Diperbarui"
   },
   "nav": {
     "appTitle": "Dashboard Kos",
@@ -58,7 +70,14 @@
     "noRecentPayments": "Tidak ada pembayaran terakhir",
     "noRecentExpenses": "Tidak ada pengeluaran terakhir",
     "paid": "Dibayar",
-    "viewAll": "Lihat Semua"
+    "viewAll": "Lihat Semua",
+    "paymentStatus": "Status Pembayaran",
+    "roomStatus": "Status Kamar",
+    "pendingPayments": "Pembayaran Tertunda",
+    "overduePayments": "Pembayaran Terlambat",
+    "occupiedRooms": "Kamar Terisi",
+    "availableRooms": "Kamar Tersedia",
+    "totalRooms": "Total Kamar"
   },
   "rooms": {
     "title": "Kamar",
@@ -96,8 +115,17 @@
     "floor2Upper": "Lantai 2 (A - Atas)",
     "floor1Lower": "Lantai 1 (B - Bawah)",
     "confirmDelete": "Apakah Anda yakin ingin menghapus kamar ini?",
+    "confirmDeleteWarning": "Apakah Anda yakin ingin menghapus kamar ini? Tindakan ini tidak dapat dibatalkan.",
     "createFailed": "Gagal membuat kamar",
     "deleteFailed": "Gagal menghapus kamar",
+    "updateFailed": "Gagal memperbarui kamar",
+    "loadingDetails": "Memuat detail kamar...",
+    "backToRooms": "Kembali ke Kamar",
+    "cancelEdit": "Batal Ubah",
+    "deleteRoom": "Hapus Kamar",
+    "amenitiesCommaSeparated": "Fasilitas (dipisahkan koma)",
+    "monthlyRateIDR": "Tarif Bulanan (IDR)",
+    "required": "*",
     "placeholders": {
       "roomNumber": "mis., A1, B5",
       "floor": "mis., 1",
@@ -130,6 +158,10 @@
     "selectRoom": "Pilih kamar",
     "notAssigned": "Belum ditugaskan",
     "optional": "Opsional",
+    "nameRequired": "Nama penyewa diperlukan",
+    "saveFailed": "Gagal menyimpan penyewa",
+    "deleteFailed": "Gagal menghapus penyewa",
+    "confirmDeleteTenant": "Apakah Anda yakin ingin menghapus penyewa ini?",
     "placeholders": {
       "name": "Nama lengkap",
       "phone": "Nomor telepon",
@@ -169,7 +201,12 @@
     "chooseTenant": "-- Pilih Penyewa --",
     "numberOfMonths": "Jumlah Bulan",
     "monthsHelp": "Berapa bulan sewa yang dibayar",
-    "noRoom": "Tidak Ada Kamar"
+    "noRoom": "Tidak Ada Kamar",
+    "loadFailed": "Gagal memuat data",
+    "selectTenantAndMonths": "Harap pilih penyewa dan jumlah bulan",
+    "tenantNotAssignedToRoom": "Penyewa tidak ditugaskan ke kamar manapun",
+    "createFailed": "Gagal membuat pembayaran",
+    "monthsPaymentNote": "Pembayaran {{months}} bulan"
   },
   "expenses": {
     "title": "Pengeluaran",
@@ -191,6 +228,10 @@
     "creating": "Membuat...",
     "updating": "Memperbarui...",
     "selectCategory": "Pilih kategori",
+    "loadFailed": "Gagal memuat pengeluaran",
+    "saveFailed": "Gagal menyimpan pengeluaran",
+    "deleteFailed": "Gagal menghapus pengeluaran",
+    "confirmDeleteExpense": "Apakah Anda yakin ingin menghapus pengeluaran ini?",
     "placeholders": {
       "description": "Deskripsi pengeluaran",
       "amount": "mis., 500000",

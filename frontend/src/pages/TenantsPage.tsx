@@ -52,7 +52,7 @@ export function TenantsPage() {
     setError(null);
 
     if (!formData.name || formData.name.trim() === '') {
-      setError('Tenant name is required');
+      setError(t('tenants.nameRequired'));
       return;
     }
 
@@ -76,7 +76,7 @@ export function TenantsPage() {
       setShowForm(false);
       setEditingId(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save tenant');
+      setError(err instanceof Error ? err.message : t('tenants.saveFailed'));
     }
   };
 
@@ -87,11 +87,11 @@ export function TenantsPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (confirm('Are you sure you want to delete this tenant?')) {
+    if (confirm(t('tenants.confirmDeleteTenant'))) {
       try {
         await deleteTenant(id);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to delete tenant');
+        setError(err instanceof Error ? err.message : t('tenants.deleteFailed'));
       }
     }
   };

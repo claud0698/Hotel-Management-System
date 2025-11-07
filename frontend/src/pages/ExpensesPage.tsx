@@ -45,7 +45,7 @@ export function ExpensesPage() {
       const response = await apiClient.getExpenses();
       setExpenses(response.expenses || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load expenses');
+      setError(err instanceof Error ? err.message : t('expenses.loadFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -66,7 +66,7 @@ export function ExpensesPage() {
     setError(null);
 
     if (!formData.date || !formData.category || !formData.amount || formData.amount <= 0) {
-      setError('Please fill in all required fields');
+      setError(t('common.requiredFields'));
       return;
     }
 
@@ -91,7 +91,7 @@ export function ExpensesPage() {
       setShowForm(false);
       setEditingId(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save expense');
+      setError(err instanceof Error ? err.message : t('expenses.saveFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -107,13 +107,13 @@ export function ExpensesPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (confirm('Are you sure you want to delete this expense?')) {
+    if (confirm(t('expenses.confirmDeleteExpense'))) {
       try {
         setIsLoading(true);
         await apiClient.deleteExpense(id);
         await loadExpenses();
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to delete expense');
+        setError(err instanceof Error ? err.message : t('expenses.deleteFailed'));
       } finally {
         setIsLoading(false);
       }
