@@ -1,8 +1,8 @@
-# 🏠 Kos Management Dashboard
+# 🏨 Hotel Management System
 
-**Complete Property Management Solution for Indonesian Boarding Houses (Kos)**
+**Modern Property Management Solution for Hotels**
 
-A modern web application built with React + TypeScript + FastAPI to help property managers streamline operations and maximize efficiency.
+A comprehensive web application built with React + TypeScript + FastAPI to help hotel operators manage daily operations efficiently.
 
 ---
 
@@ -10,35 +10,32 @@ A modern web application built with React + TypeScript + FastAPI to help propert
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| **Backend** | ✅ Ready | FastAPI with SQLAlchemy ORM |
-| **Frontend** | ✅ Complete | React 19 + TypeScript + Tailwind |
-| **Database** | ✅ Ready | SQLite (dev) / PostgreSQL (prod) |
-| **Documentation** | ✅ Complete | 5+ guides + API docs |
-| **Overall** | ✅ **READY FOR TESTING** | Full feature implementation |
+| **Documentation** | ✅ Complete | PRD, Architecture, Tasks (62 total) |
+| **Backend** | 🔄 In Planning | FastAPI + SQLAlchemy + PostgreSQL |
+| **Frontend** | 🔄 In Planning | React 19 + TypeScript + Tailwind |
+| **Database** | 📝 Designed | 6 tables, 35 API endpoints |
+| **Overall** | 📋 **READY FOR DEVELOPMENT** | MVP v1.0 scope defined |
 
 ---
 
-## 🚀 Quick Start (3 Steps)
+## 🎯 What We're Building
 
-### Step 1: Backend
-```bash
-cd backend
-python app.py
-```
-✅ Runs on `http://localhost:5000`
+### Hotel Management System MVP v1.0
 
-### Step 2: Frontend
-```bash
-cd frontend
-npm install  # Only first time
-npm run dev
-```
-✅ Runs on `http://localhost:8002` (or 8003 if 8002 in use)
+A streamlined hotel operations platform for small to mid-size hotels (10-200 rooms) with:
 
-### Step 3: Login
-Open http://localhost:8002 and login with:
-- **Username**: `admin`
-- **Password**: `password`
+- **Room inventory management** with room types
+- **Reservation booking** with availability checking
+- **Guest profile management** and history
+- **Check-in/check-out** operations
+- **Simple payment tracking** per reservation
+- **Basic operational dashboard**
+- **Two-tier user access** (Admin + User roles)
+
+### Key Goals
+1. **Zero double-bookings** - 100% accurate availability
+2. **Fast operations** - Check-in/out in < 3 minutes
+3. **Simple & reliable** - Easy to learn (< 1 hour training)
 
 ---
 
@@ -46,98 +43,156 @@ Open http://localhost:8002 and login with:
 
 **📖 Complete Documentation**: See [docs/README.md](./docs/README.md) for the full documentation index
 
-### Quick Access
-- **Quick Start**: [docs/setup/QUICK_START.md](./docs/setup/QUICK_START.md)
-- **Backend Setup**: [docs/setup/BACKEND_SETUP.md](./docs/setup/BACKEND_SETUP.md)
-- **Frontend Setup**: [frontend/README.md](./frontend/README.md)
-- **Database Scripts**: [backend/scripts/README.md](./backend/scripts/README.md)
+### Core Documents
 
-### Documentation Categories
-- **📚 Setup & Installation**: [docs/setup/](./docs/setup/) - Installation and configuration guides
-- **🚀 Deployment**: [docs/deployment/](./docs/deployment/) - Production deployment guides
-- **🏗️ Architecture**: [docs/architecture/](./docs/architecture/) - System design and structure
-- **✨ Features**: [docs/features/](./docs/features/) - Feature documentation and roadmap
-- **📋 Planning**: [docs/planning/](./docs/planning/) - Requirements and project planning
+#### 1. [PRD.md](docs/planning/PRD.md) - Product Requirements
+**What to build** - Complete feature specifications for MVP v1.0
+- 7 core features defined
+- User roles (Admin vs User)
+- Out of scope (v2.0+)
+- 10-week timeline
+
+#### 2. [PROJECT_OVERVIEW.md](docs/architecture/PROJECT_OVERVIEW.md) - Architecture
+**How it's built** - Technical architecture and roadmap
+- System architecture
+- Technology stack
+- Database schema (6 tables)
+- API structure (35 endpoints)
+- Development phases
+
+#### 3. [BACKEND_TASKS.md](docs/planning/BACKEND_TASKS.md) - Backend Development
+**Backend guide** - 30 detailed tasks across 9 phases
+- 85 hours estimated (6-7 weeks)
+- What to salvage from existing code (60%)
+- Acceptance criteria per task
+
+#### 4. [FRONTEND_TASKS.md](docs/planning/FRONTEND_TASKS.md) - Frontend Development
+**Frontend guide** - 32 detailed tasks across 11 phases
+- 100 hours estimated (5-6 weeks)
+- What to salvage from existing code (70%)
+- Component structure
 
 ---
 
-## 🎯 Features
+## 🚀 Quick Start (Coming Soon)
 
-### ✅ Dashboard
-- Real-time metrics (occupancy, revenue, expenses, profit)
-- Room status summary
-- Payment status alerts
-- Recent activity
+### Prerequisites
+- **Backend**: Python 3.11+, PostgreSQL 14+
+- **Frontend**: Node.js 18+, npm
+- **Tools**: Git, VS Code (recommended)
 
-### ✅ Room Management
-- Create/edit/delete rooms
-- Track room status (available, occupied, maintenance)
-- Assign tenants to rooms
-- View occupancy rate
+### Setup (Development)
+```bash
+# Clone repository
+git clone <repo-url>
+cd Hotel-Management-System
 
-### ✅ Tenant Management
-- Add/edit/delete tenants
-- Track move-in/move-out dates
-- Assign to rooms
-- Update tenant status
+# Backend setup
+cd backend
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+python scripts/init_hotel_db.py
 
-### ✅ Payment Tracking
-- **Smart duration-based entry**: Select tenant + months + date
-- Automatic payment record creation
-- Track payment status (paid, pending, overdue)
-- Payment method tracking
+# Frontend setup
+cd ../frontend
+npm install
+npm run dev
+```
 
-### ✅ Expense Tracking
-- Record business expenses
-- Categorize (utilities, maintenance, supplies, cleaning, other)
-- Total expense calculation
-- View expense history
+Detailed instructions will be added as development progresses.
 
-### ✅ Authentication
-- Secure login system
-- Token-based authentication
-- Protected routes
-- Session persistence
+---
+
+## ✨ Features (MVP v1.0)
+
+### ✅ Two-Tier Authentication
+- Admin: Full access (CRUD everything, manage users, dashboard)
+- User: Can create/update but not delete, cannot manage users
+- JWT token authentication with roles
+
+### ✅ Room Inventory Management
+- Room types (Standard, Deluxe, Suite, etc.)
+- Individual rooms with status tracking
+- Occupancy rate calculation
+- Admin-only configuration
+
+### ✅ Reservation Management
+- Booking with availability checking
+- Conflict detection (no double-booking)
+- Unique confirmation numbers
+- Extend stay functionality
+- Cancel reservations
+
+### ✅ Guest Management
+- Guest profiles with contact info
+- Guest reservation history
+- Search by name/email/phone
+- Both admin and user can create guests
+
+### ✅ Front Desk Operations
+- Check-in process (assign room, update status)
+- Check-out process (settle payment, free room)
+- Today's arrivals/departures lists
+- In-house guests view
+- Walk-in guest handling
+
+### ✅ Simple Payment Tracking
+- Record payments per reservation
+- Track balance (total - paid)
+- Payment methods (cash, card, transfer)
+- No invoicing (v1.0 limitation)
+
+### ✅ Basic Dashboard
+- Today's arrivals/departures count
+- Occupancy rate
+- Simple revenue totals
+- Quick access links
+- No charts/exports (v1.0 limitation)
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-Frontend (React 19 + Vite)              Backend (FastAPI)
-├── Pages (6)                           ├── API Routes (6)
-│  ├── Login                            │  ├── Auth
-│  ├── Dashboard                        │  ├── Rooms
-│  ├── Rooms                            │  ├── Tenants
-│  ├── Tenants                          │  ├── Payments
-│  ├── Payments                         │  ├── Expenses
-│  └── Expenses                         │  └── Dashboard
-├── Components (3)                      └── Database Models
-│  ├── Navbar                           ├── User
-│  ├── Sidebar                          ├── Room
-│  └── Layout                           ├── Tenant
-├── Stores (4 - Zustand)                ├── Payment
-│  ├── Auth                             ├── Expense
-│  ├── Rooms                            └── RoomHistory
-│  ├── Tenants
-│  └── Dashboard
-└── API Client (27 endpoints)
+Frontend (React 19 + TypeScript)        Backend (FastAPI)
+├── Pages (9)                           ├── API Routes (35 endpoints)
+│  ├── Login                            │  ├── /auth (3)
+│  ├── Dashboard                        │  ├── /users (5)
+│  ├── Rooms                            │  ├── /room-types (5)
+│  ├── Room Types                       │  ├── /rooms (6)
+│  ├── Guests                           │  ├── /guests (5)
+│  ├── Reservations                     │  ├── /reservations (9)
+│  ├── Check-In                         │  ├── /payments (5)
+│  ├── Check-Out                        │  └── /dashboard (2)
+│  └── Users                            │
+├── Components (Layout, Forms)          └── Database Models (6)
+├── Stores (Zustand)                    ├── User
+│  ├── Auth                             ├── RoomType
+│  ├── Rooms                            ├── Room
+│  ├── Guests                           ├── Guest
+│  ├── Reservations                     ├── Reservation
+│  └── Dashboard                        └── Payment
+└── API Client (Type-safe)
 ```
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| **Frontend** | React 19, TypeScript, Vite |
-| **Styling** | Tailwind CSS |
-| **State** | Zustand |
-| **Routing** | React Router v7 |
-| **Backend** | Python FastAPI |
-| **ORM** | SQLAlchemy |
-| **Database** | SQLite (dev) / PostgreSQL (prod) |
-| **API** | RESTful JSON |
+| Layer | Technology | Version |
+|-------|-----------|---------|
+| **Frontend** | React + TypeScript | 19.x |
+| **Build Tool** | Vite | 5.x |
+| **Styling** | Tailwind CSS | 4.x |
+| **State** | Zustand | 4.x |
+| **Routing** | React Router | v7 |
+| **i18n** | react-i18next | Latest |
+| **Backend** | Python FastAPI | 3.11+ |
+| **ORM** | SQLAlchemy | 2.x |
+| **Database** | PostgreSQL / SQLite | 14+ / 3.x |
+| **Auth** | JWT (PyJWT) | Latest |
+| **Migrations** | Alembic | Latest |
 
 ---
 
@@ -145,315 +200,257 @@ Frontend (React 19 + Vite)              Backend (FastAPI)
 
 | Metric | Value |
 |--------|-------|
-| **Total Files** | 26+ files |
-| **Total Lines** | 3,500+ lines of code |
-| **React Components** | 8 |
-| **API Endpoints** | 27 |
-| **Zustand Stores** | 4 |
-| **Build Time** | < 1 second (Vite) |
-| **TypeScript Errors** | 0 |
-| **Bundle Size** | < 200KB (gzipped) |
+| **Database Tables** | 6 |
+| **API Endpoints** | 35 |
+| **Frontend Pages** | 9 |
+| **User Roles** | 2 (Admin, User) |
+| **Development Time** | ~185 hours (11-13 weeks) |
+| **Backend Tasks** | 30 (6-7 weeks) |
+| **Frontend Tasks** | 32 (5-6 weeks) |
+| **Documentation** | 4 core docs + guides |
 
 ---
 
-## 🎨 User Interface
+## 📈 Development Roadmap
 
-### Modern & Responsive
-- ✅ Mobile-first design
-- ✅ Responsive breakpoints
-- ✅ Color-coded status indicators
-- ✅ Emoji icons for clarity
-- ✅ Smooth transitions
+### Phase 1: Foundation (Week 1-2)
+- Backend: Database models, JWT auth with roles, user management
+- Frontend: API types, auth store with roles, layout updates
 
-### Intuitive Navigation
-- ✅ Sidebar with menu
-- ✅ Navbar with user info
-- ✅ Active route highlighting
-- ✅ Protected routes
+### Phase 2-3: Room & Guest Management (Week 2-3)
+- Backend: Room types, rooms, guests endpoints
+- Frontend: Room types page, rooms page, guests page
 
-### User Experience
-- ✅ Loading states
-- ✅ Error messages
-- ✅ Confirmation dialogs
-- ✅ Form validation
-- ✅ Real-time updates
+### Phase 4: Reservation System (Week 3-5) ⭐ **Most Complex**
+- Backend: Reservation CRUD, conflict detection, availability
+- Frontend: New reservation flow, reservations list, availability search
+
+### Phase 5: Check-In/Out (Week 5-6)
+- Backend: Check-in/out endpoints, arrivals/departures
+- Frontend: Check-in page, check-out page, room assignment
+
+### Phase 6-7: Payments & Dashboard (Week 6-8)
+- Backend: Payments, balance calculation, dashboard metrics
+- Frontend: Payments page, dashboard redesign
+
+### Phase 8-9: Polish & Deploy (Week 8-10)
+- Backend: Testing, validation, migrations, deployment
+- Frontend: Mobile responsive, loading states, build optimization
 
 ---
 
-## 🔐 Security
+## 🎯 Success Criteria
 
-- ✅ Token-based authentication (Bearer)
-- ✅ Protected routes (redirect to login)
-- ✅ Form validation (client-side)
-- ✅ Error handling (no sensitive info exposure)
-- ✅ CORS support
+### MVP Launch
+- [ ] Zero critical bugs in production
+- [ ] All 7 core features functional
+- [ ] 100% availability accuracy (no double-bookings)
+- [ ] Check-in/out process < 3 minutes
+- [ ] System response time < 3 seconds
+- [ ] User training < 1 hour
+- [ ] Documentation complete
 
-**Production Ready**:
-- Implement real JWT validation on backend
-- Use HTTPS only
-- Add rate limiting
-- Implement token refresh
-- Add CSRF protection
+### Post-Launch (First Month)
+- [ ] 95%+ staff adoption
+- [ ] Zero double-booking incidents
+- [ ] 99% uptime maintained
+- [ ] Positive user feedback (>4/5)
+- [ ] All reports accurate
+
+---
+
+## 🔄 Migration from KOS System
+
+### What We're Keeping
+✅ Infrastructure (FastAPI, React, Tailwind setup)
+✅ Authentication (upgraded to JWT with roles)
+✅ Database setup (SQLAlchemy, migrations)
+✅ Layout components (Navbar, Sidebar)
+✅ State management (Zustand pattern)
+
+### What's Changing
+🔄 **Tenants** → **Guests** (short-term stays)
+🔄 **Move-in/Move-out** → **Check-in/Check-out**
+🔄 **Monthly payments** → **Reservation payments**
+🔄 **Simple rooms** → **Room types + Rooms**
+🔄 **Dashboard** → Hotel metrics (occupancy, ADR, RevPAR)
+
+### What's Removed
+❌ Expense tracking (deferred to v2.0)
+❌ Room history (not needed for v1.0)
+❌ KOS-specific terminology
 
 ---
 
 ## 📦 Project Structure
 
 ```
-kos-database/
+Hotel-Management-System/
 ├── backend/                          # Python FastAPI backend
-│   ├── app.py                        # Main app
-│   ├── models.py                     # Database models
+│   ├── app.py                        # Main application
+│   ├── models.py                     # SQLAlchemy models (6 tables)
+│   ├── security.py                   # JWT auth + roles
+│   ├── database.py                   # Database config
 │   ├── routes/                       # API endpoints
-│   ├── scripts/                      # Database scripts (15 scripts)
-│   │   ├── README.md                 # Scripts documentation
-│   │   ├── seed*.py                  # Data seeding scripts
-│   │   ├── migrate*.py               # Migration scripts
-│   │   └── setup*.py                 # Setup utilities
-│   ├── requirements.txt              # Python dependencies
-│   └── .env                          # Config
+│   │   ├── auth_router.py
+│   │   ├── users_router.py
+│   │   ├── room_types_router.py
+│   │   ├── rooms_router.py
+│   │   ├── guests_router.py
+│   │   ├── reservations_router.py
+│   │   ├── payments_router.py
+│   │   └── dashboard_router.py
+│   ├── scripts/                      # Database utilities
+│   └── requirements.txt              # Python dependencies
 │
 ├── frontend/                         # React TypeScript frontend
 │   ├── src/
-│   │   ├── pages/                   # Page components
-│   │   ├── components/              # Layout components
-│   │   ├── stores/                  # Zustand stores
-│   │   ├── services/                # API client
-│   │   ├── App.tsx                  # Main app
-│   │   └── index.css                # Styles
-│   ├── package.json                 # Dependencies
-│   ├── vite.config.ts              # Build config
-│   ├── tailwind.config.js           # CSS config
-│   └── README.md                    # Frontend docs
+│   │   ├── pages/                    # 9 page components
+│   │   │   ├── LoginPage.tsx
+│   │   │   ├── DashboardPage.tsx
+│   │   │   ├── RoomsPage.tsx
+│   │   │   ├── RoomTypesPage.tsx
+│   │   │   ├── GuestsPage.tsx
+│   │   │   ├── ReservationsPage.tsx
+│   │   │   ├── NewReservationPage.tsx
+│   │   │   ├── CheckInPage.tsx
+│   │   │   └── CheckOutPage.tsx
+│   │   ├── components/               # Reusable components
+│   │   ├── stores/                   # Zustand state stores
+│   │   ├── services/                 # API client
+│   │   └── locales/                  # i18n translations (EN/ID)
+│   ├── package.json
+│   └── vite.config.ts
 │
-├── docs/                            # 📚 Documentation hub
-│   ├── README.md                    # Documentation index
-│   ├── setup/                       # Setup guides (5 docs)
-│   ├── deployment/                  # Deployment guides (6 docs)
-│   ├── architecture/                # System design (3 docs)
-│   ├── features/                    # Features & roadmap (5 docs)
-│   └── planning/                    # Requirements & tasks (2 docs)
+├── docs/                             # 📚 Documentation
+│   ├── README.md                     # Documentation index
+│   ├── planning/
+│   │   ├── PRD.md                    # Product requirements
+│   │   ├── BACKEND_TASKS.md          # 30 backend tasks
+│   │   └── FRONTEND_TASKS.md         # 32 frontend tasks
+│   └── architecture/
+│       └── PROJECT_OVERVIEW.md       # Technical architecture
 │
-└── README.md                         # This file
+├── README.md                          # This file
+└── SECURITY_ASSESSMENT_REPORT.md     # Security audit
 ```
 
 ---
 
-## 🧪 Testing
+## 🎓 Core Concepts
 
-### Build Test
-```bash
-npm run build
+### Availability Checking
+Room is available if NOT occupied during requested dates:
 ```
-✅ Status: Success (66 modules, < 1 second)
+Conflict = (check_in < existing.check_out) AND (check_out > existing.check_in)
+```
 
-### Type Check
-```bash
-npx tsc --noEmit
-```
-✅ Status: 0 errors
+### Check-In Process
+1. Find reservation (status = confirmed)
+2. Assign room if not assigned
+3. Update reservation status → checked_in
+4. Update room status → occupied
+5. Record timestamp
 
-### Start Dev Server
-```bash
-npm run dev
-```
-✅ Status: Ready on port 8002
+### Check-Out Process
+1. Find reservation (status = checked_in)
+2. Calculate balance (total - paid)
+3. Record final payment (optional)
+4. Update reservation status → checked_out
+5. Update room status → available
 
 ---
 
-## 🚀 Deployment
+## 🔐 Security
 
-### Frontend Deployment
-Options: Vercel (recommended), Netlify, GitHub Pages
+### Implemented
+- ✅ JWT token authentication
+- ✅ Role-based access control (RBAC)
+- ✅ Password hashing (bcrypt)
+- ✅ Protected routes
+- ✅ SQL injection prevention
+- ✅ XSS protection
 
-```bash
-npm run build
-# Deploy the 'dist' folder
-```
-
-### Backend Deployment
-Options: Heroku, Railway, DigitalOcean, AWS
-
-```bash
-pip install -r requirements.txt
-python app.py
-```
-
-### Database
-- Development: SQLite (no setup needed)
-- Production: PostgreSQL (separate database)
-
----
-
-## 🔍 API Documentation
-
-### Backend API
-Access Swagger UI at: `http://localhost:5000/api/docs`
-
-### Endpoints (27 total)
-- **Auth** (2): Login, Get current user
-- **Rooms** (5): CRUD operations
-- **Tenants** (5): CRUD operations
-- **Payments** (6): CRUD + Mark paid
-- **Expenses** (5): CRUD operations
-- **Dashboard** (2): Metrics, Summary
-
-See [API_DOCS.md](./backend/API_DOCS.md) for full details.
-
----
-
-## 🎓 Learning Resources
-
-### Project Includes
-- Real-world React patterns
-- TypeScript best practices
-- Zustand state management
-- Tailwind CSS responsive design
-- FastAPI API development
-- SQLAlchemy ORM usage
-
-### Useful Links
-- [React Docs](https://react.dev)
-- [TypeScript Guide](https://www.typescriptlang.org/docs/)
-- [Zustand GitHub](https://github.com/pmndrs/zustand)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [FastAPI Docs](https://fastapi.tiangolo.com/)
+### Production TODO
+- [ ] HTTPS/SSL enforcement
+- [ ] Rate limiting
+- [ ] Token refresh mechanism
+- [ ] CSRF protection
+- [ ] Security headers
+- [ ] Database encryption at rest
 
 ---
 
 ## ❓ Troubleshooting
 
-### Frontend Won't Start
-```bash
-rm -rf node_modules package-lock.json
-npm install
-npm run dev
-```
+### Documentation Issues
+Check [docs/README.md](./docs/README.md) for complete documentation
 
-### Port Already in Use
-```bash
-# Use different port
-npm run dev -- --port 3000
-```
+### Development Issues
+- Backend: See [BACKEND_TASKS.md](docs/planning/BACKEND_TASKS.md)
+- Frontend: See [FRONTEND_TASKS.md](docs/planning/FRONTEND_TASKS.md)
 
-### Backend Not Responding
-```bash
-# Make sure backend is running
-cd backend
-python app.py
-```
-
-### Database Issues
-```bash
-# Reset database (backend)
-rm backend/kos.db
-python app.py  # Creates fresh database
-```
+### Common Questions
+- **How long to develop?** ~11-13 weeks (185 hours)
+- **Can I start now?** Yes! Start with Phase 1 tasks
+- **What's the tech stack?** FastAPI + React + PostgreSQL
+- **Mobile support?** Responsive web UI (mobile-friendly)
 
 ---
 
 ## 📞 Support
 
-### Questions?
-Check these files:
-1. **Documentation Index**: [docs/README.md](./docs/README.md)
-2. **Quick start**: [docs/setup/QUICK_START.md](./docs/setup/QUICK_START.md)
-3. **Setup**: [frontend/README.md](./frontend/README.md)
-4. **Components**: [frontend/COMPONENTS.md](./frontend/COMPONENTS.md)
-5. **Database Scripts**: [backend/scripts/README.md](./backend/scripts/README.md)
-
-### Common Issues?
-See [docs/setup/QUICK_START.md](./docs/setup/QUICK_START.md#-troubleshooting)
+For questions about:
+- **Features**: See [PRD.md](docs/planning/PRD.md)
+- **Architecture**: See [PROJECT_OVERVIEW.md](docs/architecture/PROJECT_OVERVIEW.md)
+- **Backend tasks**: See [BACKEND_TASKS.md](docs/planning/BACKEND_TASKS.md)
+- **Frontend tasks**: See [FRONTEND_TASKS.md](docs/planning/FRONTEND_TASKS.md)
 
 ---
 
 ## 🎉 What's Next?
 
 ### Immediate
-- [ ] Test all features
-- [ ] Create sample data
-- [ ] Verify calculations
-- [ ] Check mobile responsiveness
+- [ ] Review all documentation
+- [ ] Set up development environment
+- [ ] Start with Phase 1: Foundation
 
-### Short-term
-- [ ] Add more demo data
-- [ ] Test payment scenarios
-- [ ] Performance testing
-- [ ] Security review
+### Phase 1 (Week 1-2)
+- [ ] Update database models (6 tables)
+- [ ] Upgrade to JWT with roles
+- [ ] Update API types and client
+- [ ] Update navigation and layout
 
-### Medium-term
-- [ ] Deploy to production
-- [ ] Setup monitoring
-- [ ] Configure backups
-- [ ] Add SSL certificates
-
-### Long-term
-- [ ] Add report export
-- [ ] Multi-user support
-- [ ] Payment gateway integration
-- [ ] Mobile app version
-
----
-
-## 📈 Performance
-
-- ✅ **Frontend**: Vite build < 1 second, dev load < 200ms
-- ✅ **Backend**: FastAPI response time < 200ms
-- ✅ **Database**: SQLite suitable for up to 100 rooms, 1000 tenants
-- ✅ **Bundle Size**: < 200KB (gzipped)
-
----
-
-## 🔒 Production Checklist
-
-Before deploying to production:
-
-- [ ] Implement real JWT authentication on backend
-- [ ] Enable HTTPS/SSL
-- [ ] Setup environment variables
-- [ ] Configure CORS properly
-- [ ] Enable database backups
-- [ ] Setup error logging
-- [ ] Configure rate limiting
-- [ ] Add request validation
-- [ ] Security headers setup
-- [ ] Performance optimization
+### Ready to Start?
+1. Read [docs/README.md](./docs/README.md) - Documentation overview
+2. Review [PRD.md](docs/planning/PRD.md) - What we're building
+3. Start [BACKEND_TASKS.md](docs/planning/BACKEND_TASKS.md) - Begin development
 
 ---
 
 ## 📄 License
 
-Private project for Kos Management Dashboard
+Private project for Hotel Management System
 
 ---
 
 ## 👤 About
 
-**Kos Management Dashboard** is a complete solution designed specifically for Indonesian property managers to streamline room rental operations.
+**Hotel Management System** is designed to help hotel operators manage daily operations efficiently with:
+- Intuitive user interface
+- Real-time operational metrics
+- Automated availability checking
+- Simple data entry workflows
+- Mobile-responsive design
+- Reliable data integrity
 
 **Built with** ❤️ using modern web technologies
 
-**Status**: ✅ **READY FOR TESTING**
-
-**Start here**: [QUICK_START.md](./QUICK_START.md)
+**Status**: 📋 **READY FOR DEVELOPMENT**
 
 ---
 
-## 🎯 Goal
+**Last Updated**: November 7, 2025
+**Version**: 1.0 (MVP Planning Phase)
 
-> "Make it simple for property managers to manage their room rental business with confidence and clarity."
-
-This dashboard achieves that goal through:
-- Intuitive user interface
-- Real-time metrics
-- Automated calculations
-- Simple data entry
-- Mobile-responsive design
-- Reliable data storage
-
----
-
-**Last Updated**: October 26, 2025
-**Status**: ✅ Complete & Ready
-
-🚀 **Ready to get started?** → [docs/README.md](./docs/README.md) | [Quick Start](./docs/setup/QUICK_START.md)
+🚀 **Ready to start?** → [docs/README.md](./docs/README.md) | [PRD](docs/planning/PRD.md) | [Backend Tasks](docs/planning/BACKEND_TASKS.md)

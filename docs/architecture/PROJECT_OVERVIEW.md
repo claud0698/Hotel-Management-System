@@ -1,405 +1,811 @@
-# Kos Management Dashboard - Project Overview
+# Hotel Management System - Project Overview
+## MVP v1.0
 
-**Project Status**: Planning Complete | Ready for Development
-**Last Updated**: October 24, 2025
-**Version**: 1.0
-
----
-
-## 📋 Quick Start Guide
-
-### What is This Project?
-A web-based dashboard to manage room rentals (Kos) in Indonesia. Property owners can:
-- Track which rooms are occupied
-- Manage tenant information
-- Record rent payments and track overdue
-- Monitor income and expenses
-- View financial reports and analytics
-
-### Tech Stack
-- **Backend**: Python Flask + SQLAlchemy
-- **Frontend**: React TypeScript + Tailwind CSS + Vite
-- **Database**: SQLite (dev) → PostgreSQL (production)
-- **Authentication**: JWT tokens
-- **API**: RESTful JSON API
+**Version**: 1.0 (MVP)
+**Last Updated**: November 7, 2025
+**Status**: Ready for Development
+**Previous System**: KOS Management Dashboard
 
 ---
 
-## 📁 Documentation Files
-
-### 1. **PRD.md** (Product Requirements Document) - 21 KB
-**Read this for**: Understanding WHAT we're building
-
-**Contains**:
-- Executive summary and business goals
-- Detailed feature specifications for all 6 core features
-- Non-functional requirements (performance, security, scalability)
-- Technical architecture overview
-- User flows and workflows
-- Acceptance testing checklist
-
-**Key Sections**:
-- Features 1-6: Authentication, Room Management, Tenant Management, Payments, Expenses, Dashboard
+## Table of Contents
+1. [System Overview](#system-overview)
+2. [MVP Scope](#mvp-scope)
+3. [Architecture](#architecture)
+4. [Technology Stack](#technology-stack)
+5. [Database Design](#database-design)
+6. [API Structure](#api-structure)
+7. [Frontend Structure](#frontend-structure)
+8. [Development Roadmap](#development-roadmap)
 
 ---
 
-### 2. **TASKS_BREAKDOWN.md** (Implementation Roadmap) - 54 KB
-**Read this for**: Understanding HOW to build it, step by step
+## System Overview
 
-**Contains**:
-- 38 detailed tasks organized in 9 phases
-- Each task has: effort estimate, acceptance criteria, steps, deliverables
-- Timeline: ~25 working days (~120 hours at 4h/day)
-- Task dependencies and implementation order
-- **NEW**: Phase 10 - Dashboard Report Export (Future Development) with 10 detailed tasks
+### What We're Building
+A **focused hotel management system** for small to mid-size hotels (up to 200 rooms) to manage daily operations:
+- Room inventory and availability
+- Guest reservations with conflict detection
+- Check-in/check-out processes
+- Simple payment tracking
+- Operational dashboard
 
-**Phases**:
-1. Project Setup & Database (9.5h)
-2. Room Management (9h)
-3. Tenant Management (8.5h)
-4. Payment Tracking (11.5h)
-5. Income & Expenses (8.5h)
-6. Dashboard & Visualization (9h)
-7. Frontend Setup (12h)
-8. Testing (11h)
-9. Deployment & Documentation (14h)
-10. Dashboard Report Export - Future Phase 2 (24.5h)
+### Target Users
+- **Admin**: Hotel manager with full system access
+- **User**: Front desk staff with limited permissions
+
+### Key Goals
+1. **Zero double-bookings**: 100% accurate availability
+2. **Fast operations**: Check-in/out in < 3 minutes
+3. **Simple & reliable**: Easy to learn (< 1 hour training)
 
 ---
 
-### 3. **FUTURE_FEATURES.md** (Phase 2+ Roadmap) - 13 KB
-**Read this for**: Understanding future enhancements
+## MVP Scope
 
-**Contains**:
-- Comprehensive dashboard report export feature specification
-- User can export financial reports as PDF, Excel, CSV
-- Supports monthly, quarterly, yearly, or custom date ranges
-- Optional features: report scheduling, customization, email delivery
-- Detailed UI mockups and example reports
-- Other future features (Phase 3+): multi-user, payment reminders, mobile app, etc.
+### ✅ What's IN v1.0
 
-**Phase 2 Features** (Post v1.0 Launch):
-- Dashboard Report Export (Primary feature)
-- Report Scheduling (optional automated emails)
-- Report Customization (branding, logo)
-- Export History (re-download previous reports)
+**Core Features**:
+1. **Two-Tier Authentication**
+   - Admin: Full CRUD, user management, dashboard
+   - User: Create/update only, no delete, no user management
+
+2. **Room Inventory**
+   - Room types (Standard, Deluxe, Suite, etc.)
+   - Individual rooms with status (available, occupied, out_of_order)
+   - Occupancy tracking
+
+3. **Guest Management**
+   - Guest profiles with contact info
+   - Guest reservation history
+   - Search by name/email/phone
+
+4. **Reservations**
+   - Create reservations with availability checking
+   - Conflict detection (prevents double-booking)
+   - Unique confirmation numbers
+   - Extend stay functionality
+   - Cancel reservations
+
+5. **Front Desk Operations**
+   - Check-in process (assign room, update status)
+   - Check-out process (settle payment, free room)
+   - Today's arrivals/departures lists
+   - In-house guests view
+   - Walk-in guest handling
+
+6. **Simple Payments**
+   - Record payments per reservation
+   - Track balance (total - paid)
+   - Payment methods (cash, card, transfer)
+   - No invoicing, no tax calculation
+
+7. **Basic Dashboard**
+   - Today's arrivals/departures count
+   - Occupancy rate
+   - Simple revenue totals
+   - Quick access links
+   - No charts, no exports
+
+### ❌ What's OUT (v2.0+)
+- Housekeeping module
+- Maintenance tracking
+- Advanced rate management
+- Invoice generation
+- Email/SMS notifications
+- Report exports (PDF/Excel)
+- Online booking engine
+- Multi-property support
 
 ---
 
-### 4. **README.md** (Project Root)
-Main project entry point (to be updated with setup instructions)
+## Architecture
 
----
-
-## 🎯 Project Structure
+### Architecture Pattern
+**Layered Monolithic Architecture** - Simple, proven, easy to maintain
 
 ```
-kos-database/
-├── backend/                    # Python Flask API
-│   ├── venv/                   # Virtual environment
-│   ├── app.py                  # Flask app entry point
-│   ├── models.py               # Database models (SQLAlchemy)
-│   ├── routes.py               # API endpoints
-│   ├── requirements.txt         # Python dependencies
-│   ├── .env                    # Environment variables
-│   └── kos.db                  # SQLite database (created on first run)
+┌─────────────────────────────────────────────┐
+│         Frontend (React SPA)                │
+│    React 19 + TypeScript + Tailwind         │
+└─────────────────────────────────────────────┘
+                    │
+              HTTPS/JSON API
+                    │
+┌─────────────────────────────────────────────┐
+│         Backend (FastAPI)                   │
+│  ┌──────────┬──────────┬──────────────┐    │
+│  │   Auth   │  Rooms   │ Reservations │    │
+│  │  Guests  │ Payments │  Dashboard   │    │
+│  └──────────┴──────────┴──────────────┘    │
+└─────────────────────────────────────────────┘
+                    │
+              SQLAlchemy ORM
+                    │
+┌─────────────────────────────────────────────┐
+│      Database (PostgreSQL/SQLite)           │
+└─────────────────────────────────────────────┘
+```
+
+### Design Principles
+1. **Keep It Simple**: No over-engineering
+2. **API-First**: All logic accessible via REST API
+3. **Mobile-Responsive**: Works on tablets/phones
+4. **Role-Based**: Admin vs User permissions
+5. **Type-Safe**: TypeScript frontend, Pydantic backend
+
+---
+
+## Technology Stack
+
+### Backend
+```
+FastAPI (Python 3.11+)     - Modern, fast web framework
+├── SQLAlchemy 2.x         - ORM for database
+├── Alembic                - Database migrations
+├── Pydantic v2            - Data validation
+├── PyJWT                  - Authentication tokens
+└── Passlib + Bcrypt       - Password hashing
+```
+
+**Database**:
+- **Development**: SQLite (zero config)
+- **Production**: PostgreSQL 14+ (Google Cloud SQL)
+
+### Frontend
+```
+React 19 + TypeScript      - UI framework
+├── Vite                   - Build tool (fast!)
+├── Tailwind CSS           - Styling
+├── Zustand                - State management
+├── React Router v7        - Routing
+├── Axios                  - HTTP client
+└── react-i18next          - Internationalization
+```
+
+### Infrastructure
+```
+Frontend: Vercel           - Automatic deployments, CDN
+Backend:  Google Cloud Run - Serverless containers
+Database: Google Cloud SQL - Managed PostgreSQL
+Monitoring: Sentry         - Error tracking
+```
+
+---
+
+## Database Design
+
+### Tables (6 total)
+
+#### 1. users
+```sql
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    email VARCHAR(100),
+    full_name VARCHAR(100),
+    role VARCHAR(10) NOT NULL CHECK(role IN ('admin', 'user')),
+    status VARCHAR(10) DEFAULT 'active' CHECK(status IN ('active', 'inactive')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_users_username ON users(username);
+```
+
+#### 2. room_types
+```sql
+CREATE TABLE room_types (
+    id INTEGER PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    code VARCHAR(10) UNIQUE NOT NULL,
+    base_capacity_adults INTEGER DEFAULT 2,
+    base_capacity_children INTEGER DEFAULT 1,
+    bed_config VARCHAR(50),
+    default_rate DECIMAL(10,2) NOT NULL,
+    amenities TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_room_types_code ON room_types(code);
+```
+
+#### 3. rooms
+```sql
+CREATE TABLE rooms (
+    id INTEGER PRIMARY KEY,
+    room_number VARCHAR(10) UNIQUE NOT NULL,
+    floor INTEGER,
+    room_type_id INTEGER NOT NULL,
+    status VARCHAR(20) DEFAULT 'available'
+        CHECK(status IN ('available', 'occupied', 'out_of_order')),
+    view_type VARCHAR(50),
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (room_type_id) REFERENCES room_types(id)
+);
+
+CREATE INDEX idx_rooms_number ON rooms(room_number);
+CREATE INDEX idx_rooms_status ON rooms(status);
+CREATE INDEX idx_rooms_type ON rooms(room_type_id);
+```
+
+#### 4. guests
+```sql
+CREATE TABLE guests (
+    id INTEGER PRIMARY KEY,
+    full_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100),
+    phone VARCHAR(20),
+    id_type VARCHAR(50),
+    id_number VARCHAR(50),
+    nationality VARCHAR(50),
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_guests_name ON guests(full_name);
+CREATE INDEX idx_guests_email ON guests(email);
+CREATE INDEX idx_guests_phone ON guests(phone);
+```
+
+#### 5. reservations
+```sql
+CREATE TABLE reservations (
+    id INTEGER PRIMARY KEY,
+    confirmation_number VARCHAR(20) UNIQUE NOT NULL,
+    guest_id INTEGER NOT NULL,
+    check_in_date DATE NOT NULL,
+    check_out_date DATE NOT NULL,
+    room_type_id INTEGER NOT NULL,
+    room_id INTEGER,
+    adults INTEGER DEFAULT 1,
+    children INTEGER DEFAULT 0,
+    rate_per_night DECIMAL(10,2) NOT NULL,
+    total_amount DECIMAL(10,2) NOT NULL,
+    special_requests TEXT,
+    status VARCHAR(20) DEFAULT 'confirmed'
+        CHECK(status IN ('confirmed', 'checked_in', 'checked_out', 'cancelled')),
+    booking_source VARCHAR(20),
+    created_by INTEGER NOT NULL,
+    checked_in_at TIMESTAMP,
+    checked_out_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (guest_id) REFERENCES guests(id),
+    FOREIGN KEY (room_type_id) REFERENCES room_types(id),
+    FOREIGN KEY (room_id) REFERENCES rooms(id),
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
+CREATE INDEX idx_reservations_dates ON reservations(check_in_date, check_out_date);
+CREATE INDEX idx_reservations_status ON reservations(status);
+CREATE INDEX idx_reservations_guest ON reservations(guest_id);
+CREATE INDEX idx_reservations_room ON reservations(room_id);
+CREATE INDEX idx_reservations_confirmation ON reservations(confirmation_number);
+```
+
+#### 6. payments
+```sql
+CREATE TABLE payments (
+    id INTEGER PRIMARY KEY,
+    reservation_id INTEGER NOT NULL,
+    payment_date DATE NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    payment_method VARCHAR(20) NOT NULL
+        CHECK(payment_method IN ('cash', 'credit_card', 'debit_card', 'bank_transfer', 'other')),
+    reference_number VARCHAR(50),
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (reservation_id) REFERENCES reservations(id)
+);
+
+CREATE INDEX idx_payments_reservation ON payments(reservation_id);
+CREATE INDEX idx_payments_date ON payments(payment_date);
+```
+
+### Key Relationships
+```
+users (1) ──< (N) reservations (created_by)
+room_types (1) ──< (N) rooms
+room_types (1) ──< (N) reservations
+rooms (1) ──< (N) reservations (optional FK)
+guests (1) ──< (N) reservations
+reservations (1) ──< (N) payments
+```
+
+---
+
+## API Structure
+
+### Base URL
+`/api/v1`
+
+### Endpoints (35 total)
+
+#### Authentication (3 endpoints)
+```
+POST   /auth/login               - Login user
+POST   /auth/logout              - Logout user
+GET    /auth/me                  - Get current user
+```
+
+#### Users (5 endpoints) - Admin only
+```
+GET    /users                    - List all users
+GET    /users/{id}               - Get user details
+POST   /users                    - Create user
+PUT    /users/{id}               - Update user
+PUT    /users/{id}/status        - Activate/deactivate
+```
+
+#### Room Types (5 endpoints)
+```
+GET    /room-types               - List all room types
+GET    /room-types/{id}          - Get room type details
+POST   /room-types               - Create room type (admin)
+PUT    /room-types/{id}          - Update room type (admin)
+DELETE /room-types/{id}          - Delete room type (admin)
+```
+
+#### Rooms (6 endpoints)
+```
+GET    /rooms                    - List all rooms
+GET    /rooms/{id}               - Get room details
+POST   /rooms                    - Create room (admin)
+PUT    /rooms/{id}               - Update room (admin)
+DELETE /rooms/{id}               - Delete room (admin)
+PUT    /rooms/{id}/status        - Update room status
+GET    /rooms/availability       - Check availability
+       ?check_in=YYYY-MM-DD&check_out=YYYY-MM-DD&room_type_id=N
+```
+
+#### Guests (5 endpoints)
+```
+GET    /guests                   - List all guests
+GET    /guests/{id}              - Get guest details
+POST   /guests                   - Create guest
+PUT    /guests/{id}              - Update guest
+GET    /guests/{id}/reservations - Get guest reservation history
+```
+
+#### Reservations (9 endpoints)
+```
+GET    /reservations             - List all reservations
+GET    /reservations/{id}        - Get reservation details
+POST   /reservations             - Create reservation
+PUT    /reservations/{id}        - Update reservation
+DELETE /reservations/{id}        - Cancel reservation (admin)
+POST   /reservations/{id}/check-in      - Check in guest
+POST   /reservations/{id}/check-out     - Check out guest
+PUT    /reservations/{id}/extend        - Extend stay
+GET    /reservations/arrivals    - Today's arrivals
+       ?date=YYYY-MM-DD
+GET    /reservations/departures  - Today's departures
+       ?date=YYYY-MM-DD
+GET    /reservations/in-house    - Currently checked-in
+```
+
+#### Payments (5 endpoints)
+```
+GET    /payments                 - List payments
+       ?reservation_id=N
+GET    /payments/{id}            - Get payment details
+POST   /payments                 - Record payment
+PUT    /payments/{id}            - Update payment (admin)
+DELETE /payments/{id}            - Delete payment (admin)
+```
+
+#### Dashboard (2 endpoints)
+```
+GET    /dashboard/metrics        - Key metrics
+GET    /dashboard/summary        - Summary data
+       ?date_from=YYYY-MM-DD&date_to=YYYY-MM-DD
+```
+
+---
+
+## Frontend Structure
+
+### Pages (9 pages)
+```
+/login              - LoginPage          - Authentication
+/                   - DashboardPage      - Main dashboard
+/rooms              - RoomsPage          - Room inventory list
+/room-types         - RoomTypesPage      - Room type management
+/guests             - GuestsPage         - Guest list
+/reservations       - ReservationsPage   - Reservation list
+/reservations/new   - NewReservationPage - Create booking
+/check-in           - CheckInPage        - Arrivals today
+/check-out          - CheckOutPage       - Departures today
+```
+
+### Components Structure
+```
+src/
+├── pages/                  - Page components
+│   ├── LoginPage.tsx
+│   ├── DashboardPage.tsx
+│   ├── RoomsPage.tsx
+│   ├── RoomTypesPage.tsx
+│   ├── GuestsPage.tsx
+│   ├── ReservationsPage.tsx
+│   ├── NewReservationPage.tsx
+│   ├── CheckInPage.tsx
+│   └── CheckOutPage.tsx
 │
-├── frontend/                   # React TypeScript app
-│   ├── src/
-│   │   ├── pages/              # Page components
-│   │   ├── components/         # Reusable components
-│   │   ├── services/           # API client
-│   │   ├── stores/             # Zustand state management
-│   │   ├── App.tsx             # Main app with routes
-│   │   └── index.css           # Tailwind CSS
-│   ├── public/                 # Static assets
-│   └── vite.config.ts          # Vite configuration
+├── components/             - Shared components
+│   ├── layout/
+│   │   ├── Layout.tsx
+│   │   ├── Navbar.tsx
+│   │   └── Sidebar.tsx
+│   ├── common/
+│   │   ├── Button.tsx
+│   │   ├── Input.tsx
+│   │   ├── Select.tsx
+│   │   ├── Modal.tsx
+│   │   ├── Table.tsx
+│   │   └── Badge.tsx
+│   └── features/
+│       ├── AvailabilitySearch.tsx
+│       ├── GuestSelector.tsx
+│       ├── RoomAssignment.tsx
+│       └── PaymentForm.tsx
 │
-├── PRD.md                      # Product Requirements
-├── TASKS_BREAKDOWN.md          # Task list & timeline
-├── FUTURE_FEATURES.md          # Phase 2+ features
-└── PROJECT_OVERVIEW.md         # This file
+├── stores/                 - Zustand state
+│   ├── authStore.ts
+│   ├── roomStore.ts
+│   ├── guestStore.ts
+│   ├── reservationStore.ts
+│   └── dashboardStore.ts
+│
+├── services/               - API client
+│   └── api.ts
+│
+├── types/                  - TypeScript types
+│   └── index.ts
+│
+├── i18n/                   - Translations
+│   ├── en.json
+│   └── id.json
+│
+└── App.tsx                 - Main app
+```
+
+### State Management (Zustand)
+```typescript
+// authStore
+- user: User | null
+- token: string | null
+- login(username, password)
+- logout()
+
+// roomStore
+- rooms: Room[]
+- roomTypes: RoomType[]
+- fetchRooms()
+- fetchRoomTypes()
+
+// guestStore
+- guests: Guest[]
+- fetchGuests()
+- searchGuests(query)
+
+// reservationStore
+- reservations: Reservation[]
+- fetchReservations()
+- checkAvailability(checkIn, checkOut, roomTypeId)
+
+// dashboardStore
+- metrics: DashboardMetrics
+- fetchMetrics()
 ```
 
 ---
 
-## 📊 Implementation Timeline
+## Development Roadmap
 
-### Phase 1: Backend Setup (1-2 days)
-- Backend project structure
-- Database models and ORM
-- Database initialization
-- Authentication endpoints
+### Timeline: 10 Weeks
 
-### Phase 2-6: Core Features (2-3 weeks)
-- Room management (API + UI)
-- Tenant management (API + UI)
-- Payment tracking (API + UI)
-- Income & expenses (API + UI)
-- Dashboard with visualizations
+#### **Phase 1: Foundation (Week 1-2)**
+**Backend**:
+- [x] Project setup (FastAPI + SQLAlchemy)
+- [ ] Database models (all 6 tables)
+- [ ] Alembic migrations setup
+- [ ] Authentication (JWT + roles)
+- [ ] User CRUD endpoints
 
-### Phase 7: Frontend Infrastructure (3 days)
-- React/Vite setup
-- API client configuration
-- Authentication store
-- Login pages
-- Navigation & routing
-- Tailwind CSS setup
+**Frontend**:
+- [ ] Project setup (React + Vite + Tailwind)
+- [ ] Auth store and login page
+- [ ] Layout components (Navbar, Sidebar)
+- [ ] API client setup
+- [ ] Protected routes
 
-### Phase 8: Testing (2-3 days)
-- Backend unit tests
-- Frontend component tests
-- End-to-end testing
-- Bug fixes
-
-### Phase 9: Deployment (2-3 days)
-- Production setup
-- API documentation
-- User documentation
-- Deployment to hosting
-
-**Total: ~25-30 working days (3-4 weeks)**
+**Deliverable**: Login system working end-to-end
 
 ---
 
-## 🎬 Getting Started
+#### **Phase 2: Room Management (Week 3)**
+**Backend**:
+- [ ] Room type CRUD endpoints
+- [ ] Room CRUD endpoints
+- [ ] Room status management
+- [ ] Availability checking logic
 
-### For Project Review:
-1. **Start here**: Read PRD.md (understand the features)
-2. **Then**: Skim TASKS_BREAKDOWN.md (see implementation plan)
-3. **Finally**: Check FUTURE_FEATURES.md (understand Phase 2 roadmap)
+**Frontend**:
+- [ ] Room types page (admin only)
+- [ ] Rooms page with status view
+- [ ] Occupancy visualization
+- [ ] Room type/room forms
 
-### For Development:
-1. **Phase 1**: Backend setup (tasks 1.1-1.4)
-2. **Phase 2-6**: Implement each feature (rooms, tenants, payments, expenses, dashboard)
-3. **Phase 7**: Setup frontend infrastructure (React, routing, stores)
-4. **Phase 8**: Test everything
-5. **Phase 9**: Deploy to production
+**Deliverable**: Complete room inventory management
 
-### To Start Coding:
-```bash
-# Backend
-cd backend
-source venv/bin/activate
-python app.py
+---
 
-# Frontend (in another terminal)
-cd frontend
-npm install
-npm run dev
+#### **Phase 3: Guest Management (Week 3)**
+**Backend**:
+- [ ] Guest CRUD endpoints
+- [ ] Guest search functionality
+- [ ] Guest reservation history
+
+**Frontend**:
+- [ ] Guests list page
+- [ ] Guest search
+- [ ] Guest form (create/edit)
+- [ ] Guest detail view with history
+
+**Deliverable**: Guest database functional
+
+---
+
+#### **Phase 4: Reservation System (Week 4-5)**
+**Backend**:
+- [ ] Reservation CRUD endpoints
+- [ ] Availability search API
+- [ ] Conflict detection logic
+- [ ] Confirmation number generation
+- [ ] Extend stay endpoint
+
+**Frontend**:
+- [ ] Availability search component
+- [ ] New reservation page
+- [ ] Reservation list with filters
+- [ ] Reservation detail/edit
+- [ ] Extend stay modal
+
+**Deliverable**: Full reservation booking system
+
+---
+
+#### **Phase 5: Check-In/Out (Week 6)**
+**Backend**:
+- [ ] Check-in endpoint (update statuses)
+- [ ] Check-out endpoint (update statuses)
+- [ ] Arrivals/departures list endpoints
+- [ ] In-house guests endpoint
+
+**Frontend**:
+- [ ] Check-in page (today's arrivals)
+- [ ] Check-out page (today's departures)
+- [ ] Room assignment during check-in
+- [ ] Walk-in guest flow
+
+**Deliverable**: Front desk operations complete
+
+---
+
+#### **Phase 6: Payments (Week 7)**
+**Backend**:
+- [ ] Payment CRUD endpoints
+- [ ] Balance calculation logic
+- [ ] Payment history per reservation
+
+**Frontend**:
+- [ ] Payment recording form
+- [ ] Payment history display
+- [ ] Balance indicator
+- [ ] Payment during check-out
+
+**Deliverable**: Payment tracking functional
+
+---
+
+#### **Phase 7: Dashboard (Week 8)**
+**Backend**:
+- [ ] Metrics calculation endpoint
+- [ ] Summary data endpoint
+- [ ] Aggregation queries
+
+**Frontend**:
+- [ ] Dashboard metrics cards
+- [ ] Quick access links
+- [ ] Date range selector
+- [ ] Today's summary
+
+**Deliverable**: Operational dashboard complete
+
+---
+
+#### **Phase 8: Polish & Testing (Week 9)**
+- [ ] UI/UX refinement
+- [ ] Mobile responsiveness
+- [ ] Error handling
+- [ ] Loading states
+- [ ] Form validations
+- [ ] Role permissions enforcement
+- [ ] Integration testing
+
+**Deliverable**: Production-ready UI
+
+---
+
+#### **Phase 9: Deployment (Week 10)**
+- [ ] Database migration to PostgreSQL
+- [ ] Environment configuration
+- [ ] Backend deployment (Google Cloud Run)
+- [ ] Frontend deployment (Vercel)
+- [ ] User acceptance testing
+- [ ] Documentation
+- [ ] Training materials
+
+**Deliverable**: System live in production
+
+---
+
+## Key Business Logic
+
+### Availability Checking Algorithm
+```python
+def check_availability(check_in, check_out, room_type_id):
+    """
+    Room is available if:
+    1. Has the requested room type
+    2. NOT occupied during requested dates
+    3. NOT out_of_order
+
+    Overlap logic:
+    Conflict exists if:
+        check_in < existing.check_out AND
+        check_out > existing.check_in
+    """
+
+    # Get all rooms of requested type
+    rooms = Room.query.filter_by(
+        room_type_id=room_type_id,
+        status!='out_of_order'
+    ).all()
+
+    # For each room, check for conflicts
+    available_rooms = []
+    for room in rooms:
+        has_conflict = Reservation.query.filter(
+            Reservation.room_id == room.id,
+            Reservation.status.in_(['confirmed', 'checked_in']),
+            Reservation.check_in_date < check_out,
+            Reservation.check_out_date > check_in
+        ).first()
+
+        if not has_conflict:
+            available_rooms.append(room)
+
+    return available_rooms
+```
+
+### Check-In Process
+```python
+def check_in(reservation_id, room_id):
+    """
+    1. Verify reservation status is 'confirmed'
+    2. Assign room if not already assigned
+    3. Update reservation status to 'checked_in'
+    4. Update room status to 'occupied'
+    5. Record check-in timestamp
+    """
+    reservation = get_reservation(reservation_id)
+
+    if reservation.status != 'confirmed':
+        raise ValueError("Reservation must be confirmed")
+
+    if not reservation.room_id:
+        reservation.room_id = room_id
+
+    reservation.status = 'checked_in'
+    reservation.checked_in_at = datetime.now()
+
+    room = get_room(reservation.room_id)
+    room.status = 'occupied'
+
+    db.commit()
+```
+
+### Check-Out Process
+```python
+def check_out(reservation_id):
+    """
+    1. Verify reservation status is 'checked_in'
+    2. Update reservation status to 'checked_out'
+    3. Update room status to 'available'
+    4. Record check-out timestamp
+    """
+    reservation = get_reservation(reservation_id)
+
+    if reservation.status != 'checked_in':
+        raise ValueError("Reservation must be checked in")
+
+    reservation.status = 'checked_out'
+    reservation.checked_out_at = datetime.now()
+
+    room = get_room(reservation.room_id)
+    room.status = 'available'
+
+    db.commit()
 ```
 
 ---
 
-## 📈 Key Metrics & Goals
+## Migration from KOS System
 
-### Success Criteria (v1.0 Launch)
-- ✓ All 6 core features working
-- ✓ Zero critical bugs
-- ✓ Dashboard loads < 2 seconds
-- ✓ Mobile responsive
-- ✓ Data persists reliably
-- ✓ Full documentation
+### What We Keep
+✅ Backend structure (FastAPI + SQLAlchemy)
+✅ Frontend structure (React + Tailwind)
+✅ Authentication framework (upgrade to roles)
+✅ State management (Zustand)
+✅ i18n setup
 
-### Post-Launch Success (Phase 2+)
-- ✓ Report export functionality
-- ✓ 99%+ uptime
-- ✓ Multi-user support (future)
-- ✓ Payment gateway integration (future)
-- ✓ Mobile app (future)
+### What We Change
+🔄 Database schema (6 new tables)
+🔄 Room model (add room types)
+🔄 Replace tenants → guests + reservations
+🔄 Replace monthly payments → reservation payments
+🔄 Dashboard metrics (hotel-specific)
 
----
-
-## 💡 Key Features Summary
-
-### v1.0 (Current Build)
-
-#### Authentication
-- Admin user registration & login
-- JWT token-based sessions
-- Password hashing with bcrypt
-- Session persistence
-
-#### Room Management
-- Create, edit, delete rooms
-- Track room status (available, occupied, maintenance)
-- Visual occupancy grid
-- Occupancy percentage metrics
-
-#### Tenant Management
-- Create & edit tenant profiles
-- Assign tenants to rooms
-- Track move-in/move-out dates
-- Tenant status tracking
-
-#### Payment Tracking
-- Record monthly rent payments
-- Track payment status (pending, paid, overdue)
-- Automatic overdue detection
-- Payment history per tenant
-
-#### Income & Expenses
-- Record business expenses by category
-- Categorize expenses (utilities, maintenance, supplies, cleaning)
-- Calculate income from paid payments
-- Financial summary (net profit/loss)
-
-#### Dashboard & Reporting
-- Key metrics cards (occupancy, revenue, expenses, profit)
-- Room occupancy grid visualization
-- Payment status summary
-- Recent activity panel
-- Financial charts (revenue trend, expense breakdown, occupancy trend)
-- Date range filtering
-
-### Phase 2 (Future)
-
-#### Dashboard Report Export
-- Export financial reports as PDF, Excel, CSV
-- Select date range (month, quarter, year, custom)
-- Choose report sections
-- Professional formatting
-- Optional: Report scheduling, email delivery, export history
+### What We Remove
+❌ Tenant management
+❌ Monthly payment tracking
+❌ Expense tracking
+❌ Room history
 
 ---
 
-## 🔧 Technology Decisions
+## Success Criteria
 
-### Why Flask?
-- Lightweight and easy to understand
-- Perfect for REST APIs
-- SQLAlchemy ORM is excellent
-- Easy deployment options
+### Technical
+- [ ] Zero double-bookings (100% accuracy)
+- [ ] All API endpoints functional
+- [ ] All user roles enforced
+- [ ] Dashboard loads < 3 seconds
+- [ ] Mobile responsive
 
-### Why React?
-- Modern, component-based UI
-- Large ecosystem and community
-- TypeScript for type safety
-- Easy to build responsive interfaces
-
-### Why Tailwind CSS?
-- Fast development with utility classes
-- Professional-looking UI out of the box
-- Responsive design built-in
-- Customizable design system
-
-### Why SQLite (initially)?
-- Zero configuration, file-based
-- Perfect for development and small deployments
-- Easy to migrate to PostgreSQL later
-- Built-in with Python
-
-### Why JWT?
-- Stateless authentication
-- Works well with REST APIs
-- Mobile-friendly (no sessions needed)
-- Industry standard
+### Business
+- [ ] Check-in process < 3 minutes
+- [ ] Reservation creation < 2 minutes
+- [ ] User training < 1 hour
+- [ ] 99% uptime
+- [ ] Zero data loss
 
 ---
 
-## 🚀 Next Steps
+## Next Steps
 
-### Immediate (Today)
-- [ ] Review all documentation
-- [ ] Clarify any requirements with product owner
-- [ ] Confirm tech stack choices
-- [ ] Set up development environment
-
-### Week 1
-- [ ] Complete Phase 1 (backend setup)
-- [ ] Complete Phase 7.1-7.2 (frontend infrastructure)
-- [ ] Set up git workflow and commit process
-
-### Week 2
-- [ ] Complete Phases 2-3 (room & tenant management)
-- [ ] Complete Phase 7.3-7.5 (auth, login, routing)
-
-### Week 3
-- [ ] Complete Phases 4-5 (payments & expenses)
-- [ ] Start Phase 6 (dashboard)
-
-### Week 4
-- [ ] Complete Phase 6 (dashboard)
-- [ ] Complete Phases 8-9 (testing & deployment)
+1. ✅ PRD approved
+2. ✅ Project overview complete
+3. ⏳ Start Phase 1: Backend setup
+4. ⏳ Create initial database models
+5. ⏳ Setup authentication system
 
 ---
 
-## 📝 Documentation Quality
+**Document Status**: ✅ Ready for Development
 
-| Document | Status | Quality | Details |
-|----------|--------|---------|---------|
-| PRD.md | ✅ Complete | Professional | 12 sections, 630 lines, comprehensive |
-| TASKS_BREAKDOWN.md | ✅ Complete | Detailed | 38 tasks, effort estimates, step-by-step |
-| FUTURE_FEATURES.md | ✅ Complete | Detailed | Phase 2 features, UI mockups, effort estimates |
-| API_DOCS.md | ⏳ To-do | N/A | Will be created after implementation |
-| USER_GUIDE.md | ⏳ To-do | N/A | Will be created during Phase 9 |
+**Start Here**: Phase 1 - Week 1 (Backend Setup)
 
 ---
 
-## ❓ FAQ
-
-### Q: How long will this take?
-**A**: ~25-30 working days (~3-4 weeks) at 4 hours/day for v1.0. Phase 2 features add another 6 days.
-
-### Q: Can I start coding now?
-**A**: Yes! Start with Task 1.1 in TASKS_BREAKDOWN.md. Backend setup is first.
-
-### Q: What if requirements change?
-**A**: Update the PRD and TASKS_BREAKDOWN documents, then adjust implementation accordingly.
-
-### Q: Will this scale to multiple properties?
-**A**: v1.0 is designed for single property. Multi-property support is Phase 3 feature.
-
-### Q: Is mobile support included?
-**A**: v1.0 is responsive web. Full mobile app is Phase 3 feature.
-
-### Q: Can users share reports?
-**A**: Not in v1.0, but Phase 2 adds report export (PDF, Excel, CSV).
-
-### Q: How do we handle payments online?
-**A**: v1.0 is manual entry only. Payment gateway integration is Phase 3.
-
----
-
-## 📞 Support & Questions
-
-For questions about:
-- **Features**: See PRD.md section 4 (Core Features)
-- **Implementation**: See TASKS_BREAKDOWN.md for specific task details
-- **Future features**: See FUTURE_FEATURES.md
-- **Technical architecture**: See PRD.md section 6
-
----
-
-## 📄 Document Version Control
-
-| Version | Date | Changes |
-|---------|------|---------|
-| 1.0 | 2025-10-24 | Initial creation of all documentation |
-
----
-
-## 🎓 How to Use These Documents
-
-### For Stakeholders/PMs:
-1. Read **PRD.md** - understand what's being built
-2. Share **PROJECT_OVERVIEW.md** - quick reference
-3. Check **FUTURE_FEATURES.md** - for Phase 2 planning
-
-### For Developers:
-1. Read **TASKS_BREAKDOWN.md** - understand what to build
-2. Reference **PRD.md** - for feature details
-3. Check acceptance criteria - for "done" definitions
-4. Follow steps - for implementation guidance
-
-### For QA/Testing:
-1. Review **PRD.md** section 12 - acceptance testing checklist
-2. Review **TASKS_BREAKDOWN.md** - acceptance criteria per task
-3. Use **FUTURE_FEATURES.md** - for Phase 2 test planning
-
----
-
-**Project is ready for implementation!** 🚀
-
-Start with **Phase 1** by reading the first few tasks in **TASKS_BREAKDOWN.md**.
-
+**Last Updated**: November 7, 2025
+**Version**: 1.0 (MVP)

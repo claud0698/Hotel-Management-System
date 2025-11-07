@@ -1,562 +1,705 @@
 # Product Requirements Document (PRD)
-## Kos Management Dashboard
+## Hotel Management System - MVP v1.0
 
-**Version**: 1.0
-**Last Updated**: October 24, 2025
-**Status**: In Development
+**Version**: 1.0 (MVP)
+**Last Updated**: November 7, 2025
+**Status**: Planning Phase
+**Previous System**: KOS Management Dashboard
 
 ---
 
 ## 1. Executive Summary
 
-The **Kos Management Dashboard** is a web-based application designed to help property managers and owners of shared room rental properties (Kos, Boarding Houses, Co-living spaces) in Indonesia streamline their operations. The system will enable managers to efficiently track tenants, rooms, payments, and finances through an intuitive dashboard.
+The **Hotel Management System (HMS)** is a web-based property management solution designed for small to mid-size hotels. Version 1.0 focuses on core operational features needed to manage daily hotel operations efficiently.
 
 ### Business Problem
-Property managers currently face challenges in:
-- Tracking which rooms are occupied and which are available
-- Managing tenant information and payment history
-- Identifying overdue payments quickly
-- Monitoring income and expenses manually
-- Generating financial reports
+Hotel operators currently struggle with:
+- Managing room inventory and availability manually
+- Tracking reservations and preventing double-bookings
+- Coordinating guest check-in/check-out processes
+- Recording guest information and payment details
+- Generating basic operational reports
 
-### Solution Overview
-A centralized digital platform that provides:
-- Real-time room occupancy status visualization
-- Tenant management with complete profiles
-- Payment tracking with automatic overdue alerts
-- Income and expense monitoring
-- Financial reporting and analytics
+### Solution Overview - MVP v1.0
+A streamlined hotel operations platform that provides:
+- Room inventory management with room types
+- Reservation booking with availability checking
+- Guest profile management
+- Check-in/check-out operations
+- Simple payment recording
+- Basic operational dashboard
+- Two-tier user access (Admin + User roles)
+
+### What's NOT in v1.0 (Deferred to v2.0)
+- Advanced housekeeping module
+- Maintenance tracking
+- Complex rate management (yield management, seasonal pricing)
+- Invoice generation and accounting
+- Email/SMS notifications
+- Online booking engine
+- Reporting exports (PDF/Excel)
+- Multi-property support
 
 ---
 
 ## 2. Product Vision & Goals
 
 ### Vision Statement
-"Make it simple for property managers to manage their room rental business with confidence and clarity."
+"Enable hotel operators to efficiently manage reservations, guests, and rooms through a simple, reliable system."
 
-### Business Goals
-1. **Operational Efficiency**: Reduce time spent on administrative tasks by 70%
-2. **Payment Tracking**: Achieve 95% on-time payment collection through better tracking
-3. **Financial Visibility**: Provide clear monthly and yearly profit/loss visibility
-4. **Data Centralization**: Keep all business data in one secure, accessible location
+### Business Goals (v1.0)
+1. **Eliminate Double-Bookings**: 100% accuracy in room availability
+2. **Streamline Check-In/Out**: Reduce process time by 70%
+3. **Centralize Guest Data**: Single source of truth for guest information
+4. **Operational Visibility**: Real-time view of occupancy and reservations
 
 ### Success Metrics
-- User can view occupancy status in < 2 seconds
-- User can record a payment in < 1 minute
-- System uptime: 99.5%
-- All data persists reliably with automatic backups
-- Payment records are 100% accurate
+- Reservation creation in < 2 minutes
+- Check-in/check-out in < 3 minutes
+- Zero double-booking incidents
+- System uptime: 99%
+- Dashboard loads in < 3 seconds
 
 ---
 
 ## 3. Target Users
 
-### Primary User
-- **Property Owner/Manager** of a small to medium-sized Kos/Boarding House
-- Age: 25-60 years old
-- Tech-savviness: Basic to Intermediate
-- Frequency of use: Daily
-- Main pain point: Time-consuming manual management of tenants and finances
+### Primary Users
 
-### User Characteristics
-- May not have formal IT training
-- Prefers simple, intuitive interfaces
-- Primarily uses desktop/laptop for management
-- Needs mobile accessibility for quick lookups
-- Wants reliable data backup
+#### 1. Admin User
+- **Full system access**
+- **Responsibilities**:
+  - Manage all reservations and guests
+  - Configure room inventory
+  - View dashboard and reports
+  - Manage user accounts
+  - Edit and delete all data
+  - Record payments
 
-### Secondary Users
-- Accountant/Financial Administrator (view-only access for reporting)
-- Family members helping with management (limited access)
-- Note: v1.0 will only support single admin user
+#### 2. User (Staff)
+- **Limited access**
+- **Responsibilities**:
+  - Create and view reservations
+  - Check-in/check-out guests
+  - View guest information
+  - Record check-ins
+  - **Cannot delete** reservations or data
+  - View dashboard (read-only)
+
+### User Role Matrix (v1.0)
+| Feature | Admin | User |
+|---------|-------|------|
+| Dashboard | Full access | Read-only |
+| Reservations | CRUD | Create, Read, Update (no delete) |
+| Check-in/Check-out | Full | Full |
+| Guests | CRUD | Create, Read, Update |
+| Rooms/Room Types | CRUD | Read-only |
+| Payments | CRUD | Create, Read |
+| Users | CRUD | Cannot access |
 
 ---
 
-## 4. Core Features & Requirements
+## 4. Core Features (v1.0 MVP)
 
 ### 4.1 Authentication & User Management
 
-#### Feature: Admin Login
-- **Description**: Secure login system for property manager
-- **Acceptance Criteria**:
-  - User can register new account with username, email, password
-  - User can login with username/password
-  - Session persists for 30 days (auto-logout after inactivity)
-  - Password is hashed and never stored in plain text
-  - User can view their profile
-  - Invalid login attempts show clear error messages
+#### Feature: Two-Tier Authentication
+- **Description**: Simple role-based access with Admin and User roles
 
-#### Feature: Password Management (Future)
-- **Note**: Not in v1.0 - manual password reset only
+**User Roles**:
+- `admin`: Full system access, can edit/delete everything, manage users
+- `user`: Limited access, can create/update but not delete, no user management
 
----
+**Acceptance Criteria**:
+- Users login with username/password
+- JWT token authentication
+- Session persists for 24 hours
+- Password hashed with bcrypt
+- Role determines menu visibility and permissions
+- Logout clears session
 
-### 4.2 Room Management
-
-#### Feature: Room CRUD Operations
-- **Description**: Create, view, edit, and delete room listings
-- **Acceptance Criteria**:
-  - User can add new room with: room number, floor, type, monthly rate, amenities
-  - User can edit all room details
-  - User can delete a room (warning if occupied)
-  - Room numbers are unique across property
-  - Monthly rate is displayed in IDR currency
-
-#### Feature: Room Status Tracking
-- **Description**: Track current status of each room
-- **Status Types**:
-  - `available`: Room is empty and ready for occupancy
-  - `occupied`: Room has an active tenant
-  - `maintenance`: Room is being repaired/cleaned
-- **Acceptance Criteria**:
-  - Status updates automatically when tenant moves in/out
-  - User can manually change status if needed
-  - Current status is always visible in room list
-
-#### Feature: Room Occupancy Grid Visualization
-- **Description**: Visual display of all rooms with color-coded status
-- **Acceptance Criteria**:
-  - Grid shows all rooms at a glance
-  - Color coding: Green (available), Blue (occupied), Yellow (maintenance)
-  - Clicking room shows full details
-  - Room numbers are clearly visible
-  - Grid is responsive on all screen sizes
-  - Display occupancy percentage
-
-#### Feature: Room History
-- **Description**: Track which tenants lived in each room and when
-- **Acceptance Criteria**:
-  - View complete history for each room
-  - Shows move-in and move-out dates
-  - Accessible from room detail view
+#### Feature: User Management (Admin Only)
+**Acceptance Criteria**:
+- Admin can create user accounts
+- Admin assigns role (admin or user)
+- Admin can activate/deactivate users
+- Users cannot access user management
+- **Cannot delete own account while logged in** (security: prevents accidental lockout)
 
 ---
 
-### 4.3 Tenant Management
+### 4.2 Room Inventory Management
 
-#### Feature: Tenant Profile Creation
-- **Description**: Create and maintain tenant information
-- **Data Collected**:
-  - Full name (required)
-  - Phone number
-  - Email address
-  - ID number (KTP, passport, etc.)
-  - Move-in date
-  - Status (active, inactive, moved out)
-  - Additional notes
-- **Acceptance Criteria**:
-  - All tenant information is saved and retrievable
-  - Tenant can be assigned to a room
-  - Multiple tenants cannot be assigned to same room simultaneously
-  - Tenant status reflects whether they're active or not
+#### Feature: Room Type Management
+**Description**: Define categories of rooms (Standard, Deluxe, Suite, etc.)
 
-#### Feature: Tenant List View
-- **Description**: View all tenants with search and filter options
-- **Acceptance Criteria**:
-  - List shows all tenants with key information
-  - Search by name
-  - Filter by status (active, inactive, moved out)
-  - Filter by room
-  - Sort by name or move-in date
-  - Quick actions: view profile, mark for payment, edit, delete
+**Room Type Attributes**:
+- Name (e.g., "Standard Double")
+- Code (e.g., "STD")
+- Base capacity (adults + children)
+- Bed configuration (e.g., "1 King" or "2 Queens")
+- Default daily rate
+- Amenities (text field)
 
-#### Feature: Tenant-Room Assignment
-- **Description**: Assign and reassign tenants to rooms
-- **Acceptance Criteria**:
-  - Assign tenant to room with move-in date
-  - Cannot assign multiple tenants to same room
-  - Changing tenant room updates both room and tenant records
-  - Moving tenant out marks room as available
-  - Previous occupancy is recorded in room history
-  - Tenant status updates when room assignment changes
+**Acceptance Criteria**:
+- Admin can create/edit/delete room types
+- Room types display in room management
+- Default rate pre-fills when creating reservations
+- Cannot delete room type if rooms exist with that type
 
-#### Feature: Tenant Deletion
-- **Description**: Remove tenant from system
-- **Acceptance Criteria**:
-  - Cannot delete tenant with unpaid balances (future phase)
-  - Shows warning if tenant has payment records
-  - Confirms deletion action
+#### Feature: Room Management
+**Description**: Individual room inventory
+
+**Room Attributes**:
+- Room number (unique, required)
+- Floor number
+- Room type (FK to room types)
+- Status (available, occupied, out_of_order)
+- View type (city, garden, ocean, etc.) - optional
+- Notes (optional)
+
+**Acceptance Criteria**:
+- Admin can create/edit/delete rooms
+- Room number must be unique
+- Status updates automatically on check-in/check-out
+- Can manually change status to out_of_order
+- **Cannot delete room if it has active/confirmed reservations** (prevents data integrity issues)
+- Bulk room creation (optional: create multiple rooms at once)
+
+#### Feature: Room Availability View
+**Acceptance Criteria**:
+- Display all rooms with current status
+- Color-coded: Green (available), Blue (occupied), Red (out of order)
+- Filter by floor, room type, status
+- Click room to view details
+- Show occupancy percentage
 
 ---
 
-### 4.4 Payment Tracking
+### 4.3 Guest Management
+
+#### Feature: Guest Profile System
+**Description**: Maintain guest database
+
+**Guest Data**:
+- Full name (required)
+- Email
+- Phone number
+- ID document type (Passport, Driver's License, etc.)
+- ID document number
+- Nationality
+- Notes (special requests, preferences)
+
+**Acceptance Criteria**:
+- Create guest profile during reservation or separately
+- Search guests by name, email, or phone
+- View guest reservation history
+- Edit guest information
+- Merge duplicate guests (admin only)
+- **Cannot delete guest with active/confirmed reservations** (prevents data integrity issues)
+
+---
+
+### 4.4 Reservation Management
+
+#### Feature: Reservation Creation
+**Description**: Book rooms with availability checking
+
+**Reservation Data**:
+- Guest (FK to guests table)
+- Check-in date (arrival)
+- Check-out date (departure)
+- Room type requested
+- Room number (assigned now or later)
+- Number of adults
+- Number of children
+- Rate per night
+- Total amount (auto-calculated: nights × rate)
+- Special requests
+- Status (confirmed, checked_in, checked_out, cancelled)
+- Booking source (walk-in, phone, email, other)
+- Created by (user who made reservation)
+
+**Acceptance Criteria**:
+- Search available rooms by date range and room type
+- System prevents double-booking (conflict detection)
+- Auto-calculate total based on nights and rate
+- Can create reservation without assigning specific room
+- Can assign specific room during creation or later
+- Generate unique confirmation number
+- Special requests field for guest notes
+
+#### Feature: Availability Checking
+**Description**: Real-time room availability
+
+**Logic**:
+- Room is available if NOT occupied during requested dates
+- Check overlapping reservations:
+  - NOT (check-in < existing.check-out AND check-out > existing.check-in)
+- Exclude cancelled reservations
+- Exclude checked-out reservations
+- Include out_of_order rooms in unavailable count
+
+**Acceptance Criteria**:
+- Availability search by date range
+- Show available rooms by type
+- Display total available vs total rooms
+- Real-time updates after booking
+- Visual calendar view (optional for v1.0)
+
+#### Feature: Reservation Management
+**Acceptance Criteria**:
+- View all reservations (list and calendar views)
+- Filter by status, date range, room type
+- **Search by guest name or confirmation number** (critical for front desk operations)
+- Edit reservation details (dates, room, rate)
+- Cancel reservation (changes status, frees room)
+- Extend stay (update check-out date, recalculate total)
+- View upcoming arrivals (check-ins today/tomorrow)
+- View upcoming departures (check-outs today/tomorrow)
+
+#### Feature: Conflict Detection
+**Acceptance Criteria**:
+- Prevent double-booking same room for overlapping dates
+- Show warning if trying to book unavailable room
+- Suggest alternative rooms if conflict exists
+- Admin can override (with warning confirmation)
+
+---
+
+### 4.5 Front Desk Operations
+
+#### Feature: Check-In Process
+**Description**: Guest arrival and room assignment
+
+**Check-In Steps**:
+1. Search reservation (by confirmation number or guest name)
+2. Verify guest details
+3. Assign room (if not already assigned)
+4. Confirm payment method
+5. Update status to "checked_in"
+6. Update room status to "occupied"
+
+**Acceptance Criteria**:
+- Today's arrivals list (reservations with check-in = today)
+- Search reservation by confirmation or guest
+- Assign room from available rooms
+- Cannot check-in without room assignment
+- Room status auto-updates to occupied
+- Reservation status changes to checked_in
+- Record check-in time (timestamp)
+- Walk-in guests: staff manually creates new reservation with today's dates, then immediately checks in using normal check-in flow (no special walk-in workflow needed)
+
+#### Feature: Check-Out Process
+**Description**: Guest departure
+
+**Check-Out Steps**:
+1. Find reservation (by room number or guest name)
+2. Review charges (simple payment list)
+3. Record final payment
+4. Update status to "checked_out"
+5. Update room status to "available"
+
+**Acceptance Criteria**:
+- Today's departures list (reservations with check-out = today)
+- Search by room number or guest name
+- View total charges and payments
+- Record checkout payment
+- Room status auto-updates to available
+- Reservation status changes to checked_out
+- Record check-out time (timestamp)
+- Late checkout handling (manual date extension)
+
+#### Feature: In-House Guests
+**Acceptance Criteria**:
+- List currently checked-in guests
+- Show room number, guest name, check-out date
+- Filter/sort by room, name, or checkout date
+- Quick access to extend stay
+- Quick access to early checkout
+
+---
+
+### 4.6 Billing & Payments (Simple)
 
 #### Feature: Payment Recording
-- **Description**: Record monthly rent payments from tenants
-- **Payment Fields**:
-  - Tenant (who paid)
-  - Amount
-  - Due date
-  - Paid date (when actually paid)
-  - Status (pending, paid, overdue)
-  - Payment method (cash, transfer, check, etc.)
-  - Receipt number (optional)
-  - Notes (optional)
-- **Acceptance Criteria**:
-  - User can record new payment
-  - Payment amount defaults to room's monthly rate
-  - User can mark existing pending payment as paid
-  - Paid date automatically set to current date when marking paid
-  - All payment details are editable until confirmed
+**Description**: Simple payment tracking per reservation
 
-#### Feature: Payment Status Management
-- **Description**: Automated status calculation for payments
-- **Status Logic**:
-  - `pending`: Not yet paid, due date not passed
-  - `overdue`: Not yet paid, due date has passed
-  - `paid`: Successfully paid
-- **Acceptance Criteria**:
-  - Status calculated automatically based on current date
-  - Overdue status triggers visual alert
-  - Easy to mark overdue payments as paid
+**Payment Data**:
+- Reservation (FK)
+- Payment date
+- Amount
+- Payment method (Cash, Credit Card, Debit Card, Bank Transfer, Other)
+- Reference number (optional, for card/transfer)
+- Notes
 
-#### Feature: Payment History Per Tenant
-- **Description**: View complete payment history for each tenant
-- **Acceptance Criteria**:
-  - List all payments (paid and pending) for tenant
-  - Show payment status progression
-  - Display payment dates and amounts
-  - Accessible from tenant profile
+**Acceptance Criteria**:
+- Record payments against reservations
+- View payment history per reservation
+- Calculate total paid vs total amount due
+- Show balance (total amount - total paid)
+- Multiple payments per reservation allowed
+- Cannot delete payments (admin can void/edit)
 
-#### Feature: Payment List with Filters
-- **Description**: View all payments with filtering options
-- **Acceptance Criteria**:
-  - View all payments across all tenants
-  - Filter by status (pending, paid, overdue)
-  - Filter by tenant
-  - Filter by date range
-  - Sort by due date or paid date
-  - See total amounts for pending and overdue
+#### Feature: Simple Balance Tracking
+**Acceptance Criteria**:
+- Show reservation total amount
+- Show total payments received
+- Calculate and display balance
+- Color-code: Green (fully paid), Yellow (partial), Red (unpaid)
+- Dashboard shows total outstanding balances
 
-#### Feature: Overdue Alert System
-- **Description**: Highlight tenants with overdue payments
-- **Acceptance Criteria**:
-  - Dashboard shows count of overdue payments
-  - Overdue list shows tenant and amount owed
-  - Overdue items highlighted in red/orange
-  - Quick action to mark as paid from overdue list
+**Note**: No invoicing, no itemized charges, no tax calculations in v1.0. Just track room rate and payments.
 
 ---
 
-### 4.5 Income & Expense Tracking
+### 4.7 Dashboard & Reporting (Basic)
 
-#### Feature: Expense Recording
-- **Description**: Log business expenses
-- **Expense Fields**:
-  - Date
-  - Category (utilities, maintenance, supplies, cleaning, other)
-  - Amount
-  - Description
-  - Receipt attachment (optional)
-- **Acceptance Criteria**:
-  - User can add new expense
-  - All expense categories predefined but customizable
-  - Expense date can be any date (not just today)
-  - Expenses are editable and deletable
-  - Amount stored in IDR
+#### Feature: Operations Dashboard
+**Description**: Real-time operational metrics
 
-#### Feature: Expense Categories
-- **Description**: Organize expenses by type
-- **Default Categories**:
-  - `utilities`: Electricity, water, internet
-  - `maintenance`: Repairs, cleaning, upkeep
-  - `supplies`: Office, household supplies
-  - `cleaning`: Cleaning services
-  - `other`: Miscellaneous
+**Dashboard Sections**:
 
-#### Feature: Income Calculation
-- **Description**: Automatically calculate business income
-- **Logic**:
-  - Income = Sum of all paid payments in period
-  - Counts only successfully paid rent
-  - Excludes partial payments initially
-- **Acceptance Criteria**:
-  - Total income accurately reflects paid payments
-  - Income can be filtered by date range
-  - Income shows as IDR currency
+1. **Today's Summary**
+   - Arrivals today (count)
+   - Departures today (count)
+   - In-house guests (count)
+   - Available rooms (count)
 
-#### Feature: Financial Summary
-- **Description**: View income vs expenses comparison
-- **Shows**:
-  - Total income for period
-  - Total expenses for period
-  - Net profit (income - expenses)
-  - Breakdown of expenses by category
-  - Occupancy-based analysis
-- **Acceptance Criteria**:
-  - Accurate calculations
-  - Monthly and yearly summaries available
-  - Date range filtering works correctly
-  - All values in IDR currency
+2. **Occupancy Metrics**
+   - Current occupancy rate (%)
+   - Occupied rooms / Total rooms
+   - Rooms by status (available, occupied, out of order)
 
----
+3. **Revenue Summary (Simple)**
+   - Total revenue this month
+   - Total payments received this month
+   - Outstanding balance
 
-### 4.6 Dashboard & Reporting
+4. **Upcoming**
+   - Next 7 days arrivals (count by day)
+   - Next 7 days departures (count by day)
 
-#### Feature: Dashboard Overview
-- **Description**: Landing page showing key business metrics
-- **Dashboard Sections**:
+5. **Quick Access**
+   - Today's arrivals list (clickable)
+   - Today's departures list (clickable)
+   - In-house guests list (clickable)
 
-##### 4.6.1 Key Metrics Cards
-- **Occupancy Rate**: percentage of occupied rooms
-  - Shows: "8/10 rooms occupied (80%)"
-  - Color changes based on occupancy (red <50%, yellow 50-80%, green >80%)
-- **Monthly Revenue**: income for current month
-  - Shows: Total paid rent in IDR
-  - Link to payment details
-- **Monthly Expenses**: expenses for current month
-  - Shows: Total expenses in IDR by category breakdown
-  - Link to expense details
-- **Net Profit**: Monthly revenue - expenses
-  - Shows: IDR amount
-  - Color: Green if positive, Red if negative
+**Acceptance Criteria**:
+- Dashboard loads in < 3 seconds
+- Real-time data (no caching for v1.0)
+- Date range selector (This Month, Last Month, Custom)
+- Click metrics to view detailed lists
+- Responsive design for tablets
 
-##### 4.6.2 Room Status Summary
-- Available rooms count
-- Occupied rooms count
-- Maintenance rooms count
-- Visual occupancy grid
-
-##### 4.6.3 Payment Status Alert
-- Count of pending payments
-- Count of overdue payments
-- Total overdue amount
-- Quick link to overdue list
-
-##### 4.6.4 Recent Activity
-- Latest 5 payments recorded
-- Latest 5 expenses recorded
-- Recent tenant sign-ups
-
-#### Feature: Financial Reports
-- **Description**: Detailed financial analysis
-- **Report Types**:
-  - Monthly income/expense summary
-  - Yearly profit/loss statement
-  - Expense breakdown by category (pie chart)
-  - Income trend (line chart showing monthly revenue)
-  - Room occupancy trend over time
-
-#### Feature: Date Range Filtering
-- **Description**: View metrics for custom time periods
-- **Options**:
-  - Current month (default)
-  - Last 3 months
-  - Last 6 months
-  - Last 12 months
-  - Custom date range
-
-#### Feature: Data Export
-- **Description**: Export data for accounting/analysis
-- **Export Formats**:
-  - CSV (payments, expenses, tenants)
-  - PDF (financial report)
-- **Acceptance Criteria**:
-  - Exports include all selected data
-  - File naming includes date
-  - Exports are downloadable
+**Note**: No charts, no exports, no advanced analytics in v1.0.
 
 ---
 
 ## 5. Non-Functional Requirements
 
 ### 5.1 Performance
-- Dashboard loads in < 2 seconds
-- API responses within 200ms for normal queries
-- Support up to 100 rooms and 200 tenants initially
-- Smooth UI interactions without lag
+- Dashboard loads in < 3 seconds
+- Reservation search returns in < 1 second
+- API responses < 500ms
+- Support up to 200 rooms
+- Support up to 50 concurrent users
 
 ### 5.2 Security
-- All passwords hashed with bcrypt
-- JWT tokens for session management
-- HTTPS encryption in production
-- Data validation on all inputs (prevent SQL injection)
-- No sensitive data in logs
-- Regular data backups
+- JWT token authentication
+- Password hashing (bcrypt, cost 12)
+- Role-based access control (admin/user)
+- HTTPS in production
+- SQL injection prevention (parameterized queries)
+- XSS protection (React auto-escaping)
 
 ### 5.3 Reliability
-- 99.5% uptime target
-- Automatic daily backups
-- Data recovery procedures documented
-- No loss of data from system crashes
+- 99% uptime target
+- Daily automated backups
+- Data validation on all inputs
+- Graceful error handling
 
 ### 5.4 Usability
-- Intuitive interface requiring minimal training
-- Clear error messages
+- Intuitive interface (< 1 hour training)
 - Mobile-responsive design
-- Keyboard navigation support
-- Loading states for all async operations
+- Clear error messages
+- Loading indicators for all async operations
+- Multi-language support (English, Indonesian)
 
 ### 5.5 Maintainability
-- Clean, well-documented code
+- Clean, documented code
 - Modular architecture
-- Easy database migrations
-- Clear API documentation
-
-### 5.6 Scalability (Future)
-- Database designed to support multiple properties
-- API can handle 1000+ concurrent users
-- Can migrate to managed database (PostgreSQL)
+- API documentation (Swagger/OpenAPI)
+- Database migration support (Alembic)
 
 ---
 
 ## 6. Technical Architecture
 
 ### 6.1 Technology Stack
-- **Backend**: Python Flask with SQLAlchemy ORM
-- **Frontend**: React with TypeScript and Tailwind CSS
-- **Database**: SQLite (development) → PostgreSQL (production)
-- **Authentication**: JWT tokens
-- **API**: RESTful API with JSON
-- **Hosting**: Cloud-based (TBD - could be Vercel, Heroku, or self-hosted)
 
-### 6.2 Database Schema Overview
+**Backend**:
+- FastAPI (Python 3.11+)
+- SQLAlchemy 2.x ORM
+- PostgreSQL (production) / SQLite (development)
+- PyJWT for authentication
+- Pydantic for validation
+- Alembic for migrations
+
+**Frontend**:
+- React 19 + TypeScript
+- Vite (build tool)
+- Tailwind CSS
+- Zustand (state management)
+- React Router v7
+- Axios (HTTP client)
+- react-i18next (internationalization)
+
+**Infrastructure**:
+- Frontend: Vercel
+- Backend: Google Cloud Run
+- Database: Google Cloud SQL (PostgreSQL)
+- Monitoring: Sentry
+
+### 6.2 Database Schema (v1.0)
+
+#### users
+```sql
+id (PK), username (unique), password_hash, email, full_name,
+role (admin/user), status (active/inactive),
+created_at, updated_at
 ```
-Users
-├── id, username, password_hash, email
 
-Rooms
-├── id, room_number, floor, room_type
-├── monthly_rate, status, amenities
-
-Tenants
-├── id, name, phone, email, id_number
-├── move_in_date, move_out_date, current_room_id, status
-
-Payments
-├── id, tenant_id, amount, due_date, paid_date
-├── status, payment_method, receipt_number
-
-Expenses
-├── id, date, category, amount, description
-
-RoomHistory
-├── id, room_id, tenant_id, move_in_date, move_out_date
+#### room_types
+```sql
+id (PK), name, code (unique), base_capacity_adults,
+base_capacity_children, bed_config, default_rate, amenities,
+created_at, updated_at
 ```
 
-### 6.3 API Endpoints
-- `POST /api/auth/register` - Create admin account
-- `POST /api/auth/login` - Login
-- `GET /api/auth/me` - Current user info
-- `GET/POST/PUT/DELETE /api/rooms` - Room management
-- `GET/POST/PUT/DELETE /api/tenants` - Tenant management
-- `GET/POST/PUT/DELETE /api/payments` - Payment management
-- `GET/POST/PUT/DELETE /api/expenses` - Expense management
-- `GET /api/dashboard/metrics` - Dashboard metrics
-- `GET /api/dashboard/summary` - Dashboard summary data
+#### rooms
+```sql
+id (PK), room_number (unique), floor, room_type_id (FK),
+status (available/occupied/out_of_order), view_type, notes,
+created_at, updated_at
+```
+
+#### guests
+```sql
+id (PK), full_name, email, phone, id_type, id_number,
+nationality, notes,
+created_at, updated_at
+```
+
+#### reservations
+```sql
+id (PK), confirmation_number (unique), guest_id (FK),
+check_in_date, check_out_date, room_type_id (FK), room_id (FK, nullable),
+adults, children, rate_per_night, total_amount,
+special_requests, status (confirmed/checked_in/checked_out/cancelled),
+booking_source, created_by (FK to users),
+checked_in_at, checked_out_at,
+created_at, updated_at
+```
+
+#### payments
+```sql
+id (PK), reservation_id (FK), payment_date, amount,
+payment_method, reference_number, notes,
+created_at, updated_at
+```
+
+**Indexes**:
+- reservations: (check_in_date, check_out_date), (status), (guest_id), (room_id)
+- rooms: (status), (room_type_id), (room_number)
+- guests: (email), (phone), (full_name)
+- users: (username)
+
+### 6.3 API Endpoints (v1.0)
+
+**Base URL**: `/api/v1`
+
+**Authentication**
+- POST /auth/login
+- POST /auth/logout
+- GET /auth/me
+
+**Users** (Admin only)
+- GET /users
+- GET /users/{id}
+- POST /users
+- PUT /users/{id}
+- PUT /users/{id}/status (activate/deactivate)
+
+**Room Types**
+- GET /room-types
+- GET /room-types/{id}
+- POST /room-types (admin only)
+- PUT /room-types/{id} (admin only)
+- DELETE /room-types/{id} (admin only)
+
+**Rooms**
+- GET /rooms
+- GET /rooms/{id}
+- POST /rooms (admin only)
+- PUT /rooms/{id} (admin only)
+- DELETE /rooms/{id} (admin only)
+- PUT /rooms/{id}/status
+- GET /rooms/availability?check_in=date&check_out=date&room_type_id=id
+
+**Guests**
+- GET /guests
+- GET /guests/{id}
+- POST /guests
+- PUT /guests/{id}
+- GET /guests/{id}/reservations
+
+**Reservations**
+- GET /reservations
+- GET /reservations/{id}
+- POST /reservations
+- PUT /reservations/{id}
+- DELETE /reservations/{id} (admin only - soft delete/cancel)
+- POST /reservations/{id}/check-in
+- POST /reservations/{id}/check-out
+- PUT /reservations/{id}/extend
+- GET /reservations/arrivals?date=today
+- GET /reservations/departures?date=today
+- GET /reservations/in-house
+
+**Payments**
+- GET /payments?reservation_id={id}
+- GET /payments/{id}
+- POST /payments
+- PUT /payments/{id} (admin only)
+- DELETE /payments/{id} (admin only)
+
+**Dashboard**
+- GET /dashboard/metrics
+- GET /dashboard/summary?date_from=date&date_to=date
 
 ---
 
 ## 7. User Flows
 
-### 7.1 First-Time Setup Flow
-1. User registers account (username, email, password)
-2. User logs in
-3. User creates first room(s)
-4. User adds first tenant(s)
-5. System auto-generates first payment records for current month
-6. Dashboard displays occupancy and metrics
+### 7.1 Create Reservation (Walk-In Guest)
+1. User clicks "New Reservation"
+2. User searches for existing guest OR creates new guest
+3. User selects check-in and check-out dates
+4. System shows available room types
+5. User selects room type
+6. User enters number of adults/children
+7. System shows default rate (editable)
+8. User optionally assigns specific room
+9. User adds special requests (optional)
+10. System generates confirmation number
+11. Reservation created with status "confirmed"
 
-### 7.2 Daily Management Flow
-1. User logs in to dashboard
-2. Views key metrics (occupancy, revenue, overdue payments)
-3. Records new expenses if any
-4. Checks overdue payment list
-5. Marks received payments as paid
-6. (Optional) Reviews financial summary
+### 7.2 Check-In Guest
+1. User views "Arrivals Today" list
+2. User selects reservation
+3. System displays guest details
+4. User assigns room (if not already assigned)
+5. User confirms details
+6. User clicks "Check In"
+7. System updates:
+   - Reservation status → checked_in
+   - Room status → occupied
+   - Records check-in timestamp
+8. Optional: User records deposit/payment
 
-### 7.3 Tenant Move-In Flow
-1. User creates new tenant profile
-2. Assigns tenant to available room
-3. System creates payment record for next month
-4. Room status changes to occupied
-5. Occupancy metrics update automatically
+### 7.3 Check-Out Guest
+1. User views "Departures Today" list or searches by room
+2. User selects reservation
+3. System shows:
+   - Guest details
+   - Total amount
+   - Payments made
+   - Balance due
+4. User records final payment (if needed)
+5. User clicks "Check Out"
+6. System updates:
+   - Reservation status → checked_out
+   - Room status → available
+   - Records check-out timestamp
 
-### 7.4 Tenant Move-Out Flow
-1. User updates tenant status to "moved out"
-2. Removes tenant from room (or change room)
-3. System records move-out date
-4. Room status changes to available
-5. Occupancy metrics update
-6. Payment records freeze for that tenant
-
-### 7.5 Payment Recording Flow
-1. Tenant makes payment
-2. User finds tenant in payment list
-3. Clicks "Mark as Paid" on pending payment
-4. Enters payment method and receipt number
-5. System marks payment as paid with current date
-6. Payment appears in paid list
-7. Dashboard revenue updates
-
----
-
-## 8. Constraints & Assumptions
-
-### Constraints
-- Single property management only (v1.0)
-- Single admin user (v1.0)
-- Manual payment entry (no automatic payment gateway integration v1.0)
-- Maximum 500 rooms, 1000 tenants (v1.0 limit)
-- Data stored in single location (no multi-region backup initially)
-
-### Assumptions
-- Monthly rental cycle (due dates per month)
-- IDR currency (Indonesia)
-- Users have stable internet connection
-- Users prefer web access over mobile app initially
-- Data entry is manual (no bulk import initially)
+### 7.4 Extend Stay
+1. User finds in-house guest
+2. User clicks "Extend Stay"
+3. User enters new check-out date
+4. System checks room availability for extension period
+5. If available, system recalculates total amount
+6. System updates reservation
 
 ---
 
-## 9. Out of Scope (Future Versions)
+## 8. Migration from KOS System
 
-### Phase 2 Features
-- **Dashboard Report Export** (Priority: High)
-  - Export financial reports (PDF/Excel) for custom time periods
-  - Monthly, quarterly, yearly pre-set export options
-  - User-selected date range export capability
-  - Includes: Income summary, Expense breakdown, Net profit, Occupancy metrics
-  - Export formats: PDF (formatted report), Excel (detailed data), CSV (data only)
-  - Report customization: Select which sections to include
-  - Scheduled email reports (monthly/quarterly)
-  - Report templates for accounting
-- Multi-user support with role-based access
-- Automated payment reminders via SMS/Email
-- Payment gateway integration (Midtrans, Xendit)
-- Mobile app
-- Utility bill tracking per room
-- Lease contract management
-- Maintenance request system
-- Tenant application/screening
-- Multiple property management
+### 8.1 Reusable Components
+- ✅ Authentication framework (upgrade to JWT with roles)
+- ✅ Room management structure (extend with room types)
+- ✅ Database infrastructure (SQLAlchemy)
+- ✅ Frontend component structure (React + Tailwind)
+- ✅ State management (Zustand)
+- ✅ i18n setup (react-i18next)
 
-### Phase 3+ Features
-- Advanced reporting and analytics
-- Custom reports builder
-- API for third-party integrations
-- Accounting software integration (Xero, SAP)
-- Tenant communication portal
-- Auto-payment reconciliation
+### 8.2 New Components to Build
+- Room types management
+- Guest profiles (replace tenant)
+- Reservation system with availability checking
+- Check-in/check-out workflows
+- Simple payment tracking (replace complex payment system)
+- Updated dashboard for hotel metrics
+
+### 8.3 Components to Remove
+- Tenant management (replaced by guests + reservations)
+- Monthly payment tracking (replaced by simple payments)
+- Expense tracking (deferred to v2.0)
+- Room history tracking (deferred to v2.0)
 
 ---
 
-## 10. Success Criteria & Metrics
+## 9. Out of Scope (v2.0+)
 
-### Launch Success
+### Deferred to v2.0
+- **Housekeeping Module**: Task assignments, room status tracking
+- **Maintenance Tracking**: Work orders, maintenance requests
+- **Advanced Rate Management**: Yield management, seasonal pricing, multiple rate plans
+- **Invoicing System**: Itemized invoices, tax calculations, invoice templates
+- **Email/SMS Notifications**: Booking confirmations, reminders
+- **Advanced Reporting**: Custom reports, PDF/Excel exports, charts
+- **Channel Management**: OTA integrations
+- **Online Booking Engine**: Customer-facing booking
+- **Payment Gateway**: Automatic card processing
+- **Multi-property**: Support multiple hotels
+
+### Deferred to v3.0+
+- Mobile apps (staff + guest)
+- Advanced analytics and BI
+- Loyalty program
+- AI-powered pricing
+- POS integration
+- Event management
+
+---
+
+## 10. Success Criteria
+
+### MVP Launch Success
 - [ ] Zero critical bugs in production
-- [ ] All core features working as specified
+- [ ] All v1.0 features functional
+- [ ] 100% availability accuracy (no double-bookings)
+- [ ] Check-in/out process < 3 minutes
+- [ ] System response time < 3 seconds
+- [ ] User training completed (< 1 hour)
 - [ ] Documentation complete
-- [ ] User can complete full workflow in < 10 minutes
-- [ ] Dashboard loads in < 2 seconds
-- [ ] All data persists reliably
 
-### Post-Launch Success
-- [ ] User adoption: At least 2-3 property managers using daily
-- [ ] Feature adoption: All core features used within first month
-- [ ] Data accuracy: 100% accuracy in financial calculations
-- [ ] Reliability: 99%+ uptime maintained
-- [ ] User satisfaction: Positive feedback on ease of use
+### Post-Launch Success (First Month)
+- [ ] 95%+ staff adoption
+- [ ] Zero double-booking incidents
+- [ ] 99% uptime maintained
+- [ ] Positive user feedback
+- [ ] All reports accurate
 
 ---
 
@@ -564,107 +707,214 @@ RoomHistory
 
 | Term | Definition |
 |------|-----------|
-| **Kos** | Indonesian term for boarding house or shared room rental |
-| **Tenant** | Person renting/living in a room |
-| **Room Status** | Current state of room (available, occupied, maintenance) |
-| **Occupancy Rate** | Percentage of rooms with active tenants |
-| **Overdue** | Payment that passed due date but not yet paid |
-| **Move-in Date** | Date tenant starts living in room |
-| **Move-out Date** | Date tenant vacates room |
-| **Monthly Rate** | Regular rent amount per month in IDR |
+| **Check-In** | Guest arrival and room assignment process |
+| **Check-Out** | Guest departure and payment settlement |
+| **Confirmation Number** | Unique identifier for each reservation |
+| **In-House** | Currently checked-in guests |
+| **Occupancy Rate** | Percentage of occupied rooms vs total rooms |
+| **Room Type** | Category of room (Standard, Deluxe, etc.) |
+| **Walk-In** | Guest who arrives without prior reservation |
+| **Availability** | Rooms that are not occupied for given dates |
+| **Balance** | Amount owed (total - payments) |
 
 ---
 
 ## 12. Acceptance Testing Checklist
 
-### Authentication
-- [ ] New user can register with valid credentials
-- [ ] User cannot register with duplicate username/email
-- [ ] User can login with correct credentials
-- [ ] User cannot login with incorrect password
-- [ ] Session persists after refresh
-- [ ] User can logout
-- [ ] Logged out user cannot access protected routes
+### Authentication & Users
+- [ ] Admin can login and access all features
+- [ ] User can login with limited permissions
+- [ ] User cannot delete reservations/data
+- [ ] User cannot access user management
+- [ ] Admin can create/manage users
+- [ ] Session persists after page refresh
+- [ ] Logout clears session
 
 ### Room Management
-- [ ] User can create room with all fields
-- [ ] Room number must be unique
-- [ ] User can edit room details
-- [ ] User can delete unoccupied room
-- [ ] Occupancy grid displays all rooms
-- [ ] Room status updates when tenant assigned/removed
-- [ ] Occupancy percentage calculates correctly
+- [ ] Admin can create room types
+- [ ] Admin can create rooms with room type
+- [ ] Room status updates on check-in/check-out
+- [ ] Cannot delete room type with existing rooms
+- [ ] Occupancy percentage displays correctly
 
-### Tenant Management
-- [ ] User can add new tenant with required fields
-- [ ] User can assign tenant to available room
-- [ ] Multiple tenants cannot be in same room
-- [ ] User can view tenant profile
-- [ ] User can edit tenant information
-- [ ] Moving tenant out releases room
-- [ ] Tenant list searchable and filterable
+### Guest Management
+- [ ] Can create guest profiles
+- [ ] Can search guests by name/email/phone
+- [ ] View guest reservation history
+- [ ] Cannot delete guest with active reservations
 
-### Payment Tracking
-- [ ] User can record payment for tenant
-- [ ] Payment status shows correctly (pending/overdue/paid)
-- [ ] Overdue payments calculated correctly
-- [ ] User can mark pending payment as paid
-- [ ] Payment history shows per tenant
-- [ ] Payment list filterable by status, tenant, date
+### Reservations
+- [ ] Can create reservation with guest
+- [ ] Availability checking prevents double-booking
+- [ ] Confirmation number is unique
+- [ ] Total amount auto-calculates correctly
+- [ ] Can assign room during or after creation
+- [ ] Can extend reservation
+- [ ] Can cancel reservation (admin)
+- [ ] Arrivals list shows today's check-ins
+- [ ] Departures list shows today's check-outs
 
-### Income & Expenses
-- [ ] User can record expense with category
-- [ ] Expenses appear in list and summary
-- [ ] Income calculated from paid payments
-- [ ] Monthly income/expense summary accurate
-- [ ] Financial calculations correct (no rounding errors)
+### Check-In/Out
+- [ ] Check-in updates reservation and room status
+- [ ] Cannot check-in without room assignment
+- [ ] Check-out updates statuses correctly
+- [ ] Room becomes available after checkout
+- [ ] Can handle walk-in guests
+
+### Payments
+- [ ] Can record payment against reservation
+- [ ] Balance calculates correctly
+- [ ] Multiple payments per reservation work
+- [ ] Payment history displays correctly
 
 ### Dashboard
-- [ ] Dashboard loads without errors
-- [ ] Key metrics display correctly
-- [ ] Occupancy rate accurate
-- [ ] Revenue amount correct
-- [ ] Expense amount correct
-- [ ] Net profit calculated correctly
-- [ ] Overdue count accurate
-- [ ] Date range filtering works
-- [ ] Charts display proper data
+- [ ] Today's metrics display correctly
+- [ ] Occupancy rate is accurate
+- [ ] Revenue totals are correct
+- [ ] Quick access links work
+- [ ] Dashboard loads < 3 seconds
 
-### Data & Security
-- [ ] Passwords are hashed (cannot see plaintext)
-- [ ] Logout clears session
-- [ ] Unprivileged user cannot access other data
-- [ ] Data persists after refresh
-- [ ] Data can be exported to CSV
-- [ ] Backup process works
+### Security
+- [ ] Passwords are hashed
+- [ ] JWT tokens expire appropriately
+- [ ] Role permissions enforced
+- [ ] SQL injection prevented
+- [ ] XSS prevented
 
 ---
 
-## Appendix A: Wireframes & Screenshots
+## 13. Development Timeline (Estimate)
 
-*To be added with UI designs*
+### Phase 1: Setup & Core Models (Week 1-2)
+- Database schema design
+- Backend models (User, RoomType, Room, Guest, Reservation, Payment)
+- Authentication with roles
+- Database migrations
+
+### Phase 2: Room & Guest Management (Week 3)
+- Room type CRUD
+- Room CRUD
+- Guest CRUD
+- Availability checking logic
+
+### Phase 3: Reservation System (Week 4-5)
+- Reservation CRUD
+- Availability search
+- Conflict detection
+- Confirmation number generation
+
+### Phase 4: Check-In/Out (Week 6)
+- Check-in workflow
+- Check-out workflow
+- Arrivals/departures lists
+- Walk-in handling
+
+### Phase 5: Payments (Week 7)
+- Payment recording
+- Balance calculation
+- Payment history
+
+### Phase 6: Dashboard (Week 8)
+- Metrics calculation
+- Dashboard UI
+- Summary views
+
+### Phase 7: Frontend Polish (Week 9)
+- UI/UX refinement
+- Mobile responsiveness
+- Error handling
+- Loading states
+
+### Phase 8: Testing & Deployment (Week 10)
+- Integration testing
+- User acceptance testing
+- Bug fixes
+- Production deployment
+
+**Total: ~10 weeks (2.5 months)**
 
 ---
 
-## Appendix B: API Documentation
+## Appendix A: Feature Comparison
 
-*Full API documentation in separate file: `API_DOCS.md`*
+| Feature | KOS v1.0 | Hotel MVP v1.0 |
+|---------|----------|----------------|
+| **Authentication** | Single admin | Admin + User roles |
+| **Room Management** | Simple rooms | Room types + rooms |
+| **Guest/Tenant** | Tenant (long-term) | Guest (short-term) |
+| **Booking** | Move-in/out | Reservations + check-in/out |
+| **Availability** | Simple status | Date-based availability |
+| **Payments** | Monthly tracking | Per-reservation tracking |
+| **Dashboard** | Income/expenses | Occupancy/revenue |
+| **Expenses** | Yes | No (v2.0) |
+| **Housekeeping** | No | No (v2.0) |
+| **Reports** | Basic | Basic |
+
+---
+
+## Appendix B: API Response Examples
+
+### Availability Check Response
+```json
+{
+  "check_in": "2025-12-01",
+  "check_out": "2025-12-05",
+  "available_room_types": [
+    {
+      "room_type_id": 1,
+      "name": "Standard Double",
+      "available_count": 5,
+      "default_rate": 500000,
+      "available_rooms": [101, 102, 103, 104, 105]
+    }
+  ]
+}
+```
+
+### Dashboard Metrics Response
+```json
+{
+  "date": "2025-11-07",
+  "arrivals_today": 5,
+  "departures_today": 3,
+  "in_house": 45,
+  "available_rooms": 15,
+  "total_rooms": 60,
+  "occupancy_rate": 75.0,
+  "revenue_month": 125000000,
+  "outstanding_balance": 5000000
+}
+```
 
 ---
 
 **Document Approval**
 
-| Role | Name | Signature | Date |
-|------|------|-----------|------|
-| Product Owner | Claudio | — | — |
-| Developer | — | — | — |
-| QA Lead | — | — | — |
+| Role | Name | Status | Date |
+|------|------|--------|------|
+| Product Owner | Claudio | Pending | — |
+| Developer | — | Pending | — |
 
 ---
 
 **Change Log**
 
-| Version | Date | Changes |
-|---------|------|---------|
-| 1.0 | 2025-10-24 | Initial PRD creation |
+| Version | Date | Changes | Author |
+|---------|------|---------|--------|
+| 1.0 | 2025-11-07 | MVP scope: Core hotel operations only | Claude |
 
+---
+
+**Next Steps**
+
+1. ✅ Review and approve MVP scope
+2. ⏳ Create detailed database schema
+3. ⏳ Design API endpoints in detail
+4. ⏳ Create UI wireframes
+5. ⏳ Begin development Phase 1
+
+---
+
+**Status**: ✅ **Ready for Review**
+
+This PRD defines a focused MVP that delivers core hotel management functionality without the complexity of advanced features. All deferred features are documented for v2.0 planning.

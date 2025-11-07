@@ -1,180 +1,290 @@
-# KOS Database Documentation
+# Hotel Management System - Documentation
 
-Complete documentation for the KOS (Kost) Database Management System - a comprehensive solution for managing boarding house operations including room management, tenant tracking, payments, and expenses.
-
-## Table of Contents
-
-- [Quick Links](#quick-links)
-- [Documentation Structure](#documentation-structure)
-- [Getting Started](#getting-started)
-- [Documentation Categories](#documentation-categories)
+**Version**: 1.0 (MVP)
+**Last Updated**: November 7, 2025
+**Status**: Ready for Development
 
 ---
 
-## Quick Links
+## 📚 Documentation Index
 
-- **Main README**: [../README.md](../README.md)
-- **Quick Start Guide**: [setup/QUICK_START.md](setup/QUICK_START.md)
-- **Backend Setup**: [setup/BACKEND_SETUP.md](setup/BACKEND_SETUP.md)
-- **Frontend Setup**: [../frontend/README.md](../frontend/README.md)
+### Core Planning Documents
+
+#### 1. [PRD.md](planning/PRD.md) - Product Requirements Document
+**What to build** - Complete feature specifications for MVP v1.0
+
+- Executive summary and business goals
+- Target users (Admin vs User roles)
+- 7 core features in detail
+- Out of scope (deferred to v2.0)
+- Success criteria
+- Timeline: 10 weeks
+
+**Read this to understand**: Product scope, features, and requirements
 
 ---
 
-## Documentation Structure
+#### 2. [PROJECT_OVERVIEW.md](architecture/PROJECT_OVERVIEW.md) - Architecture Overview
+**How it's built** - Technical architecture and development roadmap
+
+- System architecture (layered monolithic)
+- Technology stack (FastAPI + React + PostgreSQL)
+- Database schema (6 tables)
+- API structure (35 endpoints)
+- Frontend structure (9 pages)
+- Development phases (9 phases)
+- Key business logic
+
+**Read this to understand**: Technical decisions, architecture, and structure
+
+---
+
+#### 3. [BACKEND_TASKS.md](planning/BACKEND_TASKS.md) - Backend Development Tasks
+**Backend implementation guide** - 30 detailed tasks across 9 phases
+
+- Phase-by-phase breakdown
+- What to salvage from KOS system (60% reusable)
+- Database migration strategy
+- Task estimates (85 hours / 6-7 weeks)
+- Acceptance criteria per task
+- Dependencies and order
+
+**Read this to**: Start backend development
+
+---
+
+#### 4. [FRONTEND_TASKS.md](planning/FRONTEND_TASKS.md) - Frontend Development Tasks
+**Frontend implementation guide** - 32 detailed tasks across 11 phases
+
+- Phase-by-phase breakdown
+- What to salvage from KOS system (70% reusable)
+- Component structure
+- Task estimates (100 hours / 5-6 weeks)
+- Acceptance criteria per task
+- New dependencies needed
+
+**Read this to**: Start frontend development
+
+---
+
+## 🎯 Quick Navigation
+
+### For Product Managers / Stakeholders:
+1. Start with [PRD.md](planning/PRD.md) to understand **what** we're building
+2. Review [PROJECT_OVERVIEW.md](architecture/PROJECT_OVERVIEW.md) for high-level architecture
+3. Check timeline and milestones in both documents
+
+### For Backend Developers:
+1. Read [PROJECT_OVERVIEW.md](architecture/PROJECT_OVERVIEW.md) - Database & API sections
+2. Start with [BACKEND_TASKS.md](planning/BACKEND_TASKS.md)
+3. Begin with Phase 1: Foundation (Week 1-2)
+
+### For Frontend Developers:
+1. Read [PROJECT_OVERVIEW.md](architecture/PROJECT_OVERVIEW.md) - Frontend section
+2. Start with [FRONTEND_TASKS.md](planning/FRONTEND_TASKS.md)
+3. Begin with Phase 1: Foundation & Types (Week 1)
+
+### For Full-Stack Developers:
+1. Review all 4 core documents
+2. Start backend first (frontend depends on API)
+3. Work through both task lists in parallel (if possible)
+
+---
+
+## 📊 Project Statistics
+
+### Scope
+- **Features**: 7 core features (MVP v1.0)
+- **User Roles**: 2 (Admin, User)
+- **Database Tables**: 6
+- **API Endpoints**: 35
+- **Frontend Pages**: 9
+
+### Development Estimates
+- **Backend**: 85 hours (6-7 weeks)
+- **Frontend**: 100 hours (5-6 weeks)
+- **Total**: ~185 hours (11-13 weeks full-time)
+
+### Technology Stack
+- **Backend**: Python, FastAPI, SQLAlchemy, PostgreSQL
+- **Frontend**: React 19, TypeScript, Vite, Tailwind CSS, Zustand
+- **Infrastructure**: Vercel (frontend), Google Cloud Run (backend)
+
+---
+
+## 🗂️ Documentation Structure
 
 ```
 docs/
-├── README.md                 # This file - Documentation index
-├── setup/                    # Installation and setup guides
-├── deployment/               # Deployment guides for various platforms
-├── architecture/             # System design and architecture
-├── features/                 # Feature documentation and enhancements
-└── planning/                 # Project planning and requirements
+├── README.md                          # This file
+│
+├── planning/                          # Planning & requirements
+│   ├── PRD.md                         # Product requirements (MVP v1.0)
+│   ├── BACKEND_TASKS.md               # Backend task breakdown (30 tasks)
+│   └── FRONTEND_TASKS.md              # Frontend task breakdown (32 tasks)
+│
+└── architecture/                      # Architecture & design
+    └── PROJECT_OVERVIEW.md            # Technical architecture overview
 ```
 
 ---
 
-## Getting Started
+## 🚀 Getting Started
 
-### For New Users
-1. Start with [setup/QUICK_START.md](setup/QUICK_START.md)
-2. Review the [Project Overview](architecture/PROJECT_OVERVIEW.md)
-3. Follow [Backend Setup](setup/BACKEND_SETUP.md) or [Frontend Setup](../frontend/README.md)
+### Prerequisites
+- **Backend**: Python 3.11+, PostgreSQL 14+
+- **Frontend**: Node.js 18+, npm
+- **Tools**: Git, VS Code (recommended)
 
-### For Developers
-1. Read the [Product Requirements Document](planning/PRD.md)
-2. Check the [Frontend Components Guide](../frontend/COMPONENTS.md)
-3. Review [Database Scripts Documentation](../backend/scripts/README.md)
+### Setup (Quick Start)
+```bash
+# Clone repository
+git clone <repo-url>
+cd Hotel-Management-System
 
-### For Deployment
-1. Choose your platform from [Deployment](#deployment)
-2. Follow the relevant deployment guide
-3. Configure environment variables as needed
+# Backend setup
+cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+python scripts/init_hotel_db.py  # Initialize database
 
----
+# Frontend setup
+cd ../frontend
+npm install
+npm run dev
+```
 
-## Documentation Categories
-
-### 📚 Setup & Installation
-
-Complete guides for setting up the development environment.
-
-| Document | Description |
-|----------|-------------|
-| [QUICK_START.md](setup/QUICK_START.md) | Fast-track guide to get started quickly |
-| [BACKEND_SETUP.md](setup/BACKEND_SETUP.md) | Detailed backend setup instructions |
-| [SUPABASE_SETUP.md](setup/SUPABASE_SETUP.md) | Supabase database configuration guide |
-| [SUPABASE_SINGAPORE_SETUP.md](setup/SUPABASE_SINGAPORE_SETUP.md) | Singapore region-specific setup |
-| [AUTH_README.md](setup/AUTH_README.md) | Authentication system documentation |
-
-**Frontend Setup:** See [frontend/README.md](../frontend/README.md)
+Detailed setup instructions will be added as development progresses.
 
 ---
 
-### 🚀 Deployment
+## 📈 Development Roadmap
 
-Step-by-step guides for deploying to various platforms.
+### Phase 1: Foundation (Week 1-2)
+- Backend: Database models, JWT auth with roles, user management
+- Frontend: API types, auth store with roles, layout updates
 
-| Document | Description |
-|----------|-------------|
-| [DEPLOYMENT.md](deployment/DEPLOYMENT.md) | General deployment overview |
-| [DEPLOYMENT_STACK.md](deployment/DEPLOYMENT_STACK.md) | Technology stack and deployment options |
-| [GCP_DEPLOYMENT.md](deployment/GCP_DEPLOYMENT.md) | Google Cloud Platform deployment guide |
-| [GCP_CLOUD_RUN_DEPLOY.md](deployment/GCP_CLOUD_RUN_DEPLOY.md) | Specific Cloud Run deployment steps |
-| [VERCEL_DEPLOY.md](deployment/VERCEL_DEPLOY.md) | Vercel frontend deployment guide |
-| [FRONTEND_HOSTING.md](deployment/FRONTEND_HOSTING.md) | Frontend hosting options and setup |
+### Phase 2: Room Management (Week 2-3)
+- Backend: Room types & rooms endpoints, availability checking
+- Frontend: Room types page, rooms page, room store
 
----
+### Phase 3: Guest Management (Week 3)
+- Backend: Guest endpoints, search functionality
+- Frontend: Guests page, guest store
 
-### 🏗️ Architecture & Design
+### Phase 4: Reservation System (Week 3-5) ← **Most Complex**
+- Backend: Reservation CRUD, conflict detection, extend stay
+- Frontend: Availability search, new reservation flow, reservations list
 
-System architecture, design decisions, and technical overviews.
+### Phase 5: Check-In/Out (Week 5-6)
+- Backend: Check-in/out endpoints, arrivals/departures
+- Frontend: Check-in page, check-out page, room assignment
 
-| Document | Description |
-|----------|-------------|
-| [PROJECT_OVERVIEW.md](architecture/PROJECT_OVERVIEW.md) | High-level project overview |
-| [DATABASE_OPTIONS.md](architecture/DATABASE_OPTIONS.md) | Database technology comparisons |
-| [FRONTEND_SUMMARY.md](architecture/FRONTEND_SUMMARY.md) | Frontend architecture and structure |
+### Phase 6: Payments (Week 6-7)
+- Backend: Payment CRUD, balance calculation
+- Frontend: Payments page, payment form
 
-**Component Documentation:** See [frontend/COMPONENTS.md](../frontend/COMPONENTS.md)
+### Phase 7: Dashboard (Week 7-8)
+- Backend: Metrics calculation, summary endpoints
+- Frontend: Dashboard redesign for hotel metrics
 
----
+### Phase 8: Polish (Week 8-9)
+- Backend: Testing, validation, error handling, migrations
+- Frontend: User management, loading states, mobile responsive
 
-### ✨ Features & Enhancements
-
-Documentation for features, improvements, and known issues.
-
-| Document | Description |
-|----------|-------------|
-| [FUTURE_FEATURES.md](features/FUTURE_FEATURES.md) | Planned features and roadmap |
-| [MANUAL_PAYMENT_SYSTEM.md](features/MANUAL_PAYMENT_SYSTEM.md) | Payment system documentation |
-| [BACKEND_ENHANCEMENTS.md](features/BACKEND_ENHANCEMENTS.md) | Backend improvements and updates |
-| [IMPLEMENTATION_COMPLETE.md](features/IMPLEMENTATION_COMPLETE.md) | Completed implementation notes |
-| [TOKEN_EXPIRATION.md](features/TOKEN_EXPIRATION.md) | Token management and expiration handling |
+### Phase 9: Deployment (Week 9-10)
+- Backend: Production config, documentation, deployment
+- Frontend: Build optimization, environment config, deployment
 
 ---
 
-### 📋 Planning & Requirements
+## 🎓 Key Concepts
 
-Project planning documents, requirements, and task breakdowns.
+### From KOS to Hotel System
 
-| Document | Description |
-|----------|-------------|
-| [PRD.md](planning/PRD.md) | Product Requirements Document |
-| [TASKS_BREAKDOWN.md](planning/TASKS_BREAKDOWN.md) | Detailed task breakdown and tracking |
+**What Changed**:
+- **Tenants** → **Guests** (short-term stays)
+- **Move-in/Move-out** → **Check-in/Check-out** (daily operations)
+- **Monthly payments** → **Reservation-based payments** (per stay)
+- **Simple rooms** → **Room types + rooms** (categorized inventory)
 
----
+**What Stayed**:
+- Authentication system (enhanced with roles)
+- Room management (enhanced with types)
+- Database infrastructure (SQLAlchemy + FastAPI)
+- Frontend infrastructure (React + Tailwind)
 
-## Additional Resources
+### Core Business Logic
 
-### Backend Resources
-- **Database Scripts**: [backend/scripts/README.md](../backend/scripts/README.md)
-- **API Routes**: See backend route files in `backend/routes/`
+**Availability Checking**:
+- Room is available if NOT occupied during requested dates
+- Conflict detection: `check_in < existing.check_out AND check_out > existing.check_in`
+- Excludes cancelled and checked-out reservations
 
-### Frontend Resources
-- **Setup Guide**: [frontend/SETUP.md](../frontend/SETUP.md)
-- **Components**: [frontend/COMPONENTS.md](../frontend/COMPONENTS.md)
-- **Main README**: [frontend/README.md](../frontend/README.md)
+**Check-In Process**:
+1. Find reservation (status = confirmed)
+2. Assign room if not assigned
+3. Update reservation status → checked_in
+4. Update room status → occupied
+5. Record timestamp
 
-### Development Tools
-- **Claude Agents**: `.claude/agents/` - AI agent configurations
-- **Git Workflows**: See `.github/` for CI/CD configurations
-
----
-
-## Documentation Categories at a Glance
-
-| Category | Files | Purpose |
-|----------|-------|---------|
-| **Setup** | 5 docs | Get the system running locally |
-| **Deployment** | 6 docs | Deploy to production platforms |
-| **Architecture** | 3 docs | Understand system design |
-| **Features** | 5 docs | Feature documentation |
-| **Planning** | 2 docs | Requirements and roadmap |
-
-**Total Documentation Files:** 21+ markdown files
+**Check-Out Process**:
+1. Find reservation (status = checked_in)
+2. Calculate balance (total - paid)
+3. Record final payment (optional)
+4. Update reservation status → checked_out
+5. Update room status → available
+6. Record timestamp
 
 ---
 
-## Contributing to Documentation
+## ✅ Success Criteria
 
-When adding new documentation:
-1. Place it in the appropriate category folder
-2. Update this README.md with a link
-3. Use clear, descriptive filenames
-4. Include a table of contents for longer documents
-5. Cross-reference related documentation
+### MVP Launch
+- [ ] Zero critical bugs
+- [ ] All 7 core features functional
+- [ ] 100% availability accuracy (no double-bookings)
+- [ ] Check-in/out process < 3 minutes
+- [ ] System response time < 3 seconds
+- [ ] Documentation complete
+
+### Post-Launch (First Month)
+- [ ] 95%+ staff adoption
+- [ ] Zero double-booking incidents
+- [ ] 99% uptime
+- [ ] Positive user feedback (>4/5)
+- [ ] All reports accurate
 
 ---
 
-## Need Help?
+## 🔄 Version History
 
-- **Project Issues**: Check the main [README.md](../README.md)
-- **Quick Start Problems**: See [setup/QUICK_START.md](setup/QUICK_START.md)
-- **Deployment Issues**: Review the relevant deployment guide
-- **Feature Requests**: See [features/FUTURE_FEATURES.md](features/FUTURE_FEATURES.md)
+| Version | Date | Description |
+|---------|------|-------------|
+| 1.0 | 2025-11-07 | Initial documentation for Hotel Management System MVP |
+| 0.x | 2025-10-24 | Previous KOS Management Dashboard documentation (archived) |
 
 ---
 
-**Last Updated:** October 26, 2025
-**Documentation Version:** 1.0
+## 📞 Support & Questions
+
+### For Technical Questions:
+- Check [PROJECT_OVERVIEW.md](architecture/PROJECT_OVERVIEW.md) for architecture details
+- Review specific task files for implementation guidance
+
+### For Feature Questions:
+- Check [PRD.md](planning/PRD.md) for feature specifications
+- Review acceptance criteria in task files
+
+### For Development Questions:
+- Backend: See [BACKEND_TASKS.md](planning/BACKEND_TASKS.md)
+- Frontend: See [FRONTEND_TASKS.md](planning/FRONTEND_TASKS.md)
+
+---
+
+**Status**: ✅ **Documentation Complete - Ready for Development**
+
+Start with Phase 1 tasks and work sequentially through the phases!
+
+🚀 **Let's build a great hotel management system!**
