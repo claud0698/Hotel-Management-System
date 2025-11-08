@@ -167,11 +167,11 @@ def create_app():
     app.include_router(auth_router.router, prefix="/api/auth", tags=["Authentication"])
     app.include_router(users_router.router, prefix="/api/users", tags=["Users"])
     app.include_router(rooms_router.router, prefix="/api/rooms", tags=["Rooms"])
-    app.include_router(guests_router.router, prefix="/api/guests", tags=["Guests"])
-    app.include_router(reservations_router.router, prefix="/api/reservations", tags=["Reservations"])
-    app.include_router(payments_router.router, prefix="/api/payments", tags=["Payments"])
+    app.include_router(guests_router.router, tags=["Guests"])  # Has own prefix /api/guests
+    app.include_router(reservations_router.router, tags=["Reservations"])  # Has own prefix /api/reservations
+    app.include_router(payments_router.router, tags=["Payments"])  # Has own prefix /api/payments
     app.include_router(expenses_router.router, prefix="/api/expenses", tags=["Expenses"])
-    app.include_router(dashboard_router.router, prefix="/api/dashboard", tags=["Dashboard"])
+    app.include_router(dashboard_router.router, tags=["Dashboard"])  # Has own prefix /api/dashboard
 
     # Error handlers
     @app.exception_handler(404)
