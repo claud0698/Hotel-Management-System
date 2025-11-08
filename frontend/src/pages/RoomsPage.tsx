@@ -205,7 +205,7 @@ export function RoomsPage() {
                     : 'bg-white text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                {t('rooms.floorView')}
+                Floor View
               </button>
               <button
                 onClick={() => setViewMode('grid')}
