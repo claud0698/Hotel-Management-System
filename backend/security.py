@@ -13,7 +13,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 active_tokens = {}
 
 # Token expiration time (in minutes)
-TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
+TOKEN_EXPIRE_MINUTES = 60 * 12  # 12 hours (shift-based expiration)
 
 security = HTTPBearer()
 

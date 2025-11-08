@@ -380,6 +380,7 @@ class Reservation(Base):
     booking_source = Column(String(50))
     booking_channel_id = Column(Integer, ForeignKey("booking_channels.id"))
     created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    checked_in_by = Column(Integer, ForeignKey("users.id"))  # Receptionist who did check-in
     checked_in_at = Column(DateTime)
     checked_out_at = Column(DateTime)
     is_archived = Column(Boolean, default=False)
@@ -397,6 +398,7 @@ class Reservation(Base):
     room_type = relationship("RoomType", foreign_keys=[room_type_id])
     room = relationship("Room")
     created_by_user = relationship("User", foreign_keys=[created_by])
+    checked_in_by_user = relationship("User", foreign_keys=[checked_in_by])
     discount = relationship("Discount")
     booking_channel = relationship("BookingChannel")
     payments = relationship("Payment", back_populates="reservation")
@@ -436,6 +438,8 @@ class Reservation(Base):
             "total_paid": self.calculate_total_paid(),
             "balance": self.calculate_balance(),
             "checked_in_at": self.checked_in_at.isoformat() if self.checked_in_at else None,
+            "checked_in_by": self.checked_in_by,
+            "checked_in_by_name": self.checked_in_by_user.username if self.checked_in_by_user else None,
             "checked_out_at": self.checked_out_at.isoformat() if self.checked_out_at else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
