@@ -1,6 +1,6 @@
 """
-Kos Management Dashboard - FastAPI Backend Application
-Supports SQLite (development), PostgreSQL (production), and Google Cloud SQL (GCP)
+Hotel Management System - FastAPI Backend Application
+Supports Supabase PostgreSQL (production)
 """
 
 import os
@@ -15,7 +15,7 @@ from typing import Optional
 
 from models import Base
 from database import engine, get_db
-from routes import auth_router, users_router, rooms_router, tenants_router, payments_router, expenses_router, dashboard_router
+from routes import auth_router, users_router, rooms_router, payments_router, dashboard_router
 
 load_dotenv()
 
@@ -39,8 +39,8 @@ async def lifespan(app: FastAPI):
 def create_app():
     """Application factory for FastAPI app creation"""
     app = FastAPI(
-        title="Kos Management API",
-        description="REST API for managing tenant properties (Kos) in Indonesia",
+        title="Hotel Management System API",
+        description="REST API for managing hotel properties, reservations, and payments",
         version="1.0.0",
         lifespan=lifespan,
         docs_url="/api/docs",
@@ -90,7 +90,7 @@ def create_app():
     async def api_root():
         """API root endpoint with version info"""
         return {
-            'message': 'Kos Management API',
+            'message': 'Hotel Management System API',
             'version': '1.0.0',
             'status': 'active',
             'docs': '/api/docs',
@@ -101,9 +101,7 @@ def create_app():
     app.include_router(auth_router.router, prefix="/api/auth", tags=["Authentication"])
     app.include_router(users_router.router, prefix="/api/users", tags=["Users"])
     app.include_router(rooms_router.router, prefix="/api/rooms", tags=["Rooms"])
-    app.include_router(tenants_router.router, prefix="/api/tenants", tags=["Tenants"])
     app.include_router(payments_router.router, prefix="/api/payments", tags=["Payments"])
-    app.include_router(expenses_router.router, prefix="/api/expenses", tags=["Expenses"])
     app.include_router(dashboard_router.router, prefix="/api/dashboard", tags=["Dashboard"])
 
     # Error handlers

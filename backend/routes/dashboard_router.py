@@ -1,29 +1,21 @@
 """
-Dashboard and analytics routes
+Dashboard and analytics routes for Hotel Management System
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 
-from models import Room, Tenant, Payment, Expense
-from schemas import DashboardMetrics, DashboardSummary
+from models import Room, Reservation, Payment, RoomType, Guest
 from security import get_current_user
 from database import get_db
-from utils import (
-    calculate_occupancy_rate,
-    get_room_occupancy_details,
-    get_payment_statistics,
-    get_tenant_statistics,
-    get_current_month_date_range
-)
 
 router = APIRouter()
 
 
-@router.get("/metrics", response_model=DashboardMetrics)
+@router.get("/metrics", response_model=dict)
 async def get_metrics(
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
@@ -46,77 +38,138 @@ async def get_metrics(
     else:
         end = datetime.fromisoformat(end_date)
 
-    # Use utility functions for calculations (pass date range for historical occupancy)
-    room_details = get_room_occupancy_details(db, start, end)
-    payment_stats = get_payment_statistics(db, start, end)
+    # Room metrics
+    total_rooms = db.query(Room).count()
 
-    # Expenses - use database aggregation instead of loading all records
-    total_expenses = db.query(func.coalesce(func.sum(Expense.amount), 0)).filter(
-        Expense.date >= start,
-        Expense.date < end
+    # Occupied rooms - count active reservations
+    occupied_rooms = db.query(func.count(Room.id)).join(
+        Reservation, Room.id == Reservation.room_id
+    ).filter(
+        Reservation.check_in_date <= now,
+        Reservation.check_out_date >= now,
+        Reservation.status == 'confirmed'
+    ).scalar() or 0
+
+    available_rooms = total_rooms - occupied_rooms
+    occupancy_rate = (occupied_rooms / total_rooms * 100) if total_rooms > 0 else 0
+
+    # Payment metrics
+    paid_payments = db.query(func.coalesce(func.sum(Payment.amount), 0)).filter(
+        Payment.status == 'completed',
+        Payment.paid_at >= start,
+        Payment.paid_at < end
     ).scalar() or 0.0
 
-    # Overdue payments - use database aggregation
-    overdue_stats = db.query(
-        func.count(Payment.id).label('count'),
-        func.coalesce(func.sum(Payment.amount), 0).label('total')
-    ).filter(
+    pending_payments = db.query(Payment).filter(
+        Payment.status == 'pending'
+    ).count()
+
+    # Overdue payments
+    overdue_payments = db.query(func.coalesce(func.sum(Payment.amount), 0)).filter(
         Payment.status == 'pending',
-        Payment.due_date < datetime.now(timezone.utc)
-    ).first()
+        Payment.due_date < now
+    ).scalar() or 0.0
 
-    overdue_count = overdue_stats.count if overdue_stats else 0
-    overdue_amount = float(overdue_stats.total) if overdue_stats else 0.0
-
-    # Calculate net profit
-    net_profit = payment_stats['paid_amount'] - total_expenses
-
-    return DashboardMetrics(
-        total_rooms=room_details['total_rooms'],
-        occupied_rooms=room_details['occupied_rooms'],
-        available_rooms=room_details['available_rooms'],
-        occupancy_rate=room_details['occupancy_rate'],
-        total_income=payment_stats['paid_amount'],
-        total_expenses=total_expenses,
-        net_profit=net_profit,
-        overdue_count=overdue_count,
-        overdue_amount=overdue_amount,
-        pending_count=payment_stats['pending_count'],
-        start_date=start.isoformat(),
-        end_date=end.isoformat()
-    )
+    return {
+        "total_rooms": total_rooms,
+        "occupied_rooms": occupied_rooms,
+        "available_rooms": available_rooms,
+        "occupancy_rate": round(occupancy_rate, 2),
+        "total_income": float(paid_payments),
+        "pending_payments": pending_payments,
+        "overdue_amount": float(overdue_payments),
+        "start_date": start.isoformat(),
+        "end_date": end.isoformat()
+    }
 
 
-@router.get("/summary", response_model=DashboardSummary)
+@router.get("/summary", response_model=dict)
 async def get_summary(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Get summary data for dashboard"""
+    now = datetime.now(timezone.utc)
+
+    # Recent reservations
+    recent_reservations = db.query(Reservation).order_by(
+        Reservation.created_at.desc()
+    ).limit(5).all()
+
     # Recent payments
-    recent_payments = db.query(Payment).order_by(Payment.created_at.desc()).limit(5).all()
+    recent_payments = db.query(Payment).order_by(
+        Payment.created_at.desc()
+    ).limit(5).all()
 
-    # Recent expenses
-    recent_expenses = db.query(Expense).order_by(Expense.created_at.desc()).limit(5).all()
+    # Upcoming check-ins (next 7 days)
+    week_ahead = now + timedelta(days=7)
+    upcoming_checkins = db.query(Reservation).filter(
+        Reservation.check_in_date >= now,
+        Reservation.check_in_date <= week_ahead,
+        Reservation.status == 'confirmed'
+    ).count()
 
-    # Overdue tenants - Use JOIN to avoid N+1 query problem
-    overdue_data = db.query(Payment, Tenant).join(
-        Tenant, Payment.tenant_id == Tenant.id
+    # Room type distribution
+    room_distribution = db.query(
+        RoomType.name,
+        func.count(Room.id).label('count')
+    ).join(Room, RoomType.id == Room.room_type_id).group_by(RoomType.id).all()
+
+    return {
+        "recent_reservations": [r.to_dict() for r in recent_reservations],
+        "recent_payments": [p.to_dict() for p in recent_payments],
+        "upcoming_checkins": upcoming_checkins,
+        "room_distribution": [
+            {"room_type": rt, "count": count} for rt, count in room_distribution
+        ]
+    }
+
+
+@router.get("/revenue", response_model=dict)
+async def get_revenue(
+    days: int = Query(30, ge=1, le=365),
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get revenue breakdown for the last N days"""
+    now = datetime.now(timezone.utc)
+    start_date = now - timedelta(days=days)
+
+    # Daily revenue
+    daily_revenue = db.query(
+        func.date(Payment.paid_at).label('date'),
+        func.coalesce(func.sum(Payment.amount), 0).label('amount')
     ).filter(
-        Payment.status == 'pending',
-        Payment.due_date < datetime.now(timezone.utc)
-    ).all()
+        Payment.status == 'completed',
+        Payment.paid_at >= start_date,
+        Payment.paid_at <= now
+    ).group_by(func.date(Payment.paid_at)).all()
 
-    overdue_tenants = [
-        {
-            'tenant': tenant.to_dict(),
-            'payment': payment.to_dict()
-        }
-        for payment, tenant in overdue_data
-    ]
+    # Revenue by room type
+    revenue_by_type = db.query(
+        RoomType.name,
+        func.coalesce(func.sum(Payment.amount), 0).label('amount')
+    ).join(
+        Reservation, Reservation.room_type_id == RoomType.id
+    ).join(
+        Payment, Payment.reservation_id == Reservation.id
+    ).filter(
+        Payment.status == 'completed',
+        Payment.paid_at >= start_date,
+        Payment.paid_at <= now
+    ).group_by(RoomType.id).all()
 
-    return DashboardSummary(
-        recent_payments=[p.to_dict() for p in recent_payments],
-        recent_expenses=[e.to_dict() for e in recent_expenses],
-        overdue_tenants=overdue_tenants
-    )
+    total_revenue = sum([amount for _, amount in daily_revenue])
+
+    return {
+        "total_revenue": float(total_revenue),
+        "daily_revenue": [
+            {"date": str(date), "amount": float(amount)}
+            for date, amount in daily_revenue
+        ],
+        "revenue_by_type": [
+            {"room_type": room_type, "amount": float(amount)}
+            for room_type, amount in revenue_by_type
+        ],
+        "period_days": days
+    }
