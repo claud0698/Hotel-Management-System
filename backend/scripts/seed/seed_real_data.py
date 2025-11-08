@@ -30,45 +30,79 @@ def clear_database():
     print("✅ Tables created")
 
 def seed_rooms(db):
-    """Create 24 rooms (A1-A12, B1-B12) with different rates"""
+    """Create rooms with hotel numbering convention (101-404)"""
     print("\n🏠 Creating rooms...")
 
-    # Floor A rooms (Rp 650,000 base rate, A1 = 670k, A12 = 700k)
-    floor_a_rates = {
-        'A1': 670000,
-        'A12': 700000
+    # Room rates by type
+    room_rates = {
+        'STD': 300000,  # Standard Room
+        'STT': 300000,  # Standard Twin Room
+        'SUP': 400000,  # Superior Room
+        'SUT': 400000,  # Superior Twin Room
+        'DEL': 500000,  # Deluxe Room
+        'JUS': 550000,  # Junior Suite Room
+        'SUI': 600000,  # Suite Room
+        'SUO': 650000,  # Suite Room with Ocean View
     }
 
     rooms_created = []
 
-    # Floor A (A1-A12) - Floor 2 = A (Atas/Upper)
-    for i in range(1, 13):
-        room_number = f"A{i}"
-        monthly_rate = floor_a_rates.get(room_number, 650000)  # Default 650k
-
+    # Floor 1 (100-199): Standard and Superior rooms
+    room_types = ['STD', 'STD', 'STT', 'STT', 'SUP', 'SUP', 'SUP', 'SUP']
+    for i, room_type in enumerate(room_types, 1):
+        room_number = f"10{i}"
         room = Room(
             room_number=room_number,
-            floor=2,
-            room_type="single",
-            monthly_rate=monthly_rate,
+            floor=1,
+            room_type=room_type,
+            monthly_rate=room_rates.get(room_type, 300000),
             status="available",
-            amenities="WiFi, AC, Bed, Table"
+            amenities="AC, TV, Shower"
         )
         db.add(room)
         rooms_created.append(room)
 
-    # Floor B (B1-B12) - Floor 1 = B (Bawah/Lower) - All Rp 700,000
-    for i in range(1, 13):
-        room_number = f"B{i}"
-        monthly_rate = 750000 if room_number == 'B1' else 700000
-
+    # Floor 2 (200-299): Superior and Deluxe rooms
+    room_types = ['SUP', 'SUP', 'SUT', 'SUT', 'DEL', 'DEL', 'DEL', 'DEL']
+    for i, room_type in enumerate(room_types, 1):
+        room_number = f"20{i}"
         room = Room(
             room_number=room_number,
-            floor=1,
-            room_type="single",
-            monthly_rate=monthly_rate,
+            floor=2,
+            room_type=room_type,
+            monthly_rate=room_rates.get(room_type, 400000),
             status="available",
-            amenities="WiFi, AC, Bed, Table"
+            amenities="AC, TV, Shower"
+        )
+        db.add(room)
+        rooms_created.append(room)
+
+    # Floor 3 (300-399): Deluxe and Junior Suite rooms
+    room_types = ['DEL', 'DEL', 'JUS', 'JUS', 'JUS', 'JUS', 'JUS', 'JUS']
+    for i, room_type in enumerate(room_types, 1):
+        room_number = f"30{i}"
+        room = Room(
+            room_number=room_number,
+            floor=3,
+            room_type=room_type,
+            monthly_rate=room_rates.get(room_type, 500000),
+            status="available",
+            amenities="AC, TV, Shower, Mini Fridge"
+        )
+        db.add(room)
+        rooms_created.append(room)
+
+    # Floor 4 (400-499): Suite rooms
+    room_types = ['SUI', 'SUI', 'SUO', 'SUO']
+    for i, room_type in enumerate(room_types, 1):
+        room_number = f"40{i}"
+        room = Room(
+            room_number=room_number,
+            floor=4,
+            room_type=room_type,
+            monthly_rate=room_rates.get(room_type, 600000),
+            status="available",
+            amenities="AC, TV, Shower, Mini Fridge, Ocean View"
         )
         db.add(room)
         rooms_created.append(room)
@@ -87,31 +121,33 @@ def seed_tenants_and_payments(db, rooms):
     print("\n👥 Creating tenants and payments...")
 
     # Payment data: room_number -> (payment_method/note, amount, date_str, status)
+    # Using hotel numbering: 101-404 (not A1-B12)
     payment_data = {
-        'A1': ('BCA', 670000, '2025-07-07', 'paid'),
-        'A2': ('M', 650000, '2025-07-02', 'paid'),
-        'A3': ('M', 650000, '2025-07-08', 'paid'),
-        'A4': ('BCA', 650000, '2025-07-02', 'paid'),
-        'A5': ('BCA', 650000, '2025-07-10', 'paid'),
-        'A6': ('BCA', 650000, '2025-07-18', 'paid'),
-        'A7': ('BCA', 650000, '2025-07-30', 'paid'),
-        'A8': ('M', 650000, '2025-08-02', 'paid'),
-        'A9': ('Kabur', None, None, 'vacant'),  # Tenant ran away
-        'A10': ('M', 650000, '2025-07-25', 'paid'),
-        'A11': ('BCA', 650000, '2025-07-25', 'paid'),
-        'A12': ('BCA', 700000, '2025-07-18', 'paid'),
-        'B1': ('M', 750000, '2025-07-05', 'paid'),
-        'B2': ('BCA', 700000, '2025-07-07', 'paid'),
-        'B3': ('M', 700000, '2025-07-02', 'paid'),
-        'B4': ('BCA', 700000, '2025-07-07', 'paid'),
-        'B5': ('Kosong', None, None, 'vacant'),  # Empty
-        'B6': ('M', 700000, '2025-07-07', 'paid'),
-        'B7': ('M', 700000, '2025-07-30', 'paid'),
-        'B8': ('BCA', 700000, '2025-07-01', 'paid'),
-        'B9': ('M', 700000, '2025-08-03', 'paid'),
-        'B10': ('M', 700000, '2025-07-27', 'paid'),
-        'B11': ('Kosong', None, None, 'vacant'),  # Empty
-        'B12': ('Anto', None, None, 'occupied'),  # Occupied but no payment yet
+        '101': ('BCA', 300000, '2025-07-07', 'paid'),
+        '102': ('M', 300000, '2025-07-02', 'paid'),
+        '103': ('M', 300000, '2025-07-08', 'paid'),
+        '104': ('BCA', 300000, '2025-07-02', 'paid'),
+        '105': ('BCA', 300000, '2025-07-10', 'paid'),
+        '201': ('BCA', 400000, '2025-07-18', 'paid'),
+        '202': ('M', 400000, '2025-07-30', 'paid'),
+        '203': ('M', 400000, '2025-08-02', 'paid'),
+        '204': ('Vacant', None, None, 'vacant'),  # Vacant
+        '205': ('M', 400000, '2025-07-25', 'paid'),
+        '206': ('BCA', 400000, '2025-07-25', 'paid'),
+        '207': ('BCA', 500000, '2025-07-18', 'paid'),
+        '208': ('M', 500000, '2025-07-05', 'paid'),
+        '301': ('BCA', 500000, '2025-07-07', 'paid'),
+        '302': ('M', 500000, '2025-07-02', 'paid'),
+        '303': ('BCA', 550000, '2025-07-07', 'paid'),
+        '304': ('Vacant', None, None, 'vacant'),  # Empty
+        '305': ('M', 550000, '2025-07-07', 'paid'),
+        '306': ('M', 550000, '2025-07-30', 'paid'),
+        '307': ('BCA', 550000, '2025-07-01', 'paid'),
+        '308': ('M', 550000, '2025-08-03', 'paid'),
+        '401': ('M', 600000, '2025-07-27', 'paid'),
+        '402': ('Vacant', None, None, 'vacant'),  # Empty
+        '403': ('M', 650000, '2025-07-10', 'paid'),
+        '404': ('Owner', None, None, 'occupied'),  # Occupied but no payment yet
     }
 
     tenants_created = 0
@@ -128,18 +164,18 @@ def seed_tenants_and_payments(db, rooms):
             continue
 
         # Create tenant
-        tenant_name = f"Tenant {room_number}" if method_or_note != 'Anto' else 'Anto'
+        tenant_name = f"Guest {room_number}" if method_or_note != 'Owner' else 'Owner'
         move_in_date = datetime(2025, 6, 1, 0, 0, 0, tzinfo=timezone.utc)  # Assume moved in June
 
         tenant = Tenant(
             name=tenant_name,
-            phone=f"0812345{room_number.replace('A', '1').replace('B', '2')}",
-            email=f"tenant{room_number.lower()}@example.com",
-            id_number=f"31730100000{room_number.replace('A', '1').replace('B', '2')}",
+            phone=f"08{room_number}1234567",
+            email=f"guest{room_number}@hotel.example.com",
+            id_number=f"3173010000{room_number}",
             move_in_date=move_in_date,
             current_room_id=room.id,
             status='active',
-            notes=method_or_note if method_or_note in ['M', 'Kabur'] else None
+            notes=method_or_note if method_or_note in ['M', 'Occupied'] else None
         )
         db.add(tenant)
         db.flush()  # Get tenant ID
@@ -283,50 +319,43 @@ def main():
             Payment.paid_date < datetime(2025, 8, 1, tzinfo=timezone.utc)
         ).all()
 
-        # Calculate by floor (A = Atas, B = Bawah)
-        floor_a_income = sum(p.amount for p in july_payments if 'A' in db.query(Room).join(Tenant).filter(Tenant.id == p.tenant_id).first().room_number)
-        floor_b_income = sum(p.amount for p in july_payments if 'B' in db.query(Room).join(Tenant).filter(Tenant.id == p.tenant_id).first().room_number)
-
-        # Simpler calculation - get tenant's room
-        floor_a_total = 0
-        floor_b_total = 0
+        # Calculate income by floor
+        floor_income = {1: 0, 2: 0, 3: 0, 4: 0}
 
         for payment in july_payments:
             tenant = db.query(Tenant).filter(Tenant.id == payment.tenant_id).first()
             if tenant and tenant.current_room_id:
                 room = db.query(Room).filter(Room.id == tenant.current_room_id).first()
-                if room:
-                    if room.room_number.startswith('A'):
-                        floor_a_total += payment.amount
-                    else:
-                        floor_b_total += payment.amount
+                if room and room.floor in floor_income:
+                    floor_income[room.floor] += payment.amount
 
-        total_income = floor_a_total + floor_b_total
+        total_income = sum(floor_income.values())
 
-        print(f"\n  Floor A (Atas):  Rp {floor_a_total:>11,}")
-        print(f"  Floor B (Bawah): Rp {floor_b_total:>11,}")
+        print(f"\n  Floor 1: Rp {floor_income[1]:>11,}")
+        print(f"  Floor 2: Rp {floor_income[2]:>11,}")
+        print(f"  Floor 3: Rp {floor_income[3]:>11,}")
+        print(f"  Floor 4: Rp {floor_income[4]:>11,}")
         print(f"  {'─' * 35}")
         print(f"  Total Income:    Rp {total_income:>11,}")
-        print(f"\n  Expected Total:  Rp  13,570,000")
-        print(f"  Difference:      Rp {total_income - 13570000:>11,}")
 
         print("\n" + "=" * 60)
         print("✅ DATABASE SEEDING COMPLETE!")
         print("=" * 60)
         print("\nData Summary:")
-        print(f"  - 24 rooms (A1-A12, B1-B12)")
-        print(f"  - Floor A: Rp 650,000-700,000/month")
-        print(f"  - Floor B: Rp 700,000-750,000/month")
-        print(f"  - Occupied rooms with tenants and payments")
+        print(f"  - 32 rooms (101-404) across 4 floors")
+        print(f"  - Floor 1: Standard/Superior rooms (300k-400k)")
+        print(f"  - Floor 2: Superior/Deluxe rooms (400k-500k)")
+        print(f"  - Floor 3: Deluxe/Junior Suite rooms (500k-550k)")
+        print(f"  - Floor 4: Suite rooms (600k-650k)")
+        print(f"  - Occupied rooms with guests and payments")
         print(f"  - Payment dates: July-August 2025")
         print(f"  - Payment methods: BCA transfer, Cash (M)")
         print(f"  - July income: Rp {total_income:,}")
         print(f"  - July expenses: Rp 805,000")
         print(f"  - July profit: Rp {total_income - 805000:,}")
-        print("\nSpecial Cases:")
-        print(f"  - A9: Kabur (tenant ran away)")
-        print(f"  - B5, B11: Kosong (vacant)")
-        print(f"  - B12: Anto (occupied, no payment yet)")
+        print("\nRoom Status:")
+        print(f"  - Occupied: Multiple rooms with active guests")
+        print(f"  - Vacant: Rooms 204, 304, 402")
 
     except Exception as e:
         print(f"\n❌ Error: {e}")

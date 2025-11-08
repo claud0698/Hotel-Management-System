@@ -1,23 +1,26 @@
 /**
  * Rooms Management Page
- * Features: Level view (A/B sections), Status filter, View toggle
+ * Features: Floor view (Floor 1-4), Status filter, View toggle
  */
 
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import type { Room } from '../services/api';
+import type { Room, RoomType } from '../services/api';
+import { apiClient } from '../services/api';
 import { useRoomStore } from '../stores/roomStore';
 
-type ViewMode = 'level' | 'grid';
+type ViewMode = 'floor' | 'grid';
 type StatusFilter = 'all' | 'available' | 'occupied';
 
 export function RoomsPage() {
   const { t } = useTranslation();
   const { rooms, isLoading, fetchRooms, deleteRoom } = useRoomStore();
   const [showForm, setShowForm] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>('level'); // Default to level view
+  const [viewMode, setViewMode] = useState<ViewMode>('floor'); // Default to floor view
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
+  const [loadingRoomTypes, setLoadingRoomTypes] = useState(false);
 
   // Helper function to translate status
   const translateStatus = (status: string) => {
@@ -25,9 +28,9 @@ export function RoomsPage() {
   };
   const [formData, setFormData] = useState<Partial<Room>>({
     room_number: '',
-    floor: 2,
-    room_type: 'single',
-    monthly_rate: 0,
+    floor: 1,
+    room_type_id: 1,
+    nightly_rate: 0,
     status: 'available',
     amenities: '',
   });
@@ -35,7 +38,27 @@ export function RoomsPage() {
 
   useEffect(() => {
     fetchRooms();
+    fetchRoomTypesData();
   }, []);
+
+  const fetchRoomTypesData = async () => {
+    try {
+      setLoadingRoomTypes(true);
+      const response = await apiClient.getRoomTypes();
+      setRoomTypes(response.room_types);
+      // Set default room type to first one if available
+      if (response.room_types.length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          room_type_id: response.room_types[0].id,
+        }));
+      }
+    } catch (err) {
+      console.error('Failed to fetch room types:', err);
+    } finally {
+      setLoadingRoomTypes(false);
+    }
+  };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -43,7 +66,7 @@ export function RoomsPage() {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'floor' || name === 'monthly_rate' ? parseFloat(value) : value,
+      [name]: name === 'floor' || name === 'nightly_rate' || name === 'room_type_id' ? parseFloat(value) : value,
     }));
   };
 
@@ -51,7 +74,7 @@ export function RoomsPage() {
     e.preventDefault();
     setError(null);
 
-    if (!formData.room_number || formData.monthly_rate === undefined || formData.monthly_rate <= 0) {
+    if (!formData.room_number || formData.nightly_rate === undefined || formData.nightly_rate <= 0 || !formData.room_type_id) {
       setError(t('common.requiredFields'));
       return;
     }
@@ -60,9 +83,9 @@ export function RoomsPage() {
       await useRoomStore.getState().createRoom(formData);
       setFormData({
         room_number: '',
-        floor: 2,
-        room_type: 'single',
-        monthly_rate: 0,
+        floor: 1,
+        room_type_id: 1,
+        nightly_rate: 0,
         status: 'available',
         amenities: '',
       });
@@ -99,9 +122,13 @@ export function RoomsPage() {
     return room.status === statusFilter;
   });
 
-  // Group rooms by floor (Floor 2 = A/Atas/Upper, Floor 1 = B/Bawah/Lower)
-  const roomsLevelA = filteredRooms.filter(room => room.floor === 2);
-  const roomsLevelB = filteredRooms.filter(room => room.floor === 1);
+  // Group rooms by floor
+  const roomsByFloor = {
+    1: filteredRooms.filter(room => room.floor === 1),
+    2: filteredRooms.filter(room => room.floor === 2),
+    3: filteredRooms.filter(room => room.floor === 3),
+    4: filteredRooms.filter(room => room.floor === 4),
+  };
 
   // Room Card Component
   const RoomCard = ({ room }: { room: Room }) => (
@@ -115,13 +142,13 @@ export function RoomsPage() {
 
       <div className="space-y-1 mb-3 text-sm">
         <p className="text-gray-600">
-          <strong>{t('rooms.roomType')}:</strong> {t(`rooms.${room.room_type}`)}
+          <strong>{t('rooms.roomType')}:</strong> {room.room_type_name || 'Unknown'}
         </p>
         <p className="text-gray-600">
           <strong>{t('rooms.floor')}:</strong> {room.floor}
         </p>
         <p className="text-gray-900 font-semibold">
-          Rp {room.monthly_rate.toLocaleString('id-ID')} {t('rooms.perMonth')}
+          Rp {room.nightly_rate?.toLocaleString('id-ID') || 'N/A'} / night
         </p>
         {room.current_tenant && (
           <p className="text-blue-600 text-sm">
@@ -171,14 +198,14 @@ export function RoomsPage() {
             <span className="text-sm font-medium text-gray-700">{t('common.view')}:</span>
             <div className="inline-flex rounded-lg border border-gray-300 bg-gray-50">
               <button
-                onClick={() => setViewMode('level')}
+                onClick={() => setViewMode('floor')}
                 className={`px-4 py-2 text-sm font-medium rounded-l-lg transition ${
-                  viewMode === 'level'
+                  viewMode === 'floor'
                     ? 'bg-blue-600 text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                {t('rooms.levelView')}
+                {t('rooms.floorView')}
               </button>
               <button
                 onClick={() => setViewMode('grid')}
@@ -257,37 +284,43 @@ export function RoomsPage() {
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               >
-                <option value={2}>{t('rooms.floor2Upper')}</option>
-                <option value={1}>{t('rooms.floor1Lower')}</option>
+                <option value={1}>Floor 1</option>
+                <option value={2}>Floor 2</option>
+                <option value={3}>Floor 3</option>
+                <option value={4}>Floor 4</option>
               </select>
             </div>
 
             {/* Room Type */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t('rooms.roomType')}
+                {t('rooms.roomType')} *
               </label>
               <select
-                name="room_type"
-                value={formData.room_type}
+                name="room_type_id"
+                value={formData.room_type_id || ''}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                disabled={loadingRoomTypes}
               >
-                <option value="single">{t('rooms.single')}</option>
-                <option value="double">{t('rooms.double')}</option>
-                <option value="suite">{t('rooms.suite')}</option>
+                <option value="">-- Select Room Type --</option>
+                {roomTypes.map((rt) => (
+                  <option key={rt.id} value={rt.id}>
+                    {rt.name} (Rp {rt.default_rate?.toLocaleString('id-ID') || 'N/A'} / night)
+                  </option>
+                ))}
               </select>
             </div>
 
-            {/* Monthly Rate */}
+            {/* Nightly Rate */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t('rooms.monthlyRate')} (IDR) *
+                Nightly Rate (IDR) *
               </label>
               <input
                 type="number"
-                name="monthly_rate"
-                value={formData.monthly_rate}
+                name="nightly_rate"
+                value={formData.nightly_rate || 0}
                 onChange={handleInputChange}
                 placeholder={t('rooms.placeholders.monthlyRate')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
@@ -351,50 +384,30 @@ export function RoomsPage() {
               : t('rooms.noRoomsFiltered', { status: t(`rooms.${statusFilter}`) })}
           </p>
         </div>
-      ) : viewMode === 'level' ? (
-        /* Level View - A (Atas) and B (Bawah) sections */
+      ) : viewMode === 'floor' ? (
+        /* Floor View - Rooms grouped by floors 1-4 */
         <div className="space-y-8">
-          {/* Level A - Upper */}
-          <div>
-            <div className="flex items-center gap-3 mb-4">
-              <h2 className="text-2xl font-bold text-gray-900">{t('rooms.levelAUpper')}</h2>
-              <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
-                {roomsLevelA.length} {t('rooms.rooms')}
-              </span>
+          {[1, 2, 3, 4].map((floor) => (
+            <div key={floor}>
+              <div className="flex items-center gap-3 mb-4">
+                <h2 className="text-2xl font-bold text-gray-900">Floor {floor}</h2>
+                <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
+                  {roomsByFloor[floor as keyof typeof roomsByFloor].length} {t('rooms.rooms')}
+                </span>
+              </div>
+              {roomsByFloor[floor as keyof typeof roomsByFloor].length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                  {roomsByFloor[floor as keyof typeof roomsByFloor].map((room) => (
+                    <RoomCard key={room.id} room={room} />
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-gray-50 rounded-lg p-8 text-center">
+                  <p className="text-gray-500">No rooms on Floor {floor}</p>
+                </div>
+              )}
             </div>
-            {roomsLevelA.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                {roomsLevelA.map((room) => (
-                  <RoomCard key={room.id} room={room} />
-                ))}
-              </div>
-            ) : (
-              <div className="bg-gray-50 rounded-lg p-8 text-center">
-                <p className="text-gray-500">{t('rooms.noRoomsLevelA')}</p>
-              </div>
-            )}
-          </div>
-
-          {/* Level B - Lower */}
-          <div>
-            <div className="flex items-center gap-3 mb-4">
-              <h2 className="text-2xl font-bold text-gray-900">{t('rooms.levelBLower')}</h2>
-              <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
-                {roomsLevelB.length} {t('rooms.rooms')}
-              </span>
-            </div>
-            {roomsLevelB.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                {roomsLevelB.map((room) => (
-                  <RoomCard key={room.id} room={room} />
-                ))}
-              </div>
-            ) : (
-              <div className="bg-gray-50 rounded-lg p-8 text-center">
-                <p className="text-gray-500">{t('rooms.noRoomsLevelB')}</p>
-              </div>
-            )}
-          </div>
+          ))}
         </div>
       ) : (
         /* Grid View - All rooms in one grid */

@@ -16,7 +16,7 @@ else:
     load_dotenv()
 
 # Database configuration
-DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///./kos.db')
+DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///./hotel.db')
 
 # Create engine and session factory with optimized connection pooling
 engine = create_engine(

@@ -54,11 +54,15 @@ export interface Room {
   room_number: string;
   floor: number;
   room_type_id: number;
+  room_type?: string; // code
+  room_type_name?: string; // full name
+  nightly_rate?: number; // rate per night
   room_type?: RoomType;
-  status: 'available' | 'occupied' | 'out_of_order';
+  status: 'available' | 'occupied' | 'out_of_order' | 'maintenance';
   view_type?: string;
   notes?: string;
   custom_rate?: number;
+  amenities?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -322,6 +326,10 @@ class ApiClient {
   }
 
   // ==================== ROOMS ====================
+
+  async getRoomTypes(): Promise<{ room_types: RoomType[] }> {
+    return this.request('/rooms/types');
+  }
 
   async getRooms(): Promise<{ rooms: Room[] }> {
     return this.request('/rooms');
