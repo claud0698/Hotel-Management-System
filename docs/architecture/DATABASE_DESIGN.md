@@ -406,25 +406,69 @@ CREATE INDEX idx_settings_key ON settings(setting_key);
 CREATE INDEX idx_settings_category ON settings(category);
 ```
 
-**File Storage Settings (for V1.0 use)**:
+**File Storage Settings (for V1.0 use - Google Cloud Storage)**:
 ```json
 {
   "file_storage_config": {
-    "storage_backend": "local",  // local, s3, gcs, azure
-    "local_path": "/data/uploads/payment_proofs",
+    "storage_backend": "gcs",
     "max_file_size_mb": 10,
     "allowed_file_types": ["jpg", "jpeg", "png", "pdf"],
-    "retention_days": 2555  // ~7 years for audit
+    "retention_days": 2555
   },
-  "s3_config": {
-    "enabled": false,
-    "bucket": "hotel-payment-proofs",
-    "region": "us-east-1",
-    "access_key": "xxxxx",
-    "secret_key": "xxxxx"
+  "gcs_config": {
+    "enabled": true,
+    "project_id": "your-gcp-project",
+    "bucket_name": "hotel-payment-proofs",
+    "service_account_json": "path/to/service-account-key.json"
   }
 }
 ```
+
+**Booking Channels Configuration (V1.0 - Simplified, No API Keys)**:
+```json
+{
+  "enabled_channels": ["direct", "tiket", "traveloka", "booking", "other"],
+  "channels": {
+    "direct": {
+      "name": "Direct Booking",
+      "enabled": true,
+      "commission_percentage": 0,
+      "notes": "Walk-in, phone, email, website"
+    },
+    "tiket": {
+      "name": "Tiket.com",
+      "enabled": true,
+      "commission_percentage": 15,
+      "notes": "Track Tiket bookings and price"
+    },
+    "traveloka": {
+      "name": "Traveloka",
+      "enabled": true,
+      "commission_percentage": 18,
+      "notes": "Track Traveloka bookings and price"
+    },
+    "booking": {
+      "name": "Booking.com",
+      "enabled": true,
+      "commission_percentage": 20,
+      "notes": "Track Booking.com bookings and price"
+    },
+    "other": {
+      "name": "Other",
+      "enabled": true,
+      "commission_percentage": 0,
+      "notes": "Other booking sources"
+    }
+  }
+}
+```
+
+**How it works (V1.0)**:
+- Staff manually selects booking channel when creating reservation
+- System tracks which channel the booking came from
+- Tracks the rate/price per booking
+- Commission percentage stored for future reporting (v1.1+)
+- No API integration yet - purely for tracking sales by channel
 
 ---
 
@@ -651,16 +695,16 @@ CREATE INDEX idx_guest_documents_type ON guest_documents(document_type);
 **Purpose**: Store payment evidence (invoices, receipts, transfer proofs)
 
 **Supported Storage Backends**:
-1. **Local** (v1.0) - `/data/uploads/payment_proofs/{reservation_id}/{payment_id}/`
-2. **AWS S3** (v1.1+) - `s3://bucket/payment-proofs/{reservation_id}/{payment_id}/`
-3. **Google Cloud Storage** (v1.1+) - `gs://bucket/payment-proofs/{reservation_id}/{payment_id}/`
-4. **Azure Blob** (v1.1+) - `https://account.blob.core.windows.net/container/...`
+1. **Google Cloud Storage (GCS)** (v1.0 default) - `gs://bucket/payment-proofs/{reservation_id}/{payment_id}/`
+2. **Local** (fallback) - `/data/uploads/payment_proofs/{reservation_id}/{payment_id}/`
+3. **AWS S3** (future) - `s3://bucket/payment-proofs/{reservation_id}/{payment_id}/`
+4. **Azure Blob** (future) - `https://account.blob.core.windows.net/container/...`
 
 ### File Organization
 
+**Google Cloud Storage Path Structure**:
 ```
-Local Storage Path Structure:
-/data/uploads/
+gs://hotel-payment-proofs/
 ├── payment_proofs/
 │   ├── RES-20251108-0001/
 │   │   ├── PAY-001/
@@ -671,11 +715,28 @@ Local Storage Path Structure:
 │   │       └── credit_card_slip.png (890 KB)
 │   └── RES-20251108-0002/
 │       └── ...
+│
+├── room_images/
+│   ├── ROOM-101/
+│   │   ├── main_photo.jpg
+│   │   ├── bedroom.jpg
+│   │   └── ...
+│   └── ROOM-102/
+│
+└── room_type_images/
+    ├── TYPE-STANDARD/
+    │   ├── showcase.jpg
+    │   └── ...
+    └── TYPE-DELUXE/
+```
 
-Metadata Format:
+**Metadata Format** (stored in database):
+```json
 {
   "payment_id": 123,
   "file_name": "bank_transfer_proof.jpg",
+  "file_path": "gs://hotel-payment-proofs/payment_proofs/RES-001/PAY-001/bank_transfer_proof.jpg",
+  "storage_location": "gcs",
   "file_size": 1254321,
   "mime_type": "image/jpeg",
   "uploaded_by": 1,
@@ -796,18 +857,44 @@ DEFAULT_SETTINGS = [
     ('check_in_time', '14:00', 'string', 'Booking'),
     ('check_out_time', '12:00', 'string', 'Booking'),
 
-    # File Storage
-    ('file_storage_config', '{"storage_backend": "local", ...}', 'json', 'File Storage'),
+    # File Storage (Google Cloud Storage)
+    ('file_storage_config', '{"storage_backend": "gcs", ...}', 'json', 'File Storage'),
 
     # Localization
     ('timezone', 'Asia/Jakarta', 'string', 'Localization'),
     ('currency', 'IDR', 'string', 'Localization'),
     ('default_language', 'id', 'string', 'Localization'),
 
-    # OTA Channels
-    ('booking_channels_config', '{"enabled_channels": [...]}', 'json', 'OTA'),
+    # Booking Channels (Track sales by channel)
+    ('booking_channels_config', '{"enabled_channels": ["direct", "tiket", "traveloka", "booking"], ...}', 'json', 'Booking Channels'),
 ]
 ```
+
+### Admin Settings UI (V1.0)
+
+**What Admin Can Configure**:
+
+1. **Hotel Information**
+   - Hotel name, address, phone
+
+2. **Booking Configuration**
+   - Check-in time
+   - Check-out time
+
+3. **Booking Channels** (Track sales by channel)
+   - Enable/disable each channel (Direct, Tiket, Traveloka, Booking, Other)
+   - Set commission percentage (for future analytics in v1.1)
+   - Add notes about channel
+
+4. **File Storage** (Google Cloud Storage)
+   - Project ID
+   - Bucket name
+   - Service account configuration (via environment variables, not in UI)
+
+5. **Localization**
+   - Timezone
+   - Currency
+   - Default language (EN/ID)
 
 ---
 
