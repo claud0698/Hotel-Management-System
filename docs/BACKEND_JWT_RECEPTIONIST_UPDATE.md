@@ -11,18 +11,19 @@ This document summarizes the backend updates for JWT token expiration (12-hour s
 
 ## Changes Made
 
-### 1. JWT Token Expiration (12 Hours)
+### 1. JWT Token Expiration (16 Hours)
 
 **File:** `backend/security.py` (line 16)
 
 ```python
-TOKEN_EXPIRE_MINUTES = 60 * 12  # 12 hours (shift-based expiration)
+TOKEN_EXPIRE_MINUTES = 60 * 16  # 16 hours (shift-based expiration)
 ```
 
-**Why 12 hours?**
-- Hotel receptionists work in shifts (typically 8-12 hour shifts)
-- 12-hour expiration aligns with shift duration
-- Requires re-authentication for new shifts, improving security
+**Why 16 hours?**
+- Hotel receptionists work in extended shifts (8-16 hour shifts)
+- 16-hour expiration covers standard and extended shift durations
+- Provides flexibility for longer operational periods
+- Still requires re-authentication for new shifts, improving security
 - Reduces token validity window for security incidents
 
 **Implementation:**
@@ -33,8 +34,8 @@ TOKEN_EXPIRE_MINUTES = 60 * 12  # 12 hours (shift-based expiration)
 **Testing:**
 ```python
 # Token created at: 2025-11-10 08:00:00 UTC
-# Token expires at: 2025-11-10 20:00:00 UTC
-# Duration: 12 hours exactly
+# Token expires at: 2025-11-11 00:00:00 UTC
+# Duration: 16 hours exactly
 ```
 
 ---
@@ -343,22 +344,23 @@ ORDER BY r.checked_in_at DESC;
 ### 2. JWT Security Timeline
 
 ```
-Receptionist Login Time    Shift-End Time         Token Expiration
-       ↓                        ↓                         ↓
-   08:00 UTC          16:00 UTC (end of shift)    20:00 UTC
-   │                      │                        │
-   └──────────────────────┘                        │
-         8-hour shift                              │
-                                                   │ 12-hour validity
-                                                   │ (covers overlap)
-                                                   │
+Receptionist Login Time    Standard Shift         Extended Shift         Token Expiration
+       ↓                   End Time               End Time                      ↓
+   08:00 UTC          16:00 UTC              24:00 UTC (midnight)        00:00 UTC (+1 day)
+   │                      │                      │                           │
+   └──────────────────────┘─────────────────────┘                           │
+         8-hour shift      16-hour shift                                      │
+                                                                              │ 16-hour validity
+                                                                              │ (covers all shifts)
 ```
 
 Benefits:
-- Token valid for entire shift + 4-hour overlap
+- Token valid for entire standard shift (8-12 hours)
+- Token valid for extended shifts (up to 16 hours)
 - Receptionist only needs to re-login at shift change
 - Reduces password entry fatigue
-- Automatic logout after 12 hours for security
+- Automatic logout after 16 hours for security
+- Flexibility for operational requirements
 
 ### 3. Room Management
 
@@ -389,14 +391,14 @@ Check-in flow:
 
 ### 1. JWT Token Handling
 
-**Token Expiration (12 hours):**
+**Token Expiration (16 hours):**
 ```typescript
-// Frontend should implement automatic re-login at 11.5 hours
-const TOKEN_EXPIRATION_MS = 12 * 60 * 60 * 1000; // 12 hours
+// Frontend should implement automatic re-login at 15.5 hours
+const TOKEN_EXPIRATION_MS = 16 * 60 * 60 * 1000; // 16 hours
 
 useEffect(() => {
   const refreshTimer = setTimeout(() => {
-    // Show "Session expiring soon" warning at 11.5 hours
+    // Show "Session expiring soon" warning at 15.5 hours
     showSessionExpiryWarning();
   }, TOKEN_EXPIRATION_MS - 30 * 60 * 1000); // 30 minutes before expiry
 }, []);
@@ -465,7 +467,7 @@ GROUP BY checked_in_by;
 
 | Aspect | Before | After |
 |--------|--------|-------|
-| **JWT Expiration** | 24 hours | 12 hours (shift-based) |
+| **JWT Expiration** | 24 hours | 16 hours (shift-based, flexible) |
 | **Receptionist Tracking** | Not tracked | User ID + Username |
 | **Check-in Audit Trail** | Basic | Full with receptionist info |
 | **API Endpoints** | None | 7 endpoints for reservations |
