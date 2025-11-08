@@ -107,13 +107,8 @@
     "updateRoom": "Perbarui Kamar",
     "creating": "Membuat...",
     "updating": "Memperbarui...",
-    "levelView": "Tampilan Lantai",
     "gridView": "Tampilan Grid",
     "rooms": "kamar",
-    "levelAUpper": "Lantai A - Atas",
-    "levelBLower": "Lantai B - Bawah",
-    "floor2Upper": "Lantai 2 (A - Atas)",
-    "floor1Lower": "Lantai 1 (B - Bawah)",
     "confirmDelete": "Apakah Anda yakin ingin menghapus kamar ini?",
     "confirmDeleteWarning": "Apakah Anda yakin ingin menghapus kamar ini? Tindakan ini tidak dapat dibatalkan.",
     "createFailed": "Gagal membuat kamar",
@@ -127,7 +122,7 @@
     "monthlyRateIDR": "Tarif Bulanan (IDR)",
     "required": "*",
     "placeholders": {
-      "roomNumber": "mis., A1, B5",
+      "roomNumber": "mis., 101, 205",
       "floor": "mis., 1",
       "monthlyRate": "500000",
       "amenities": "mis., Wi-Fi, AC, TV"
