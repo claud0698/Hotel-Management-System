@@ -71,13 +71,39 @@ export interface Room {
 export interface RoomImage {
   id: number;
   room_id: number;
+  image_name: string;
   image_type: 'main_photo' | 'bedroom' | 'bathroom' | 'living_area' | 'amenities' | 'other';
-  storage_location: 'local' | 's3' | 'gcs' | 'azure';
   image_path: string;
+  storage_location: 'local' | 's3' | 'gcs' | 'azure';
   file_size_bytes?: number;
   mime_type?: string;
+  original_filename?: string;
+  image_width?: number;
+  image_height?: number;
   uploaded_by?: number;
+  description?: string;
   display_order?: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RoomTypeImage {
+  id: number;
+  room_type_id: number;
+  image_name: string;
+  image_type: 'showcase' | 'floorplan' | 'amenities' | 'other';
+  image_path: string;
+  storage_location: 'local' | 's3' | 'gcs' | 'azure';
+  file_size_bytes?: number;
+  mime_type?: string;
+  original_filename?: string;
+  image_width?: number;
+  image_height?: number;
+  uploaded_by?: number;
+  description?: string;
+  display_order?: number;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -358,6 +384,120 @@ class ApiClient {
 
   async deleteRoom(roomId: number): Promise<{ message: string }> {
     return this.request(`/rooms/${roomId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // ==================== ROOM IMAGES ====================
+
+  async getRoomImages(roomId: number): Promise<{ images: RoomImage[] }> {
+    return this.request(`/rooms/${roomId}/images`);
+  }
+
+  async getRoomImage(roomId: number, imageId: number): Promise<{ image: RoomImage }> {
+    return this.request(`/rooms/${roomId}/images/${imageId}`);
+  }
+
+  async uploadRoomImage(
+    roomId: number,
+    file: File,
+    imageType: RoomImage['image_type'],
+    description?: string
+  ): Promise<{ image: RoomImage }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('image_type', imageType);
+    if (description) {
+      formData.append('description', description);
+    }
+
+    const url = `${API_BASE_URL}/rooms/${roomId}/images`;
+    const headers: Record<string, string> = {};
+
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`API Error [POST /rooms/${roomId}/images]:`, error);
+      throw error;
+    }
+  }
+
+  async deleteRoomImage(roomId: number, imageId: number): Promise<{ message: string }> {
+    return this.request(`/rooms/${roomId}/images/${imageId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async updateRoomImageOrder(
+    roomId: number,
+    imageUpdates: Array<{ id: number; display_order: number }>
+  ): Promise<{ message: string }> {
+    return this.request(`/rooms/${roomId}/images/reorder`, {
+      method: 'POST',
+      body: JSON.stringify({ images: imageUpdates }),
+    });
+  }
+
+  // ==================== ROOM TYPE IMAGES ====================
+
+  async getRoomTypeImages(roomTypeId: number): Promise<{ images: RoomTypeImage[] }> {
+    return this.request(`/rooms/types/${roomTypeId}/images`);
+  }
+
+  async uploadRoomTypeImage(
+    roomTypeId: number,
+    file: File,
+    imageType: RoomTypeImage['image_type'],
+    description?: string
+  ): Promise<{ image: RoomTypeImage }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('image_type', imageType);
+    if (description) {
+      formData.append('description', description);
+    }
+
+    const url = `${API_BASE_URL}/rooms/types/${roomTypeId}/images`;
+    const headers: Record<string, string> = {};
+
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`API Error [POST /rooms/types/${roomTypeId}/images]:`, error);
+      throw error;
+    }
+  }
+
+  async deleteRoomTypeImage(roomTypeId: number, imageId: number): Promise<{ message: string }> {
+    return this.request(`/rooms/types/${roomTypeId}/images/${imageId}`, {
       method: 'DELETE',
     });
   }

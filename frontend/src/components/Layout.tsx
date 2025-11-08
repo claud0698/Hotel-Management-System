@@ -1,6 +1,7 @@
 /**
  * Main Layout Component
  * Wraps authenticated pages with Navbar and Sidebar
+ * Fully responsive with mobile-friendly collapsible sidebar
  */
 
 import type { ReactNode } from 'react';
@@ -20,12 +21,12 @@ export function Layout({ children }: LayoutProps) {
   }
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen bg-gray-50">
       <Navbar />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
-        <main className="flex-1 overflow-y-auto bg-gray-50">
-          <div className="p-6 max-w-7xl mx-auto">
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-4 sm:p-6 max-w-7xl mx-auto w-full">
             {children}
           </div>
         </main>
