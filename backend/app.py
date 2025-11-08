@@ -47,10 +47,8 @@ def create_app():
         openapi_url="/api/openapi.json"
     )
 
-    # GZip Compression Middleware - compress responses larger than 1KB
-    app.add_middleware(GZipMiddleware, minimum_size=1000)
-
     # CORS Configuration - allow all origins for testing (disable for production)
+    # Must be added FIRST (before other middleware) due to middleware ordering
     cors_origins = os.getenv('CORS_ORIGINS', '*')  # Allow all origins for testing
 
     if cors_origins == '*':
@@ -58,8 +56,8 @@ def create_app():
         app.add_middleware(
             CORSMiddleware,
             allow_origins=["*"],
-            allow_credentials=True,
-            allow_methods=["*"],
+            allow_credentials=False,
+            allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
             allow_headers=["*"],
         )
     else:
@@ -68,10 +66,13 @@ def create_app():
         app.add_middleware(
             CORSMiddleware,
             allow_origins=origins,
-            allow_credentials=True,
-            allow_methods=["*"],
+            allow_credentials=False,
+            allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
             allow_headers=["*"],
         )
+
+    # GZip Compression Middleware - compress responses larger than 1KB
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
 
     # Comprehensive health check endpoint
     @app.get('/health')
