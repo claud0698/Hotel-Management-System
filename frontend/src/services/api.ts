@@ -133,11 +133,17 @@ export interface Payment {
   reservation_id: number;
   reservation?: Reservation;
   amount: number;
+  payment_date: string;
   payment_type: 'full' | 'downpayment' | 'deposit' | 'adjustment';
-  payment_method: 'cash' | 'card' | 'transfer' | 'check' | 'other';
+  payment_method: 'cash' | 'credit_card' | 'debit_card' | 'bank_transfer' | 'e_wallet' | 'other';
   reference_number?: string;
+  transaction_id?: string;
   notes?: string;
-  recorded_by?: number;
+  created_by?: number;
+  is_refund?: boolean;
+  refund_reason?: string;
+  is_voided?: boolean;
+  has_proof?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -150,6 +156,18 @@ export interface PaymentAttachment {
   storage_location: 'local' | 's3' | 'gcs' | 'azure';
   file_size_bytes?: number;
   uploaded_at: string;
+}
+
+// ==================== EXPENSES ====================
+export interface Expense {
+  id: number;
+  date: string;
+  category: string;
+  amount: number;
+  description?: string;
+  receipt_url?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 // ==================== DASHBOARD ====================
@@ -471,6 +489,49 @@ class ApiClient {
 
   async deletePayment(paymentId: number): Promise<{ message: string }> {
     return this.request(`/payments/${paymentId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // ==================== EXPENSES ====================
+
+  async getExpenses(
+    category?: string,
+    startDate?: string,
+    endDate?: string
+  ): Promise<{ expenses: Expense[] }> {
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+
+    const query = params.toString();
+    return this.request(`/expenses${query ? '?' + query : ''}`);
+  }
+
+  async getExpense(expenseId: number): Promise<{ expense: Expense }> {
+    return this.request(`/expenses/${expenseId}`);
+  }
+
+  async createExpense(data: Partial<Expense>): Promise<{ message: string; expense: Expense }> {
+    return this.request('/expenses', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateExpense(
+    expenseId: number,
+    data: Partial<Expense>
+  ): Promise<{ message: string; expense: Expense }> {
+    return this.request(`/expenses/${expenseId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteExpense(expenseId: number): Promise<{ message: string }> {
+    return this.request(`/expenses/${expenseId}`, {
       method: 'DELETE',
     });
   }

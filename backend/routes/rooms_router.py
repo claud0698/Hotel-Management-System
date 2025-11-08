@@ -28,18 +28,15 @@ async def get_rooms(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Get all rooms with pagination and eager loading for performance"""
-    # Eager load tenants to avoid N+1 queries
-    query = db.query(Room).options(joinedload(Room.tenants))
-
+    """Get all rooms with pagination"""
     # Get total count for pagination metadata
     total = db.query(Room).count()
 
-    # Apply pagination
-    rooms = query.offset(skip).limit(limit).all()
+    # Query rooms
+    rooms = db.query(Room).offset(skip).limit(limit).all()
 
     return {
-        "rooms": [room.to_dict(include_tenant=True) for room in rooms],
+        "rooms": [room.to_dict() for room in rooms],
         "total": total,
         "skip": skip,
         "limit": limit

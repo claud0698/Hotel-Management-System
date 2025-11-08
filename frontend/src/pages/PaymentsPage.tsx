@@ -1,27 +1,29 @@
 /**
  * Payments Management Page
- * Simplified for manual payment entry with duration tracking
+ * Track payments for active reservations
  */
 
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { Payment, Tenant, Room } from '../services/api';
+import type { Payment, Reservation, Guest, Room } from '../services/api';
 import { apiClient } from '../services/api';
 
 export function PaymentsPage() {
   const { t } = useTranslation();
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [guests, setGuests] = useState<Guest[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    tenant_id: '',
-    months: 1,
+    reservation_id: '',
+    amount: 0,
     payment_date: new Date().toISOString().split('T')[0],
     payment_method: 'cash',
+    reference_number: '',
     notes: '',
   });
 
@@ -31,14 +33,16 @@ export function PaymentsPage() {
 
   const loadData = async () => {
     try {
-      const [paymentsRes, tenantsRes, roomsRes] = await Promise.all([
+      const [paymentsRes, reservationsRes, guestsRes, roomsRes] = await Promise.all([
         apiClient.getPayments(),
-        apiClient.getTenants(),
+        apiClient.getReservations(),
+        apiClient.getGuests(),
         apiClient.getRooms(),
       ]);
 
       setPayments(paymentsRes.payments || []);
-      setTenants(tenantsRes.tenants || []);
+      setReservations(reservationsRes.reservations || []);
+      setGuests(guestsRes.guests || []);
       setRooms(roomsRes.rooms || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('payments.loadFailed'));
@@ -51,7 +55,7 @@ export function PaymentsPage() {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'months' ? parseInt(value) : value,
+      [name]: name === 'amount' ? parseFloat(value) : value,
     }));
   };
 
@@ -59,49 +63,35 @@ export function PaymentsPage() {
     e.preventDefault();
     setError(null);
 
-    if (!formData.tenant_id || formData.months <= 0) {
-      setError(t('payments.selectTenantAndMonths'));
+    if (!formData.reservation_id || formData.amount <= 0) {
+      setError(t('payments.selectReservationAndAmount'));
       return;
     }
 
     try {
       setIsLoading(true);
 
-      const tenant = tenants.find((t) => t.id === parseInt(formData.tenant_id));
-      const room = rooms.find((r) => r.id === tenant?.current_room_id);
+      await apiClient.createPayment({
+        reservation_id: parseInt(formData.reservation_id),
+        amount: formData.amount,
+        payment_date: formData.payment_date,
+        payment_method: formData.payment_method as any,
+        payment_type: 'full',
+        reference_number: formData.reference_number || undefined,
+        notes: formData.notes || undefined,
+      });
 
-      if (!room) {
-        throw new Error(t('payments.tenantNotAssignedToRoom'));
-      }
-
-      // Create payment record for each month
-      const baseDate = new Date(formData.payment_date);
-
-      for (let i = 0; i < formData.months; i++) {
-        const dueDate = new Date(baseDate);
-        dueDate.setMonth(dueDate.getMonth() + i);
-
-        await apiClient.createPayment({
-          tenant_id: parseInt(formData.tenant_id),
-          amount: room.monthly_rate,
-          due_date: dueDate.toISOString(),
-          status: 'paid',
-          paid_date: new Date(formData.payment_date).toISOString(),
-          payment_method: formData.payment_method,
-          notes: `${t('payments.monthsPaymentNote', { months: formData.months })} - ${formData.notes || ''}`,
-        });
-      }
-
-      // Reload payments
+      // Reload payments and update reservation balances
       const paymentsRes = await apiClient.getPayments();
       setPayments(paymentsRes.payments || []);
 
       // Reset form
       setFormData({
-        tenant_id: '',
-        months: 1,
+        reservation_id: '',
+        amount: 0,
         payment_date: new Date().toISOString().split('T')[0],
         payment_method: 'cash',
+        reference_number: '',
         notes: '',
       });
       setShowForm(false);
@@ -112,8 +102,10 @@ export function PaymentsPage() {
     }
   };
 
-  const getTenantName = (tenantId: number) => {
-    return tenants.find((t) => t.id === tenantId)?.name || t('common.unknown');
+  const getGuestName = (reservationId: number) => {
+    const reservation = reservations.find((r) => r.id === reservationId);
+    if (!reservation || !reservation.guest) return t('common.unknown');
+    return reservation.guest.full_name;
   };
 
   // Helper function to translate status
@@ -173,51 +165,49 @@ export function PaymentsPage() {
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('payments.recordPayment')}</h2>
           <form onSubmit={handleCreatePayment} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Tenant Selection */}
+            {/* Reservation Selection */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t('payments.tenant')} *
+                {t('reservations.title')} *
               </label>
               <select
-                name="tenant_id"
-                value={formData.tenant_id}
+                name="reservation_id"
+                value={formData.reservation_id}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">{t('payments.chooseTenant')}</option>
-                {tenants
-                  .filter((t) => t.status === 'active')
-                  .map((tenant) => {
-                    const room = rooms.find((r) => r.id === tenant.current_room_id);
-                    return (
-                      <option key={tenant.id} value={tenant.id}>
-                        {tenant.name} - {room ? `${t('rooms.title')} ${room.room_number}` : t('payments.noRoom')} (Rp{room?.monthly_rate.toLocaleString('id-ID') || 0})
-                      </option>
-                    );
-                  })}
+                <option value="">{t('reservations.chooseReservation') || 'Select Reservation'}</option>
+                {reservations
+                  .filter((r) => r.status === 'confirmed' || r.status === 'checked_in')
+                  .map((reservation) => (
+                    <option key={reservation.id} value={reservation.id}>
+                      {reservation.guest?.full_name || 'Unknown'} - Room {reservation.room?.room_number} (Balance: Rp{reservation.balance.toLocaleString('id-ID')})
+                    </option>
+                  ))}
               </select>
             </div>
 
-            {/* Number of Months */}
+            {/* Payment Amount */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t('payments.numberOfMonths')} *
+                {t('payments.amount')} (IDR) *
               </label>
               <input
                 type="number"
-                name="months"
-                value={formData.months}
+                name="amount"
+                value={formData.amount}
                 onChange={handleInputChange}
-                min="1"
+                min="0.01"
+                step="1000"
+                placeholder="e.g. 500000"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
-              <p className="text-xs text-gray-500 mt-1">{t('payments.monthsHelp')}</p>
             </div>
 
             {/* Payment Date */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t('payments.paymentDate')}
+                {t('payments.paymentDate')} *
               </label>
               <input
                 type="date"
@@ -231,7 +221,7 @@ export function PaymentsPage() {
             {/* Payment Method */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t('payments.paymentMethod')}
+                {t('payments.paymentMethod')} *
               </label>
               <select
                 name="payment_method"
@@ -239,23 +229,40 @@ export function PaymentsPage() {
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               >
-                <option value="cash">{t('payments.cash')}</option>
-                <option value="transfer">{t('payments.bankTransfer')}</option>
-                <option value="check">{t('payments.check')}</option>
-                <option value="other">{t('payments.other')}</option>
+                <option value="cash">{t('payments.cash') || 'Cash'}</option>
+                <option value="credit_card">{t('payments.creditCard') || 'Credit Card'}</option>
+                <option value="debit_card">{t('payments.debitCard') || 'Debit Card'}</option>
+                <option value="bank_transfer">{t('payments.bankTransfer') || 'Bank Transfer'}</option>
+                <option value="e_wallet">{t('payments.eWallet') || 'E-Wallet'}</option>
+                <option value="other">{t('payments.other') || 'Other'}</option>
               </select>
+            </div>
+
+            {/* Reference Number */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {t('payments.referenceNumber') || 'Reference Number'} ({t('common.optional') || 'Optional'})
+              </label>
+              <input
+                type="text"
+                name="reference_number"
+                value={formData.reference_number}
+                onChange={handleInputChange}
+                placeholder="e.g. TRF123456 or RECEIPT-001"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
             </div>
 
             {/* Notes */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t('payments.notes')} ({t('tenants.optional')})
+                {t('payments.notes')} ({t('common.optional') || 'Optional'})
               </label>
               <textarea
                 name="notes"
                 value={formData.notes}
                 onChange={handleInputChange}
-                placeholder={t('tenants.placeholders.notes')}
+                placeholder="Additional notes about this payment"
                 rows={2}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
@@ -301,36 +308,30 @@ export function PaymentsPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-gray-50">
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">{t('payments.tenant')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">{t('guests.title') || 'Guest'}</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">{t('rooms.title') || 'Room'}</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">{t('payments.amount')}</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">{t('payments.dueDate')}</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">{t('payments.status')}</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">{t('payments.paymentMethod')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700">{t('payments.paymentDate')}</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredPayments.map((payment) => (
                   <tr key={payment.id} className="border-b hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                      {getTenantName(payment.tenant_id)}
+                      {payment.reservation?.guest?.full_name || t('common.unknown')}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {payment.reservation?.room?.room_number || '-'}
                     </td>
                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">
                       {formatCurrency(payment.amount)}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {new Date(payment.due_date).toLocaleDateString('id-ID')}
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
-                          payment.status
-                        )}`}
-                      >
-                        {translateStatus(payment.status)}
-                      </span>
+                      {payment.payment_method || '-'}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {payment.payment_method || '-'}
+                      {payment.created_at ? new Date(payment.created_at).toLocaleDateString('id-ID') : '-'}
                     </td>
                   </tr>
                 ))}
