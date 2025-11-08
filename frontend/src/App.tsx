@@ -12,6 +12,7 @@ import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { RoomsPage } from './pages/RoomsPage';
 import { RoomDetailPage } from './pages/RoomDetailPage';
+import { ReservationsPage } from './pages/ReservationsPage';
 import { TenantsPage } from './pages/TenantsPage';
 import { PaymentsPage } from './pages/PaymentsPage';
 import { ExpensesPage } from './pages/ExpensesPage';
@@ -81,6 +82,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <RoomDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reservations"
+          element={
+            <ProtectedRoute>
+              <ReservationsPage />
             </ProtectedRoute>
           }
         />
