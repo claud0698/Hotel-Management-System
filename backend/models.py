@@ -69,6 +69,21 @@ class User(Base):
         """Check password"""
         return verify_password(password, self.password_hash)
 
+    def to_dict(self):
+        """Convert user to dictionary"""
+        return {
+            "id": self.id,
+            "username": self.username,
+            "email": self.email,
+            "full_name": self.full_name,
+            "phone": self.phone,
+            "role": self.role,
+            "status": self.status,
+            "last_login": self.last_login.isoformat() if self.last_login else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
     def __repr__(self):
         return f"<User(id={self.id}, username={self.username}, role={self.role})>"
 
@@ -98,6 +113,24 @@ class RoomType(Base):
     room_images = relationship("RoomTypeImage", back_populates="room_type")
     guests_preferred = relationship("Guest", back_populates="preferred_room_type")
     reservations = relationship("Reservation", foreign_keys="Reservation.room_type_id")
+
+    def to_dict(self):
+        """Convert room type to dictionary"""
+        return {
+            "id": self.id,
+            "name": self.name,
+            "code": self.code,
+            "description": self.description,
+            "base_capacity_adults": self.base_capacity_adults,
+            "base_capacity_children": self.base_capacity_children,
+            "bed_config": self.bed_config,
+            "default_rate": float(self.default_rate) if self.default_rate else 0,
+            "amenities": self.amenities,
+            "max_occupancy": self.max_occupancy,
+            "is_active": self.is_active,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
 
     def __repr__(self):
         return f"<RoomType(id={self.id}, name={self.name}, code={self.code})>"
@@ -136,6 +169,24 @@ class Room(Base):
         if self.custom_rate:
             return float(self.custom_rate)
         return float(self.room_type.default_rate)
+
+    def to_dict(self):
+        """Convert room to dictionary"""
+        return {
+            "id": self.id,
+            "room_number": self.room_number,
+            "floor": self.floor,
+            "room_type_id": self.room_type_id,
+            "room_type_name": self.room_type.name if self.room_type else None,
+            "status": self.status,
+            "view_type": self.view_type,
+            "notes": self.notes,
+            "custom_rate": float(self.custom_rate) if self.custom_rate else None,
+            "effective_rate": self.get_effective_rate(),
+            "is_active": self.is_active,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
 
     def __repr__(self):
         return f"<Room(id={self.id}, room_number={self.room_number}, status={self.status})>"
@@ -242,6 +293,25 @@ class Guest(Base):
     preferred_room_type = relationship("RoomType", back_populates="guests_preferred")
     reservations = relationship("Reservation", back_populates="guest")
 
+    def to_dict(self):
+        """Convert guest to dictionary"""
+        return {
+            "id": self.id,
+            "full_name": self.full_name,
+            "email": self.email,
+            "phone": self.phone,
+            "phone_country_code": self.phone_country_code,
+            "id_type": self.id_type,
+            "id_number": self.id_number,
+            "nationality": self.nationality,
+            "birth_date": self.birth_date.isoformat() if self.birth_date else None,
+            "notes": self.notes,
+            "is_vip": self.is_vip,
+            "preferred_room_type_id": self.preferred_room_type_id,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
     def __repr__(self):
         return f"<Guest(id={self.id}, name={self.full_name}, vip={self.is_vip})>"
 
@@ -303,6 +373,36 @@ class Reservation(Base):
         total_paid = self.calculate_total_paid()
         return float(self.total_amount) - total_paid
 
+    def to_dict(self):
+        """Convert reservation to dictionary"""
+        return {
+            "id": self.id,
+            "confirmation_number": self.confirmation_number,
+            "guest_id": self.guest_id,
+            "guest_name": self.guest.full_name if self.guest else None,
+            "check_in_date": self.check_in_date.isoformat() if self.check_in_date else None,
+            "check_out_date": self.check_out_date.isoformat() if self.check_out_date else None,
+            "room_type_id": self.room_type_id,
+            "room_id": self.room_id,
+            "room_number": self.room.room_number if self.room else None,
+            "adults": self.adults,
+            "children": self.children,
+            "rate_per_night": float(self.rate_per_night) if self.rate_per_night else 0,
+            "number_of_nights": self.number_of_nights,
+            "subtotal": float(self.subtotal) if self.subtotal else 0,
+            "discount_amount": float(self.discount_amount) if self.discount_amount else 0,
+            "total_amount": float(self.total_amount) if self.total_amount else 0,
+            "special_requests": self.special_requests,
+            "status": self.status,
+            "booking_source": self.booking_source,
+            "total_paid": self.calculate_total_paid(),
+            "balance": self.calculate_balance(),
+            "checked_in_at": self.checked_in_at.isoformat() if self.checked_in_at else None,
+            "checked_out_at": self.checked_out_at.isoformat() if self.checked_out_at else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
     def __repr__(self):
         return f"<Reservation(id={self.id}, conf={self.confirmation_number}, guest_id={self.guest_id})>"
 
@@ -337,6 +437,26 @@ class Payment(Base):
     reservation = relationship("Reservation", back_populates="payments")
     created_by_user = relationship("User", foreign_keys=[created_by])
     attachments = relationship("PaymentAttachment", back_populates="payment")
+
+    def to_dict(self):
+        """Convert payment to dictionary"""
+        return {
+            "id": self.id,
+            "reservation_id": self.reservation_id,
+            "payment_date": self.payment_date.isoformat() if self.payment_date else None,
+            "amount": float(self.amount) if self.amount else 0,
+            "payment_method": self.payment_method,
+            "reference_number": self.reference_number,
+            "transaction_id": self.transaction_id,
+            "notes": self.notes,
+            "is_refund": self.is_refund,
+            "refund_reason": self.refund_reason,
+            "is_voided": self.is_voided,
+            "has_proof": self.has_proof,
+            "created_by": self.created_by,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
 
     def __repr__(self):
         return f"<Payment(id={self.id}, reservation_id={self.reservation_id}, amount={self.amount})>"
