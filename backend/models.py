@@ -317,6 +317,44 @@ class Guest(Base):
 
 
 # ============================================================================
+# MODEL 4.5: Guest Image (ID Photo)
+# ============================================================================
+class GuestImage(Base):
+    __tablename__ = "guest_images"
+
+    id = Column(Integer, primary_key=True)
+    guest_id = Column(Integer, ForeignKey("guests.id"), nullable=False, index=True)
+    image_type = Column(String(50), nullable=False)  # id_photo, passport_photo, license_photo, etc.
+    file_path = Column(String(500), nullable=False)  # Storage path (GCS, S3, local, etc.)
+    file_name = Column(String(255), nullable=False)
+    file_size = Column(Integer)  # Size in bytes
+    mime_type = Column(String(100))  # image/jpeg, image/png, etc.
+    uploaded_by_user_id = Column(Integer, ForeignKey("users.id"))  # Receptionist who uploaded
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    guest = relationship("Guest", backref="images")
+    uploaded_by = relationship("User", backref="guest_images_uploaded")
+
+    def to_dict(self):
+        """Convert guest image to dictionary"""
+        return {
+            "id": self.id,
+            "guest_id": self.guest_id,
+            "image_type": self.image_type,
+            "file_path": self.file_path,
+            "file_name": self.file_name,
+            "file_size": self.file_size,
+            "mime_type": self.mime_type,
+            "uploaded_by_user_id": self.uploaded_by_user_id,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+    def __repr__(self):
+        return f"<GuestImage(id={self.id}, guest_id={self.guest_id}, type={self.image_type})>"
+
+
+# ============================================================================
 # MODEL 5: Reservation
 # ============================================================================
 class Reservation(Base):

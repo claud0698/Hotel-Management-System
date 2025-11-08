@@ -2,20 +2,23 @@
 Guest Management Routes
 
 Handles all guest-related endpoints:
-- POST /api/guests - Create a new guest
+- POST /api/guests - Create a new guest (requires full_name, id_type, id_number)
 - GET /api/guests - List guests with pagination and filters
 - GET /api/guests/{id} - Get specific guest details
 - PUT /api/guests/{id} - Update guest information
 - DELETE /api/guests/{id} - Delete guest
+- POST /api/guests/{id}/upload-id-photo - Upload guest ID photo
+- GET /api/guests/{id}/photos - Get guest's ID photos
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, File, UploadFile
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
+import os
 
 from database import get_db
-from models import Guest, RoomType
-from schemas import GuestCreate, GuestUpdate, GuestResponse, GuestListResponse
+from models import Guest, RoomType, GuestImage, User
+from schemas import GuestCreate, GuestUpdate, GuestResponse, GuestListResponse, GuestImageResponse
 from security import get_current_user
 
 router = APIRouter(prefix="/api/guests", tags=["Guests"])
@@ -30,14 +33,15 @@ async def create_guest(
     current_user: dict = Depends(get_current_user),
 ):
     """
-    Create a new guest.
+    Create a new guest. Receptionist will photocopy ID and input details.
 
-    **Required Fields:**
+    **REQUIRED Fields:**
     - full_name: Guest's full name
+    - id_type: Type of ID (passport, driver_license, national_id, etc.)
+    - id_number: ID document number
 
     **Optional Fields:**
     - email, phone, phone_country_code
-    - id_type, id_number (for identification)
     - nationality, birth_date
     - is_vip, preferred_room_type_id
     - notes
@@ -285,3 +289,140 @@ async def get_guest_reservations(
         "skip": skip,
         "limit": limit
     }
+
+
+# ============== UPLOAD GUEST ID PHOTO ==============
+
+@router.post("/{guest_id}/upload-id-photo", response_model=GuestImageResponse, status_code=201)
+async def upload_guest_id_photo(
+    guest_id: int,
+    image_type: str = Query("id_photo", description="Type of photo: id_photo, passport_photo, license_photo, etc."),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Upload guest ID photo/document photo. Receptionist uploads scanned/photographed ID.
+
+    **Parameters:**
+    - guest_id: Guest ID
+    - image_type: Type of photo (id_photo, passport_photo, license_photo, etc.)
+    - file: Image file (JPEG, PNG, PDF)
+
+    **Returns:** Guest image metadata with file path
+    """
+    # Verify guest exists
+    guest = db.query(Guest).filter(Guest.id == guest_id).first()
+    if not guest:
+        raise HTTPException(status_code=404, detail=f"Guest with ID {guest_id} not found")
+
+    # Validate file type
+    allowed_types = {"image/jpeg", "image/png", "application/pdf"}
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid file type. Allowed: JPEG, PNG, PDF. Got: {file.content_type}"
+        )
+
+    # Create uploads directory if it doesn't exist
+    upload_dir = f"uploads/guests/{guest_id}"
+    os.makedirs(upload_dir, exist_ok=True)
+
+    # Save file with unique name
+    file_extension = file.filename.split(".")[-1]
+    safe_filename = f"{image_type}_{guest_id}_{os.urandom(4).hex()}.{file_extension}"
+    file_path = os.path.join(upload_dir, safe_filename)
+
+    # Read and save file
+    file_content = await file.read()
+    with open(file_path, "wb") as f:
+        f.write(file_content)
+
+    # Create database record
+    guest_image = GuestImage(
+        guest_id=guest_id,
+        image_type=image_type,
+        file_path=file_path,
+        file_name=safe_filename,
+        file_size=len(file_content),
+        mime_type=file.content_type,
+        uploaded_by_user_id=current_user.get("id"),
+    )
+    db.add(guest_image)
+    db.commit()
+    db.refresh(guest_image)
+
+    return guest_image.to_dict()
+
+
+# ============== GET GUEST PHOTOS ==============
+
+@router.get("/{guest_id}/photos", response_model=list[GuestImageResponse])
+async def get_guest_photos(
+    guest_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Get all ID photos for a specific guest.
+
+    **Parameters:**
+    - guest_id: Guest ID
+
+    **Returns:** List of guest's uploaded ID photos with metadata
+    """
+    # Verify guest exists
+    guest = db.query(Guest).filter(Guest.id == guest_id).first()
+    if not guest:
+        raise HTTPException(status_code=404, detail=f"Guest with ID {guest_id} not found")
+
+    # Get all images for guest
+    images = db.query(GuestImage).filter(GuestImage.guest_id == guest_id).all()
+
+    return [img.to_dict() for img in images]
+
+
+# ============== DELETE GUEST PHOTO ==============
+
+@router.delete("/{guest_id}/photos/{photo_id}")
+async def delete_guest_photo(
+    guest_id: int,
+    photo_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Delete a guest's ID photo.
+
+    **Parameters:**
+    - guest_id: Guest ID
+    - photo_id: Photo ID to delete
+
+    **Returns:** Confirmation message
+    """
+    # Verify guest exists
+    guest = db.query(Guest).filter(Guest.id == guest_id).first()
+    if not guest:
+        raise HTTPException(status_code=404, detail=f"Guest with ID {guest_id} not found")
+
+    # Get photo
+    photo = db.query(GuestImage).filter(
+        and_(GuestImage.id == photo_id, GuestImage.guest_id == guest_id)
+    ).first()
+
+    if not photo:
+        raise HTTPException(status_code=404, detail=f"Photo with ID {photo_id} not found for guest {guest_id}")
+
+    # Delete file from storage
+    try:
+        if os.path.exists(photo.file_path):
+            os.remove(photo.file_path)
+    except Exception as e:
+        # Log error but continue with database deletion
+        print(f"Warning: Could not delete file {photo.file_path}: {str(e)}")
+
+    # Delete from database
+    db.delete(photo)
+    db.commit()
+
+    return {"message": f"Photo {photo_id} deleted successfully"}

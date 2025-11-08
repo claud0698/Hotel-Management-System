@@ -439,13 +439,13 @@ class DashboardSummary(BaseModel):
 # ============== GUEST SCHEMAS ==============
 
 class GuestCreate(BaseModel):
-    """Guest creation schema"""
+    """Guest creation schema - receptionist will photocopy ID and input details"""
     full_name: str = Field(..., min_length=2, max_length=100)
+    id_type: str = Field(..., max_length=50)  # REQUIRED: passport, driver_license, national_id, etc.
+    id_number: str = Field(..., min_length=1, max_length=50)  # REQUIRED: ID document number
     email: Optional[EmailStr] = None
     phone: Optional[str] = Field(None, max_length=20)
     phone_country_code: Optional[str] = Field(None, max_length=5)
-    id_type: Optional[str] = Field(None, max_length=50)  # passport, driver_license, national_id, etc.
-    id_number: Optional[str] = Field(None, max_length=50)
     nationality: Optional[str] = Field(None, max_length=50)
     birth_date: Optional[str] = None  # ISO format: YYYY-MM-DD
     is_vip: Optional[bool] = Field(default=False)
@@ -456,11 +456,11 @@ class GuestCreate(BaseModel):
         json_schema_extra = {
             "example": {
                 "full_name": "John Doe",
+                "id_type": "passport",
+                "id_number": "A12345678",
                 "email": "john.doe@example.com",
                 "phone": "+1-555-0123",
                 "phone_country_code": "+1",
-                "id_type": "passport",
-                "id_number": "A12345678",
                 "nationality": "USA",
                 "birth_date": "1990-05-15",
                 "is_vip": False,
@@ -547,6 +547,35 @@ class GuestListResponse(BaseModel):
                 "total": 150,
                 "skip": 0,
                 "limit": 10
+            }
+        }
+
+
+class GuestImageResponse(BaseModel):
+    """Guest ID photo response schema"""
+    id: int
+    guest_id: int
+    image_type: str
+    file_path: str
+    file_name: str
+    file_size: Optional[int] = None
+    mime_type: Optional[str] = None
+    uploaded_by_user_id: Optional[int] = None
+    created_at: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+        json_schema_extra = {
+            "example": {
+                "id": 1,
+                "guest_id": 1,
+                "image_type": "id_photo",
+                "file_path": "/gcs/hotel-images/guests/1/passport_photo.jpg",
+                "file_name": "passport_photo.jpg",
+                "file_size": 245000,
+                "mime_type": "image/jpeg",
+                "uploaded_by_user_id": 1,
+                "created_at": "2025-11-08T10:30:00"
             }
         }
 
