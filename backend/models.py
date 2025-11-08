@@ -224,7 +224,8 @@ class RoomImage(Base):
 
     # Relationships
     room = relationship("Room", back_populates="room_images")
-    uploaded_by_user = relationship("User", foreign_keys=[uploaded_by])
+    uploaded_by_user = relationship("User", foreign_keys=[uploaded_by],
+                                     overlaps="uploaded_room_images")
 
     def __repr__(self):
         return f"<RoomImage(id={self.id}, room_id={self.room_id}, type={self.image_type})>"
@@ -262,7 +263,8 @@ class RoomTypeImage(Base):
 
     # Relationships
     room_type = relationship("RoomType", back_populates="room_images")
-    uploaded_by_user = relationship("User", foreign_keys=[uploaded_by])
+    uploaded_by_user = relationship("User", foreign_keys=[uploaded_by],
+                                     overlaps="uploaded_type_images")
 
     def __repr__(self):
         return f"<RoomTypeImage(id={self.id}, room_type_id={self.room_type_id}, type={self.image_type})>"
@@ -397,9 +399,11 @@ class Reservation(Base):
 
     # Relationships
     guest = relationship("Guest", back_populates="reservations")
-    room_type = relationship("RoomType", foreign_keys=[room_type_id])
-    room = relationship("Room")
-    created_by_user = relationship("User", foreign_keys=[created_by])
+    room_type = relationship("RoomType", foreign_keys=[room_type_id],
+                            overlaps="reservations")
+    room = relationship("Room", overlaps="reservations")
+    created_by_user = relationship("User", foreign_keys=[created_by],
+                                  overlaps="created_reservations")
     checked_in_by_user = relationship("User", foreign_keys=[checked_in_by])
     discount = relationship("Discount")
     booking_channel = relationship("BookingChannel")
@@ -483,7 +487,8 @@ class Payment(Base):
 
     # Relationships
     reservation = relationship("Reservation", back_populates="payments")
-    created_by_user = relationship("User", foreign_keys=[created_by])
+    created_by_user = relationship("User", foreign_keys=[created_by],
+                                  overlaps="created_payments")
     attachments = relationship("PaymentAttachment", back_populates="payment")
 
     def to_dict(self):
@@ -542,8 +547,10 @@ class PaymentAttachment(Base):
 
     # Relationships
     payment = relationship("Payment", back_populates="attachments")
-    uploaded_by_user = relationship("User", foreign_keys=[uploaded_by])
-    verified_by_user = relationship("User", foreign_keys=[verified_by])
+    uploaded_by_user = relationship("User", foreign_keys=[uploaded_by],
+                                    overlaps="uploaded_attachments")
+    verified_by_user = relationship("User", foreign_keys=[verified_by],
+                                   overlaps="verified_attachments")
 
     def __repr__(self):
         return f"<PaymentAttachment(id={self.id}, payment_id={self.payment_id}, type={self.file_type})>"
@@ -643,6 +650,42 @@ class BookingChannel(Base):
 
     def __repr__(self):
         return f"<BookingChannel(id={self.id}, code={self.code}, name={self.name})>"
+
+
+# ============================================================================
+# MODEL 11: Expense
+# ============================================================================
+class Expense(Base):
+    __tablename__ = "expenses"
+
+    id = Column(Integer, primary_key=True)
+    date = Column(DateTime, nullable=False, index=True)
+    category = Column(String(50), nullable=False, index=True)
+    amount = Column(Numeric(12, 2), nullable=False)
+    description = Column(Text)
+    receipt_url = Column(String(500))
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        CheckConstraint("category IN ('utilities', 'maintenance', 'cleaning', 'supplies', 'repairs', 'insurance', 'taxes', 'other')"),
+    )
+
+    def to_dict(self):
+        """Convert expense to dictionary"""
+        return {
+            "id": self.id,
+            "date": self.date.isoformat() if self.date else None,
+            "category": self.category,
+            "amount": float(self.amount) if self.amount else 0,
+            "description": self.description,
+            "receipt_url": self.receipt_url,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+    def __repr__(self):
+        return f"<Expense(id={self.id}, category={self.category}, amount={self.amount})>"
 
 
 # Database instance for compatibility
