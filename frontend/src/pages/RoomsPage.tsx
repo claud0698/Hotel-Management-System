@@ -1,6 +1,6 @@
 /**
  * Rooms Management Page
- * Features: Floor view (Floor 1-4), Status filter, View toggle
+ * Features: Status filter, View toggle (Grid, By Type)
  */
 
 import { useEffect, useState } from 'react';
@@ -10,14 +10,14 @@ import type { Room, RoomType } from '../services/api';
 import { apiClient } from '../services/api';
 import { useRoomStore } from '../stores/roomStore';
 
-type ViewMode = 'floor' | 'grid' | 'type';
+type ViewMode = 'grid' | 'type';
 type StatusFilter = 'all' | 'available' | 'occupied';
 
 export function RoomsPage() {
   const { t } = useTranslation();
   const { rooms, isLoading, fetchRooms, deleteRoom } = useRoomStore();
   const [showForm, setShowForm] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>('floor'); // Default to floor view
+  const [viewMode, setViewMode] = useState<ViewMode>('grid'); // Default to grid view
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
   const [loadingRoomTypes, setLoadingRoomTypes] = useState(false);
@@ -28,7 +28,6 @@ export function RoomsPage() {
   };
   const [formData, setFormData] = useState<Partial<Room>>({
     room_number: '',
-    floor: undefined,
     room_type_id: 1,
     nightly_rate: 0,
     status: 'available',
@@ -66,7 +65,7 @@ export function RoomsPage() {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'floor' || name === 'nightly_rate' || name === 'room_type_id' ? parseFloat(value) : value,
+      [name]: name === 'nightly_rate' || name === 'room_type_id' ? parseFloat(value) : value,
     }));
   };
 
@@ -83,8 +82,7 @@ export function RoomsPage() {
       await useRoomStore.getState().createRoom(formData);
       setFormData({
         room_number: '',
-        floor: undefined,
-        room_type_id: 1,
+        room_type_id: roomTypes.length > 0 ? roomTypes[0].id : 1,
         nightly_rate: 0,
         status: 'available',
         amenities: '',
@@ -122,14 +120,6 @@ export function RoomsPage() {
     return room.status === statusFilter;
   });
 
-  // Group rooms by floor
-  const roomsByFloor = {
-    1: filteredRooms.filter(room => room.floor === 1),
-    2: filteredRooms.filter(room => room.floor === 2),
-    3: filteredRooms.filter(room => room.floor === 3),
-    4: filteredRooms.filter(room => room.floor === 4),
-  };
-
   // Group rooms by type
   const roomsByType: { [key: string]: Room[] } = {};
   roomTypes.forEach(roomType => {
@@ -137,6 +127,8 @@ export function RoomsPage() {
       room => room.room_type_id === roomType.id
     );
   });
+
+  // Removed roomsByFloor grouping - floor view no longer used
 
   // Room Card Component
   const RoomCard = ({ room }: { room: Room }) => (
@@ -151,9 +143,6 @@ export function RoomsPage() {
       <div className="space-y-1 mb-3 text-sm">
         <p className="text-gray-600">
           <strong>{t('rooms.roomType')}:</strong> {room.room_type_name || 'Unknown'}
-        </p>
-        <p className="text-gray-600">
-          <strong>{t('rooms.floor')}:</strong> {room.floor}
         </p>
         <p className="text-gray-900 font-semibold">
           Rp {room.nightly_rate?.toLocaleString('id-ID') || 'N/A'} / night
@@ -206,18 +195,8 @@ export function RoomsPage() {
             <span className="text-sm font-medium text-gray-700">{t('common.view')}:</span>
             <div className="inline-flex rounded-lg border border-gray-300 bg-gray-50">
               <button
-                onClick={() => setViewMode('floor')}
-                className={`px-3 py-2 text-sm font-medium rounded-l-lg transition ${
-                  viewMode === 'floor'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                Floor
-              </button>
-              <button
                 onClick={() => setViewMode('type')}
-                className={`px-3 py-2 text-sm font-medium transition border-l border-r border-gray-300 ${
+                className={`px-3 py-2 text-sm font-medium rounded-l-lg transition border-r border-gray-300 ${
                   viewMode === 'type'
                     ? 'bg-blue-600 text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-100'
@@ -289,25 +268,6 @@ export function RoomsPage() {
                 placeholder={t('rooms.placeholders.roomNumber')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
-            </div>
-
-            {/* Floor */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t('rooms.floor')}
-              </label>
-              <select
-                name="floor"
-                value={formData.floor || ''}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">-- No Floor --</option>
-                <option value={1}>Floor 1</option>
-                <option value={2}>Floor 2</option>
-                <option value={3}>Floor 3</option>
-                <option value={4}>Floor 4</option>
-              </select>
             </div>
 
             {/* Room Type */}
@@ -402,31 +362,6 @@ export function RoomsPage() {
               ? t('rooms.noRooms')
               : t('rooms.noRoomsFiltered', { status: t(`rooms.${statusFilter}`) })}
           </p>
-        </div>
-      ) : viewMode === 'floor' ? (
-        /* Floor View - Rooms grouped by floors 1-4 */
-        <div className="space-y-8">
-          {[1, 2, 3, 4].map((floor) => (
-            <div key={floor}>
-              <div className="flex items-center gap-3 mb-4">
-                <h2 className="text-2xl font-bold text-gray-900">Floor {floor}</h2>
-                <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
-                  {roomsByFloor[floor as keyof typeof roomsByFloor].length} {t('rooms.rooms')}
-                </span>
-              </div>
-              {roomsByFloor[floor as keyof typeof roomsByFloor].length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                  {roomsByFloor[floor as keyof typeof roomsByFloor].map((room) => (
-                    <RoomCard key={room.id} room={room} />
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-gray-50 rounded-lg p-8 text-center">
-                  <p className="text-gray-500">No rooms on Floor {floor}</p>
-                </div>
-              )}
-            </div>
-          ))}
         </div>
       ) : viewMode === 'type' ? (
         /* Type View - Rooms grouped by room type */

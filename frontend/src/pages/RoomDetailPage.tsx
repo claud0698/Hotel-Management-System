@@ -56,7 +56,7 @@ export function RoomDetailPage() {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'floor' || name === 'nightly_rate' || name === 'room_type_id' ? parseFloat(value) : value,
+      [name]: name === 'nightly_rate' || name === 'room_type_id' ? parseFloat(value) : value,
     }));
   };
 
@@ -163,25 +163,6 @@ export function RoomDetailPage() {
                 />
               </div>
 
-              {/* Floor */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('rooms.floor')}
-                </label>
-                <select
-                  name="floor"
-                  value={formData.floor || ''}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">-- No Floor --</option>
-                  <option value={1}>Floor 1</option>
-                  <option value={2}>Floor 2</option>
-                  <option value={3}>Floor 3</option>
-                  <option value={4}>Floor 4</option>
-                </select>
-              </div>
-
               {/* Room Type */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -282,11 +263,6 @@ export function RoomDetailPage() {
               <div>
                 <h3 className="text-sm font-medium text-gray-500">{t('rooms.roomNumber')}</h3>
                 <p className="text-2xl font-bold text-gray-900 mt-1">{room.room_number}</p>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">{t('rooms.floor')}</h3>
-                <p className="text-2xl font-bold text-gray-900 mt-1">{room.floor}</p>
               </div>
 
               <div>

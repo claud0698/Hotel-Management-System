@@ -52,7 +52,7 @@ export interface RoomType {
 export interface Room {
   id: number;
   room_number: string;
-  floor: number;
+  floor?: number;
   room_type_id: number;
   room_type?: string; // code
   room_type_name?: string; // full name
