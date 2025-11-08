@@ -13,7 +13,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { RoomsPage } from './pages/RoomsPage';
 import { RoomDetailPage } from './pages/RoomDetailPage';
 import { ReservationsPage } from './pages/ReservationsPage';
-import { TenantsPage } from './pages/TenantsPage';
+import { GuestsPage } from './pages/GuestsPage';
 import { PaymentsPage } from './pages/PaymentsPage';
 import { ExpensesPage } from './pages/ExpensesPage';
 import UsersPage from './pages/UsersPage';
@@ -94,10 +94,10 @@ export default function App() {
           }
         />
         <Route
-          path="/tenants"
+          path="/guests"
           element={
             <ProtectedRoute>
-              <TenantsPage />
+              <GuestsPage />
             </ProtectedRoute>
           }
         />

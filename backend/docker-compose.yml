@@ -1,0 +1,89 @@
+version: '3.9'
+
+services:
+  # PostgreSQL Database Service
+  db:
+    image: postgres:15-alpine
+    container_name: hotel-db
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_DB: ${DB_NAME:-hotel_dev}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hotel-network
+    restart: unless-stopped
+
+  # FastAPI Application Service
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hotel-api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-hotel_dev}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-this}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      DEBUG: ${DEBUG:-True}
+      LOG_LEVEL: ${LOG_LEVEL:-DEBUG}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173}
+      API_PREFIX: /api
+      API_VERSION: 1.0.0
+    ports:
+      - "8001:8001"
+    volumes:
+      - .:/app
+      - /app/__pycache__
+      - /app/.pytest_cache
+    command: >
+      bash -c "
+      python scripts/init_admin.py &&
+      uvicorn app:app --host 0.0.0.0 --port 8001 --reload
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - hotel-network
+    restart: unless-stopped
+
+  # Redis Cache Service (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: hotel-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hotel-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  hotel-network:
+    driver: bridge
