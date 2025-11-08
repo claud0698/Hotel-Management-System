@@ -3,11 +3,17 @@ Database configuration and session management
 """
 
 import os
+from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load environment - prefer .env.local for development, fall back to .env
+env_local = Path('.env.local')
+if env_local.exists():
+    load_dotenv(env_local)
+else:
+    load_dotenv()
 
 # Database configuration
 DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///./kos.db')
