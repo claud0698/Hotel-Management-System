@@ -8,6 +8,7 @@ import { useAuthStore } from '../stores/authStore';
 import { useLanguageStore } from '../stores/languageStore';
 import { useTranslation } from 'react-i18next';
 import { Alert } from '../components/ui';
+import { TIMEOUTS } from '../constants/timeouts';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -19,12 +20,12 @@ export function LoginPage() {
   const [showError, setShowError] = useState(false);
 
   useEffect(() => {
-    // Show error for 5 seconds when it changes
+    // Show error for configurable timeout when it changes
     if (error) {
       setShowError(true);
       const timer = setTimeout(() => {
         setShowError(false);
-      }, 5000);
+      }, TIMEOUTS.ALERT_ERROR);
       return () => clearTimeout(timer);
     }
   }, [error]);
