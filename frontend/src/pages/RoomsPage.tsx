@@ -10,7 +10,7 @@ import type { Room, RoomType } from '../services/api';
 import { apiClient } from '../services/api';
 import { useRoomStore } from '../stores/roomStore';
 
-type ViewMode = 'floor' | 'grid';
+type ViewMode = 'floor' | 'grid' | 'type';
 type StatusFilter = 'all' | 'available' | 'occupied';
 
 export function RoomsPage() {
@@ -28,7 +28,7 @@ export function RoomsPage() {
   };
   const [formData, setFormData] = useState<Partial<Room>>({
     room_number: '',
-    floor: 1,
+    floor: undefined,
     room_type_id: 1,
     nightly_rate: 0,
     status: 'available',
@@ -83,7 +83,7 @@ export function RoomsPage() {
       await useRoomStore.getState().createRoom(formData);
       setFormData({
         room_number: '',
-        floor: 1,
+        floor: undefined,
         room_type_id: 1,
         nightly_rate: 0,
         status: 'available',
@@ -129,6 +129,14 @@ export function RoomsPage() {
     3: filteredRooms.filter(room => room.floor === 3),
     4: filteredRooms.filter(room => room.floor === 4),
   };
+
+  // Group rooms by type
+  const roomsByType: { [key: string]: Room[] } = {};
+  roomTypes.forEach(roomType => {
+    roomsByType[roomType.name] = filteredRooms.filter(
+      room => room.room_type_id === roomType.id
+    );
+  });
 
   // Room Card Component
   const RoomCard = ({ room }: { room: Room }) => (
@@ -199,7 +207,7 @@ export function RoomsPage() {
             <div className="inline-flex rounded-lg border border-gray-300 bg-gray-50">
               <button
                 onClick={() => setViewMode('floor')}
-                className={`px-4 py-2 text-sm font-medium rounded-l-lg transition ${
+                className={`px-3 py-2 text-sm font-medium rounded-l-lg transition ${
                   viewMode === 'floor'
                     ? 'bg-blue-600 text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-100'
@@ -208,8 +216,18 @@ export function RoomsPage() {
                 Floor View
               </button>
               <button
+                onClick={() => setViewMode('type')}
+                className={`px-3 py-2 text-sm font-medium transition border-l border-r border-gray-300 ${
+                  viewMode === 'type'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                By Type
+              </button>
+              <button
                 onClick={() => setViewMode('grid')}
-                className={`px-4 py-2 text-sm font-medium rounded-r-lg transition ${
+                className={`px-3 py-2 text-sm font-medium rounded-r-lg transition ${
                   viewMode === 'grid'
                     ? 'bg-blue-600 text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-100'
@@ -280,10 +298,11 @@ export function RoomsPage() {
               </label>
               <select
                 name="floor"
-                value={formData.floor}
+                value={formData.floor || ''}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               >
+                <option value="">-- No Floor --</option>
                 <option value={1}>Floor 1</option>
                 <option value={2}>Floor 2</option>
                 <option value={3}>Floor 3</option>
@@ -408,6 +427,37 @@ export function RoomsPage() {
               )}
             </div>
           ))}
+        </div>
+      ) : viewMode === 'type' ? (
+        /* Type View - Rooms grouped by room type */
+        <div className="space-y-8">
+          {roomTypes.map((roomType) => {
+            const roomsOfType = roomsByType[roomType.name] || [];
+            return (
+              <div key={roomType.id}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">{roomType.name}</h2>
+                    <p className="text-sm text-gray-600 mt-1">{roomType.description}</p>
+                  </div>
+                  <span className="ml-auto px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
+                    {roomsOfType.length} {t('rooms.rooms')}
+                  </span>
+                </div>
+                {roomsOfType.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {roomsOfType.map((room) => (
+                      <RoomCard key={room.id} room={room} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 rounded-lg p-8 text-center">
+                    <p className="text-gray-500">No {roomType.name.toLowerCase()} rooms</p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       ) : (
         /* Grid View - All rooms in one grid */

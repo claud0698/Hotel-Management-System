@@ -6,7 +6,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useRoomStore } from '../stores/roomStore';
-import type { Room } from '../services/api';
+import { apiClient } from '../services/api';
+import type { Room, RoomType } from '../services/api';
 
 export function RoomDetailPage() {
   const { t } = useTranslation();
@@ -17,12 +18,27 @@ export function RoomDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<Room>>({});
   const [error, setError] = useState<string | null>(null);
+  const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
+  const [loadingRoomTypes, setLoadingRoomTypes] = useState(false);
 
   useEffect(() => {
     if (rooms.length === 0) {
       fetchRooms();
     }
+    fetchRoomTypesData();
   }, []);
+
+  const fetchRoomTypesData = async () => {
+    try {
+      setLoadingRoomTypes(true);
+      const response = await apiClient.getRoomTypes();
+      setRoomTypes(response.room_types);
+    } catch (err) {
+      console.error('Failed to fetch room types:', err);
+    } finally {
+      setLoadingRoomTypes(false);
+    }
+  };
 
   useEffect(() => {
     if (id && rooms.length > 0) {
@@ -40,7 +56,7 @@ export function RoomDetailPage() {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'floor' || name === 'monthly_rate' ? parseFloat(value) : value,
+      [name]: name === 'floor' || name === 'nightly_rate' || name === 'room_type_id' ? parseFloat(value) : value,
     }));
   };
 
@@ -154,41 +170,48 @@ export function RoomDetailPage() {
                 </label>
                 <select
                   name="floor"
-                  value={formData.floor}
+                  value={formData.floor || ''}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value={2}>{t('rooms.floor2Upper')}</option>
-                  <option value={1}>{t('rooms.floor1Lower')}</option>
+                  <option value="">-- No Floor --</option>
+                  <option value={1}>Floor 1</option>
+                  <option value={2}>Floor 2</option>
+                  <option value={3}>Floor 3</option>
+                  <option value={4}>Floor 4</option>
                 </select>
               </div>
 
               {/* Room Type */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('rooms.roomType')}
+                  {t('rooms.roomType')} *
                 </label>
                 <select
-                  name="room_type"
-                  value={formData.room_type}
+                  name="room_type_id"
+                  value={formData.room_type_id || ''}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  disabled={loadingRoomTypes}
                 >
-                  <option value="single">{t('rooms.single')}</option>
-                  <option value="double">{t('rooms.double')}</option>
-                  <option value="suite">{t('rooms.suite')}</option>
+                  <option value="">-- Select Room Type --</option>
+                  {roomTypes.map((rt) => (
+                    <option key={rt.id} value={rt.id}>
+                      {rt.name} (Rp {rt.default_rate?.toLocaleString('id-ID') || 'N/A'} / night)
+                    </option>
+                  ))}
                 </select>
               </div>
 
-              {/* Monthly Rate */}
+              {/* Nightly Rate */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('rooms.monthlyRateIDR')} {t('rooms.required')}
+                  Nightly Rate (IDR) *
                 </label>
                 <input
                   type="number"
-                  name="monthly_rate"
-                  value={formData.monthly_rate}
+                  name="nightly_rate"
+                  value={formData.nightly_rate || 0}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
@@ -268,13 +291,13 @@ export function RoomDetailPage() {
 
               <div>
                 <h3 className="text-sm font-medium text-gray-500">{t('rooms.roomType')}</h3>
-                <p className="text-2xl font-bold text-gray-900 mt-1 capitalize">{t(`rooms.${room.room_type}`)}</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">{room.room_type_name || 'Unknown'}</p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-500">{t('rooms.monthlyRate')}</h3>
+                <h3 className="text-sm font-medium text-gray-500">Nightly Rate</h3>
                 <p className="text-2xl font-bold text-gray-900 mt-1">
-                  Rp {room.monthly_rate.toLocaleString('id-ID')}
+                  Rp {room.nightly_rate?.toLocaleString('id-ID') || 'N/A'} / night
                 </p>
               </div>
 
