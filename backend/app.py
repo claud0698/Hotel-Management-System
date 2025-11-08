@@ -15,7 +15,7 @@ from typing import Optional
 
 from models import Base
 from database import engine, get_db
-from routes import auth_router, users_router, rooms_router, payments_router, dashboard_router
+from routes import auth_router, users_router, rooms_router, payments_router, dashboard_router, guests_router
 
 load_dotenv()
 
@@ -179,6 +179,7 @@ def create_app():
     app.include_router(auth_router.router, prefix="/api/auth", tags=["Authentication"])
     app.include_router(users_router.router, prefix="/api/users", tags=["Users"])
     app.include_router(rooms_router.router, prefix="/api/rooms", tags=["Rooms"])
+    app.include_router(guests_router.router, tags=["Guests"])
     app.include_router(payments_router.router, prefix="/api/payments", tags=["Payments"])
     app.include_router(dashboard_router.router, prefix="/api/dashboard", tags=["Dashboard"])
 

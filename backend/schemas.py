@@ -436,6 +436,121 @@ class DashboardSummary(BaseModel):
         }
 
 
+# ============== GUEST SCHEMAS ==============
+
+class GuestCreate(BaseModel):
+    """Guest creation schema"""
+    full_name: str = Field(..., min_length=2, max_length=100)
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = Field(None, max_length=20)
+    phone_country_code: Optional[str] = Field(None, max_length=5)
+    id_type: Optional[str] = Field(None, max_length=50)  # passport, driver_license, national_id, etc.
+    id_number: Optional[str] = Field(None, max_length=50)
+    nationality: Optional[str] = Field(None, max_length=50)
+    birth_date: Optional[str] = None  # ISO format: YYYY-MM-DD
+    is_vip: Optional[bool] = Field(default=False)
+    preferred_room_type_id: Optional[int] = None
+    notes: Optional[str] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "full_name": "John Doe",
+                "email": "john.doe@example.com",
+                "phone": "+1-555-0123",
+                "phone_country_code": "+1",
+                "id_type": "passport",
+                "id_number": "A12345678",
+                "nationality": "USA",
+                "birth_date": "1990-05-15",
+                "is_vip": False,
+                "preferred_room_type_id": 2,
+                "notes": "Prefers high floor, non-smoking room"
+            }
+        }
+
+
+class GuestUpdate(BaseModel):
+    """Guest update schema"""
+    full_name: Optional[str] = Field(None, min_length=2, max_length=100)
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = Field(None, max_length=20)
+    phone_country_code: Optional[str] = Field(None, max_length=5)
+    id_type: Optional[str] = Field(None, max_length=50)
+    id_number: Optional[str] = Field(None, max_length=50)
+    nationality: Optional[str] = Field(None, max_length=50)
+    birth_date: Optional[str] = None
+    is_vip: Optional[bool] = None
+    preferred_room_type_id: Optional[int] = None
+    notes: Optional[str] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "is_vip": True,
+                "preferred_room_type_id": 3,
+                "notes": "VIP guest, prefers suites"
+            }
+        }
+
+
+class GuestResponse(BaseModel):
+    """Guest response schema"""
+    id: int
+    full_name: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    phone_country_code: Optional[str] = None
+    id_type: Optional[str] = None
+    id_number: Optional[str] = None
+    nationality: Optional[str] = None
+    birth_date: Optional[str] = None
+    is_vip: bool
+    preferred_room_type_id: Optional[int] = None
+    notes: Optional[str] = None
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+        json_schema_extra = {
+            "example": {
+                "id": 1,
+                "full_name": "John Doe",
+                "email": "john.doe@example.com",
+                "phone": "+1-555-0123",
+                "phone_country_code": "+1",
+                "id_type": "passport",
+                "id_number": "A12345678",
+                "nationality": "USA",
+                "birth_date": "1990-05-15",
+                "is_vip": False,
+                "preferred_room_type_id": 2,
+                "notes": "Prefers high floor, non-smoking room",
+                "created_at": "2025-11-08T10:30:00",
+                "updated_at": "2025-11-08T10:30:00"
+            }
+        }
+
+
+class GuestListResponse(BaseModel):
+    """Guest list response schema with pagination"""
+    guests: list[GuestResponse]
+    total: int
+    skip: int
+    limit: int
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "guests": [],
+                "total": 150,
+                "skip": 0,
+                "limit": 10
+            }
+        }
+
+
 # ============== ERROR SCHEMAS ==============
 
 class ErrorResponse(BaseModel):
