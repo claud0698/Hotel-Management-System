@@ -580,6 +580,135 @@ class GuestImageResponse(BaseModel):
         }
 
 
+# ============== RESERVATION SCHEMAS ==============
+
+class ReservationCreate(BaseModel):
+    """Reservation creation schema"""
+    guest_id: int
+    room_type_id: int
+    check_in_date: str  # ISO format: YYYY-MM-DD
+    check_out_date: str  # ISO format: YYYY-MM-DD
+    adults: int = Field(default=1, ge=1)
+    children: int = Field(default=0, ge=0)
+    rate_per_night: float = Field(..., gt=0)
+    subtotal: float = Field(..., ge=0)
+    discount_amount: float = Field(default=0.0, ge=0)
+    total_amount: float = Field(..., gt=0)
+    special_requests: Optional[str] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "guest_id": 1,
+                "room_type_id": 2,
+                "check_in_date": "2025-11-10",
+                "check_out_date": "2025-11-13",
+                "adults": 2,
+                "children": 1,
+                "rate_per_night": 500000,
+                "subtotal": 1500000,
+                "discount_amount": 100000,
+                "total_amount": 1400000,
+                "special_requests": "Late check-in, breakfast included"
+            }
+        }
+
+
+class ReservationUpdate(BaseModel):
+    """Reservation update schema"""
+    check_in_date: Optional[str] = None
+    check_out_date: Optional[str] = None
+    adults: Optional[int] = Field(None, ge=1)
+    children: Optional[int] = Field(None, ge=0)
+    rate_per_night: Optional[float] = Field(None, gt=0)
+    subtotal: Optional[float] = Field(None, ge=0)
+    discount_amount: Optional[float] = Field(None, ge=0)
+    total_amount: Optional[float] = Field(None, gt=0)
+    special_requests: Optional[str] = None
+    status: Optional[str] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "special_requests": "Early checkout needed",
+                "status": "confirmed"
+            }
+        }
+
+
+class ReservationResponse(BaseModel):
+    """Reservation response schema"""
+    id: int
+    confirmation_number: str
+    guest_id: int
+    room_id: Optional[int] = None
+    room_type_id: int
+    check_in_date: str
+    check_out_date: str
+    adults: int
+    children: int
+    rate_per_night: float
+    subtotal: float
+    discount_amount: float
+    total_amount: float
+    special_requests: Optional[str] = None
+    status: str
+    checked_in_at: Optional[str] = None
+    checked_in_by: Optional[int] = None
+    checked_in_by_name: Optional[str] = None
+    checked_out_at: Optional[str] = None
+    created_by: Optional[int] = None
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+        json_schema_extra = {
+            "example": {
+                "id": 1,
+                "confirmation_number": "ABC123XYZ",
+                "guest_id": 1,
+                "room_id": 5,
+                "room_type_id": 2,
+                "check_in_date": "2025-11-10",
+                "check_out_date": "2025-11-13",
+                "adults": 2,
+                "children": 1,
+                "rate_per_night": 500000,
+                "subtotal": 1500000,
+                "discount_amount": 100000,
+                "total_amount": 1400000,
+                "special_requests": "Late check-in, breakfast included",
+                "status": "checked_in",
+                "checked_in_at": "2025-11-10T15:30:00",
+                "checked_in_by": 2,
+                "checked_in_by_name": "receptionist_john",
+                "checked_out_at": None,
+                "created_by": 1,
+                "created_at": "2025-11-09T10:00:00",
+                "updated_at": "2025-11-10T15:30:00"
+            }
+        }
+
+
+class ReservationListResponse(BaseModel):
+    """Reservation list response schema with pagination"""
+    reservations: list[ReservationResponse]
+    total: int
+    skip: int
+    limit: int
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "reservations": [],
+                "total": 45,
+                "skip": 0,
+                "limit": 10
+            }
+        }
+
+
 # ============== ERROR SCHEMAS ==============
 
 class ErrorResponse(BaseModel):
