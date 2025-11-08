@@ -423,6 +423,9 @@ Users (admin only)
 - [ ] Form validation working
 - [ ] Success/error messages shown
 
+**Important Notes**:
+- ⚠️ **Custom Rate for Rooms**: Remember that individual rooms can have custom rates (either fixed price or percentage markup/discount). The default_rate here is for the room TYPE, but rooms can override it. See Room task F3.2 for custom rate input implementation.
+
 **Files to Create**:
 - `frontend/src/pages/RoomTypesPage.tsx`
 
@@ -460,6 +463,16 @@ Users (admin only)
 - [ ] Admin can create/edit/delete
 - [ ] User can only view
 - [ ] **Admin can manually change room status** (dropdown or button to set available/occupied/out_of_order)
+
+**Custom Rate Input** (in create/edit form):
+- ⚠️ **IMPORTANT**: Provide TWO input options for room pricing:
+  1. **Fixed Price**: Direct price input (e.g., "600000")
+  2. **Percentage**: Markup/discount percentage (e.g., "20" for +20%, "-10" for -10%)
+- Use a toggle/selector to let admin choose: "Fixed Price" or "Percentage"
+- Show: "Room Type Default Rate: IDR 500,000" for reference
+- When percentage selected: Show preview calculation (e.g., "500,000 × 1.20 = 600,000")
+- **Backend will handle conversion**: Frontend sends the choice, backend converts percentage to fixed price
+- Store only final fixed price in `custom_rate` field
 
 **Files to Modify**:
 - `frontend/src/pages/RoomsPage.tsx`
