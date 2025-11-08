@@ -112,6 +112,13 @@ CREATE TABLE rooms (
         CHECK(status IN ('available', 'occupied', 'out_of_order')),
     view_type VARCHAR(50),
     notes TEXT,
+
+    -- Room-level rate override (optional)
+    -- Note: Stores FINAL fixed price only
+    -- Frontend can input as percentage (30%) or fixed price (IDR 600,000)
+    -- Backend converts percentage to absolute price before storing
+    custom_rate DECIMAL(12,2),  -- If NULL, use room_type.default_rate
+
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -124,6 +131,65 @@ CREATE INDEX idx_rooms_status ON rooms(status);
 CREATE INDEX idx_rooms_type ON rooms(room_type_id);
 CREATE INDEX idx_rooms_active ON rooms(is_active);
 ```
+
+**Rate Priority & Calculation** (How rate is determined):
+
+1. **Room Level** (highest priority): `custom_rate` if set (as fixed price)
+2. **Room Type Level** (default): `room_types.default_rate` (if no room override)
+3. **Reservation Level** (lowest priority): Admin can override when creating/editing reservation
+
+**Frontend Input & Backend Conversion**:
+- **Frontend Options**: User can input either:
+  - Fixed price: "IDR 600,000"
+  - Percentage: "30%" (markup) or "-10%" (discount)
+- **Backend Logic**:
+  - If percentage input: `final_rate = room_type.default_rate × (1 + percentage / 100)`
+  - If fixed price input: `final_rate = input_price`
+- **Database Storage**: Only stores final fixed price in `custom_rate` field
+
+**Examples**:
+
+```
+Scenario 1: Standard rates (no override)
+├── Room Type: Standard → default_rate: IDR 500,000
+├── Room 101 (Standard) → custom_rate: NULL
+└── → Uses: IDR 500,000 (from room type)
+
+Scenario 2: Fixed price override (ocean view)
+├── Room Type: Standard → default_rate: IDR 500,000
+├── Room 302 (Ocean View)
+│   └── Frontend input: "600000" (direct price)
+│   └── Backend stores: custom_rate = 600,000
+└── → Uses: IDR 600,000
+
+Scenario 3: Percentage markup (better room)
+├── Room Type: Standard → default_rate: IDR 500,000
+├── Room 405 (Premium Quality)
+│   └── Frontend input: "20%" (percentage)
+│   └── Backend converts: 500,000 × 1.20 = 600,000
+│   └── Backend stores: custom_rate = 600,000
+└── → Uses: IDR 600,000
+
+Scenario 4: Percentage discount (older room)
+├── Room Type: Deluxe → default_rate: IDR 750,000
+├── Room 101 (Older Room)
+│   └── Frontend input: "-10%" (discount)
+│   └── Backend converts: 750,000 × 0.90 = 675,000
+│   └── Backend stores: custom_rate = 675,000
+└── → Uses: IDR 675,000
+
+Scenario 5: Admin override at reservation
+├── Room Type: Deluxe → default_rate: IDR 750,000
+├── Room 201 → custom_rate: NULL
+├── Reservation created by Admin → rate_per_night: IDR 700,000 (manually changed)
+└── → Uses: IDR 700,000 (reservation override)
+```
+
+**Implementation Notes**:
+- **Frontend**: Provide toggle/selector for "Fixed Price" vs "Percentage" input
+- **Backend**: Convert percentage to fixed price, validate result is reasonable
+- **Database**: Always stores final fixed price for simplicity
+- **No confusion**: Admin sees final price they're setting, no calculated fields
 
 ---
 
