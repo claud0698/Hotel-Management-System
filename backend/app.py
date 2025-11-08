@@ -47,29 +47,16 @@ def create_app():
         openapi_url="/api/openapi.json"
     )
 
-    # CORS Configuration - allow all origins for testing (disable for production)
-    # Must be added FIRST (before other middleware) due to middleware ordering
-    cors_origins = os.getenv('CORS_ORIGINS', '*')  # Allow all origins for testing
-
-    if cors_origins == '*':
-        # Allow all origins for testing
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=["*"],
-            allow_credentials=False,
-            allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-            allow_headers=["*"],
-        )
-    else:
-        # Restrict to specific origins in production
-        origins = [origin.strip() for origin in cors_origins.split(',')]
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=origins,
-            allow_credentials=False,
-            allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-            allow_headers=["*"],
-        )
+    # CORS Configuration - DISABLED for development
+    # WARNING: This configuration allows requests from ANY origin
+    # Only use this in development. NEVER use in production!
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],  # Allow all origins
+        allow_credentials=True,
+        allow_methods=["*"],  # Allow all methods
+        allow_headers=["*"],  # Allow all headers
+    )
 
     # GZip Compression Middleware - compress responses larger than 1KB
     app.add_middleware(GZipMiddleware, minimum_size=1000)
