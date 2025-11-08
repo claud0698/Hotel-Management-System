@@ -2,11 +2,12 @@
  * Login Page
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useLanguageStore } from '../stores/languageStore';
 import { useTranslation } from 'react-i18next';
+import { Alert } from '../components/ui';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -15,16 +16,30 @@ export function LoginPage() {
   const { t } = useTranslation();
   const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('admin123');
+  const [showError, setShowError] = useState(false);
+
+  useEffect(() => {
+    // Show error for 5 seconds when it changes
+    if (error) {
+      setShowError(true);
+      const timer = setTimeout(() => {
+        setShowError(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
+    setShowError(false);
 
     try {
       await login(username, password);
       navigate('/');
     } catch (err) {
       // Error is already stored in the store
+      setShowError(true);
       console.error(err);
     }
   };
@@ -51,10 +66,19 @@ export function LoginPage() {
             <p className="text-gray-600 mt-2">{t('auth.loginTitle')}</p>
           </div>
 
-          {/* Error Message */}
-          {error && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-red-700 text-sm">{error}</p>
+          {/* Error Message - Enhanced Alert */}
+          {showError && error && (
+            <div className="mb-4">
+              <Alert
+                type="error"
+                title="Login Failed"
+                message={error}
+                onClose={() => {
+                  setShowError(false);
+                  clearError();
+                }}
+                dismissible
+              />
             </div>
           )}
 
