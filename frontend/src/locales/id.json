@@ -312,12 +312,9 @@
     "discountPercent": "Diskon (%)",
     "bookingSource": "Sumber Pemesanan",
     "source": {
-      "direct": "Langsung",
-      "ota": "OTA (Agen Perjalanan Online)",
-      "phone": "Telepon",
-      "email": "Email",
-      "corporate": "Korporat",
-      "other": "Lainnya"
+      "direct": "Pemesanan Langsung",
+      "tiket": "Tiket.com",
+      "traveloka": "Traveloka"
     },
     "totalAmount": "Jumlah Total",
     "depositAmount": "Jumlah Deposit",

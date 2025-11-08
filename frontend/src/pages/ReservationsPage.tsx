@@ -548,16 +548,13 @@ export function ReservationsPage() {
               : 'Or enter custom price below'}
           </p>
 
-          {/* Booking Source */}
+          {/* Booking Source - TODO: Make this configurable in settings */}
           <Select
             label={t('reservations.bookingSource')}
             options={[
               { value: 'direct', label: t('reservations.source.direct') },
-              { value: 'ota', label: t('reservations.source.ota') },
-              { value: 'phone', label: t('reservations.source.phone') },
-              { value: 'email', label: t('reservations.source.email') },
-              { value: 'corporate', label: t('reservations.source.corporate') },
-              { value: 'other', label: t('reservations.source.other') },
+              { value: 'tiket', label: t('reservations.source.tiket') },
+              { value: 'traveloka', label: t('reservations.source.traveloka') },
             ]}
             value={formData.booking_source}
             onChange={(e) => setFormData({ ...formData, booking_source: e.target.value })}

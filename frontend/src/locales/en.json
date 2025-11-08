@@ -312,12 +312,9 @@
     "discountPercent": "Discount (%)",
     "bookingSource": "Booking Source",
     "source": {
-      "direct": "Direct",
-      "ota": "OTA (Online Travel Agency)",
-      "phone": "Phone",
-      "email": "Email",
-      "corporate": "Corporate",
-      "other": "Other"
+      "direct": "Direct Booking",
+      "tiket": "Tiket.com",
+      "traveloka": "Traveloka"
     },
     "totalAmount": "Total Amount",
     "depositAmount": "Deposit Amount",
