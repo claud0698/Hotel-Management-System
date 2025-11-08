@@ -114,6 +114,9 @@ export function ReservationsPage() {
     setIsModalOpen(true);
   };
 
+  // Store original nightly rate for discount calculation
+  const [originalNightlyRate, setOriginalNightlyRate] = useState<number>(0);
+
   // Handle room selection and auto-populate rate
   const handleRoomChange = (roomId: string) => {
     setFormData({ ...formData, room_id: roomId });
@@ -121,40 +124,40 @@ export function ReservationsPage() {
       const selectedRoom = rooms.find(r => r.id.toString() === roomId);
       if (selectedRoom) {
         const rate = selectedRoom.nightly_rate || selectedRoom.room_type?.default_rate || 0;
+        setOriginalNightlyRate(rate);
         setFormData(prev => ({
           ...prev,
           nightly_rate: rate.toString(),
           discount_percent: '',
-          total_amount: rate.toString() // Reset total amount to nightly rate
+          total_amount: rate.toString()
         }));
       }
     }
   };
 
-  // Calculate final price based on discount percentage
-  const calculateFinalPrice = (baseRate: number, discountPercent: number) => {
-    if (discountPercent < 0 || discountPercent > 100) return baseRate;
-    return baseRate * (1 - discountPercent / 100);
-  };
-
-  // Handle discount percentage change
+  // Handle discount percentage change - updates nightly_rate display
   const handleDiscountChange = (discountPercent: string) => {
     setFormData({ ...formData, discount_percent: discountPercent });
 
-    if (discountPercent && formData.nightly_rate) {
-      const baseRate = parseFloat(formData.nightly_rate);
+    if (discountPercent && originalNightlyRate) {
       const discount = parseFloat(discountPercent);
-      const finalPrice = calculateFinalPrice(baseRate, discount);
-      setFormData(prev => ({ ...prev, total_amount: finalPrice.toString() }));
+      if (discount >= 0 && discount <= 100) {
+        const finalPrice = originalNightlyRate * (1 - discount / 100);
+        setFormData(prev => ({ ...prev, nightly_rate: finalPrice.toString(), total_amount: finalPrice.toString() }));
+      }
+    } else if (!discountPercent) {
+      // Reset to original rate when discount is cleared
+      setFormData(prev => ({ ...prev, nightly_rate: originalNightlyRate.toString(), total_amount: originalNightlyRate.toString() }));
     }
   };
 
-  // Handle manual total amount change (overrides discount)
-  const handleTotalAmountChange = (amount: string) => {
+  // Handle manual nightly rate change (overrides discount)
+  const handleNightlyRateChange = (rate: string) => {
     setFormData({
       ...formData,
-      total_amount: amount,
-      discount_percent: '' // Clear discount when manually setting price
+      nightly_rate: rate,
+      total_amount: rate,
+      discount_percent: '' // Clear discount when manually changing rate
     });
   };
 
@@ -510,31 +513,26 @@ export function ReservationsPage() {
             required
           />
 
-          {/* Nightly Rate - Auto-populated from selected room, but editable */}
+          {/* Nightly Rate - Auto-populated from selected room, editable or with discount */}
           <Input
             label={t('reservations.nightlyRate')}
             type="number"
             value={formData.nightly_rate}
-            onChange={(e) => setFormData({ ...formData, nightly_rate: e.target.value })}
+            onChange={(e) => handleNightlyRateChange(e.target.value)}
             placeholder="Automatically populated from selected room"
             helpText={formData.nightly_rate ? `${formatCurrency(parseFloat(formData.nightly_rate))} per night` : 'Select a room to auto-populate'}
           />
 
-          {/* Discount Percentage */}
+          {/* Discount Percentage - Applies to nightly rate */}
           <Input
             label={t('reservations.discountPercent')}
             type="number"
             value={formData.discount_percent}
             onChange={(e) => handleDiscountChange(e.target.value)}
-            placeholder="e.g., 10 for 10% discount"
+            placeholder="e.g., 10 for 10% discount (will update nightly rate above)"
             min="0"
             max="100"
           />
-          <p className="text-xs text-gray-600 -mt-3 mb-4">
-            {formData.discount_percent && formData.nightly_rate
-              ? `Final price: ${formatCurrency(calculateFinalPrice(parseFloat(formData.nightly_rate), parseFloat(formData.discount_percent)))}`
-              : 'Or enter custom price below'}
-          </p>
 
           {/* Booking Source - TODO: Make this configurable in settings */}
           <Select
@@ -546,17 +544,6 @@ export function ReservationsPage() {
             ]}
             value={formData.booking_source}
             onChange={(e) => setFormData({ ...formData, booking_source: e.target.value })}
-          />
-
-          {/* Final Amount - Can be set manually or calculated from discount */}
-          <Input
-            label={t('reservations.totalAmount')}
-            type="number"
-            value={formData.total_amount}
-            onChange={(e) => handleTotalAmountChange(e.target.value)}
-            required
-            placeholder="Final price to be charged (auto-calculated from discount or enter manually)"
-            helpText={formData.total_amount ? formatCurrency(parseFloat(formData.total_amount)) : ''}
           />
 
           <Input
@@ -609,12 +596,6 @@ export function ReservationsPage() {
                 <p className="text-sm text-gray-600">Check-out</p>
                 <p className="font-semibold">
                   {new Date(selectedReservationData.check_out_date).toLocaleDateString()}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Total Amount</p>
-                <p className="font-semibold">
-                  {formatCurrency(selectedReservationData.total_amount)}
                 </p>
               </div>
               <div>
