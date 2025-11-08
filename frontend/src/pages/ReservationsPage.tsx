@@ -55,7 +55,7 @@ export function ReservationsPage() {
     check_in_date: '',
     check_out_date: '',
     nightly_rate: '',
-    discount_amount: '',
+    discount_percent: '', // Discount as percentage (e.g., 10 for 10%)
     booking_source: 'direct',
     total_amount: '',
     notes: '',
@@ -91,7 +91,7 @@ export function ReservationsPage() {
         check_in_date: reservation.check_in_date.split('T')[0],
         check_out_date: reservation.check_out_date.split('T')[0],
         nightly_rate: reservation.rate_per_night?.toString() || '',
-        discount_amount: reservation.discount_amount?.toString() || '',
+        discount_percent: '', // Discount will be recalculated if needed
         booking_source: reservation.booking_source || 'direct',
         total_amount: reservation.total_amount.toString(),
         notes: reservation.notes || '',
@@ -104,7 +104,7 @@ export function ReservationsPage() {
         check_in_date: '',
         check_out_date: '',
         nightly_rate: '',
-        discount_amount: '',
+        discount_percent: '',
         booking_source: 'direct',
         total_amount: '',
         notes: '',
@@ -120,9 +120,41 @@ export function ReservationsPage() {
       const selectedRoom = rooms.find(r => r.id.toString() === roomId);
       if (selectedRoom) {
         const rate = selectedRoom.nightly_rate || selectedRoom.room_type?.default_rate || 0;
-        setFormData(prev => ({ ...prev, nightly_rate: rate.toString() }));
+        setFormData(prev => ({
+          ...prev,
+          nightly_rate: rate.toString(),
+          discount_percent: '',
+          total_amount: rate.toString() // Reset total amount to nightly rate
+        }));
       }
     }
+  };
+
+  // Calculate final price based on discount percentage
+  const calculateFinalPrice = (baseRate: number, discountPercent: number) => {
+    if (discountPercent < 0 || discountPercent > 100) return baseRate;
+    return baseRate * (1 - discountPercent / 100);
+  };
+
+  // Handle discount percentage change
+  const handleDiscountChange = (discountPercent: string) => {
+    setFormData({ ...formData, discount_percent: discountPercent });
+
+    if (discountPercent && formData.nightly_rate) {
+      const baseRate = parseFloat(formData.nightly_rate);
+      const discount = parseFloat(discountPercent);
+      const finalPrice = calculateFinalPrice(baseRate, discount);
+      setFormData(prev => ({ ...prev, total_amount: finalPrice.toString() }));
+    }
+  };
+
+  // Handle manual total amount change (overrides discount)
+  const handleTotalAmountChange = (amount: string) => {
+    setFormData({
+      ...formData,
+      total_amount: amount,
+      discount_percent: '' // Clear discount when manually setting price
+    });
   };
 
   const handleCloseModal = () => {
@@ -145,6 +177,8 @@ export function ReservationsPage() {
     }
 
     try {
+      // Only send the final calculated/entered total_amount to backend
+      // Discount is for frontend calculation only, not stored separately
       const data = {
         guest_id: parseInt(formData.guest_id),
         room_id: parseInt(formData.room_id),
@@ -152,6 +186,8 @@ export function ReservationsPage() {
         check_out_date: new Date(formData.check_out_date).toISOString(),
         total_amount: parseFloat(formData.total_amount),
         notes: formData.notes || undefined,
+        // booking_source is sent if the backend supports it
+        // discount_percent is NOT sent to backend - only the final total_amount matters
       };
 
       if (editingId) {
@@ -496,14 +532,21 @@ export function ReservationsPage() {
             <p className="text-xs text-gray-600 mt-2">{t('reservations.rateAutoPopulated')}</p>
           </div>
 
-          {/* Discount Amount */}
+          {/* Discount Percentage */}
           <Input
-            label={t('reservations.discountAmount')}
+            label={t('reservations.discountPercent')}
             type="number"
-            value={formData.discount_amount}
-            onChange={(e) => setFormData({ ...formData, discount_amount: e.target.value })}
-            placeholder="Optional discount in IDR"
+            value={formData.discount_percent}
+            onChange={(e) => handleDiscountChange(e.target.value)}
+            placeholder="e.g., 10 for 10% discount"
+            min="0"
+            max="100"
           />
+          <p className="text-xs text-gray-600 -mt-3 mb-4">
+            {formData.discount_percent && formData.nightly_rate
+              ? `Final price: IDR ${calculateFinalPrice(parseFloat(formData.nightly_rate), parseFloat(formData.discount_percent)).toLocaleString('id-ID')}`
+              : 'Or enter custom price below'}
+          </p>
 
           {/* Booking Source */}
           <Select
@@ -520,12 +563,14 @@ export function ReservationsPage() {
             onChange={(e) => setFormData({ ...formData, booking_source: e.target.value })}
           />
 
+          {/* Final Amount - Can be set manually or calculated from discount */}
           <Input
             label={t('reservations.totalAmount')}
             type="number"
             value={formData.total_amount}
-            onChange={(e) => setFormData({ ...formData, total_amount: e.target.value })}
+            onChange={(e) => handleTotalAmountChange(e.target.value)}
             required
+            placeholder="Final price to be charged (auto-calculated from discount or enter manually)"
           />
 
           <Input
