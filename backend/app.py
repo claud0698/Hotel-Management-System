@@ -5,6 +5,7 @@ Supports Supabase PostgreSQL (production)
 
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -17,7 +18,12 @@ from models import Base
 from database import engine, get_db
 from routes import auth_router, users_router, rooms_router, payments_router, dashboard_router, guests_router, reservations_router, expenses_router
 
-load_dotenv()
+# Load environment - prefer .env.local for development, fall back to .env
+env_local = Path('.env.local')
+if env_local.exists():
+    load_dotenv(env_local)
+else:
+    load_dotenv()
 
 # Create tables
 Base.metadata.create_all(bind=engine)
