@@ -12,7 +12,8 @@ export function Sidebar() {
   const menuItems = [
     { label: t('nav.dashboard'), icon: '📊', path: '/' },
     { label: t('nav.rooms'), icon: '🏘️', path: '/rooms' },
-    { label: t('nav.tenants'), icon: '👥', path: '/tenants' },
+    { label: 'Reservations', icon: '📅', path: '/reservations' },
+    { label: 'Guests', icon: '👥', path: '/guests' },
     { label: t('nav.payments'), icon: '💰', path: '/payments' },
     { label: t('nav.expenses'), icon: '💸', path: '/expenses' },
     { label: t('nav.users'), icon: '👤', path: '/users' },
