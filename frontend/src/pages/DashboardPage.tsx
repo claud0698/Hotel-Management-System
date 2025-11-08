@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDashboardStore } from '../stores/dashboardStore';
+import { formatCurrency } from '../utils/currency';
 
 export function DashboardPage() {
   const { t } = useTranslation();
@@ -21,14 +22,6 @@ export function DashboardPage() {
     fetchMetrics(startDate.toISOString(), endDate.toISOString());
     fetchSummary();
   }, [selectedMonth]);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
 
   const getOccupancyColor = (rate: number) => {
     if (rate >= 80) return 'text-green-600';

@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import type { Room, RoomType } from '../services/api';
 import { apiClient } from '../services/api';
 import { useRoomStore } from '../stores/roomStore';
+import { formatCurrency } from '../utils/currency';
 
 type ViewMode = 'grid' | 'type';
 type StatusFilter = 'all' | 'available' | 'occupied';
@@ -145,7 +146,7 @@ export function RoomsPage() {
           <strong>{t('rooms.roomType')}:</strong> {room.room_type_name || 'Unknown'}
         </p>
         <p className="text-gray-900 font-semibold">
-          Rp {room.nightly_rate?.toLocaleString('id-ID') || 'N/A'} / night
+          {formatCurrency(room.nightly_rate || 0)} / night
         </p>
         {room.current_tenant && (
           <p className="text-blue-600 text-sm">
@@ -285,7 +286,7 @@ export function RoomsPage() {
                 <option value="">-- Select Room Type --</option>
                 {roomTypes.map((rt) => (
                   <option key={rt.id} value={rt.id}>
-                    {rt.name} (Rp {rt.default_rate?.toLocaleString('id-ID') || 'N/A'} / night)
+                    {rt.name} ({formatCurrency(rt.default_rate || 0)} / night)
                   </option>
                 ))}
               </select>

@@ -20,6 +20,7 @@ import {
   LoadingSpinner,
   Skeleton,
 } from '../components/ui';
+import { formatCurrency, formatNumber, formatCurrencyDecimal } from '../utils/currency';
 import type { Reservation, Guest, Room } from '../services/api';
 
 export function ReservationsPage() {
@@ -310,22 +311,12 @@ export function ReservationsPage() {
     {
       key: 'total_amount',
       header: 'Amount',
-      render: (value: number) =>
-        new Intl.NumberFormat('id-ID', {
-          style: 'currency',
-          currency: 'IDR',
-          minimumFractionDigits: 0,
-        }).format(value),
+      render: (value: number) => formatCurrency(value),
     },
     {
       key: 'balance',
       header: 'Balance',
-      render: (value: number) =>
-        new Intl.NumberFormat('id-ID', {
-          style: 'currency',
-          currency: 'IDR',
-          minimumFractionDigits: 0,
-        }).format(value),
+      render: (value: number) => formatCurrency(value),
     },
     {
       key: 'status',
@@ -544,7 +535,7 @@ export function ReservationsPage() {
           />
           <p className="text-xs text-gray-600 -mt-3 mb-4">
             {formData.discount_percent && formData.nightly_rate
-              ? `Final price: IDR ${calculateFinalPrice(parseFloat(formData.nightly_rate), parseFloat(formData.discount_percent)).toLocaleString('id-ID')}`
+              ? `Final price: ${formatCurrency(calculateFinalPrice(parseFloat(formData.nightly_rate), parseFloat(formData.discount_percent)))}`
               : 'Or enter custom price below'}
           </p>
 
@@ -625,21 +616,13 @@ export function ReservationsPage() {
               <div>
                 <p className="text-sm text-gray-600">Total Amount</p>
                 <p className="font-semibold">
-                  {new Intl.NumberFormat('id-ID', {
-                    style: 'currency',
-                    currency: 'IDR',
-                    minimumFractionDigits: 0,
-                  }).format(selectedReservationData.total_amount)}
+                  {formatCurrency(selectedReservationData.total_amount)}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-gray-600">Total Paid</p>
                 <p className="font-semibold">
-                  {new Intl.NumberFormat('id-ID', {
-                    style: 'currency',
-                    currency: 'IDR',
-                    minimumFractionDigits: 0,
-                  }).format(selectedReservationData.total_paid)}
+                  {formatCurrency(selectedReservationData.total_paid)}
                 </p>
               </div>
               <div className="col-span-2">
@@ -647,11 +630,7 @@ export function ReservationsPage() {
                 <p className={`font-semibold text-lg ${
                   selectedReservationData.balance > 0 ? 'text-red-600' : 'text-green-600'
                 }`}>
-                  {new Intl.NumberFormat('id-ID', {
-                    style: 'currency',
-                    currency: 'IDR',
-                    minimumFractionDigits: 0,
-                  }).format(selectedReservationData.balance)}
+                  {formatCurrency(selectedReservationData.balance)}
                 </p>
               </div>
             </div>

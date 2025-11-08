@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Payment, Reservation, Guest, Room } from '../services/api';
 import { apiClient } from '../services/api';
+import { formatCurrency } from '../utils/currency';
 
 export function PaymentsPage() {
   const { t } = useTranslation();
@@ -129,14 +130,6 @@ export function PaymentsPage() {
     return p.status === filterStatus;
   });
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -181,7 +174,7 @@ export function PaymentsPage() {
                   .filter((r) => r.status === 'confirmed' || r.status === 'checked_in')
                   .map((reservation) => (
                     <option key={reservation.id} value={reservation.id}>
-                      {reservation.guest?.full_name || 'Unknown'} - Room {reservation.room?.room_number} (Balance: Rp{reservation.balance.toLocaleString('id-ID')})
+                      {reservation.guest?.full_name || 'Unknown'} - Room {reservation.room?.room_number} (Balance: {formatCurrency(reservation.balance)})
                     </option>
                   ))}
               </select>
