@@ -44,6 +44,8 @@ export function ReservationsPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [deletingReservationId, setDeletingReservationId] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [selectedReservationData, setSelectedReservationData] = useState<Reservation | null>(null);
 
@@ -171,6 +173,29 @@ export function ReservationsPage() {
         // Error is handled by the store
       }
     }
+  };
+
+  const handleDeleteClick = (reservationId: number) => {
+    setDeletingReservationId(reservationId);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (deletingReservationId) {
+      try {
+        await cancelReservation(deletingReservationId);
+        await fetchReservations();
+        setIsDeleteConfirmOpen(false);
+        setDeletingReservationId(null);
+      } catch {
+        // Error is handled by the store
+      }
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setIsDeleteConfirmOpen(false);
+    setDeletingReservationId(null);
   };
 
   const handleViewDetails = async (reservation: Reservation) => {
@@ -366,15 +391,12 @@ export function ReservationsPage() {
                           Check-out
                         </button>
                       )}
-                      {reservation.status !== 'checked_out' &&
-                        reservation.status !== 'cancelled' && (
-                          <button
-                            onClick={() => handleCancel(reservation.id)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            Cancel
-                          </button>
-                        )}
+                      <button
+                        onClick={() => handleDeleteClick(reservation.id)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        Delete
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -542,6 +564,37 @@ export function ReservationsPage() {
             )}
           </div>
         )}
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteConfirmOpen}
+        onClose={handleDeleteCancel}
+        title={t('reservations.confirmDelete') || 'Delete Reservation'}
+        size="sm"
+        footer={
+          <>
+            <Button variant="secondary" onClick={handleDeleteCancel}>
+              {t('common.cancel')}
+            </Button>
+            <Button variant="danger" onClick={handleDeleteConfirm} isLoading={isLoading}>
+              {t('common.delete')}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-gray-700">
+            {t('reservations.confirmDelete') || 'Are you sure you want to delete this reservation?'}
+          </p>
+          {deletingReservationId && (
+            <div className="bg-red-50 border border-red-200 rounded-md p-4">
+              <p className="text-sm text-red-800">
+                <strong>Warning:</strong> This action cannot be undone. The reservation will be marked as cancelled in the system.
+              </p>
+            </div>
+          )}
+        </div>
       </Modal>
     </div>
   );
