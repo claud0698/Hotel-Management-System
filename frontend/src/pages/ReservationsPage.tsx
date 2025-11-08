@@ -510,16 +510,15 @@ export function ReservationsPage() {
             required
           />
 
-          {/* Nightly Rate - Auto-populated from selected room */}
-          <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('reservations.nightlyRate')}
-            </label>
-            <div className="text-lg font-semibold text-gray-900">
-              {formData.nightly_rate ? formatCurrency(parseFloat(formData.nightly_rate)) : 'Not set'}
-            </div>
-            <p className="text-xs text-gray-600 mt-2">{t('reservations.rateAutoPopulated')}</p>
-          </div>
+          {/* Nightly Rate - Auto-populated from selected room, but editable */}
+          <Input
+            label={t('reservations.nightlyRate')}
+            type="number"
+            value={formData.nightly_rate}
+            onChange={(e) => setFormData({ ...formData, nightly_rate: e.target.value })}
+            placeholder="Automatically populated from selected room"
+            helpText={formData.nightly_rate ? `${formatCurrency(parseFloat(formData.nightly_rate))} per night` : 'Select a room to auto-populate'}
+          />
 
           {/* Discount Percentage */}
           <Input
@@ -550,21 +549,15 @@ export function ReservationsPage() {
           />
 
           {/* Final Amount - Can be set manually or calculated from discount */}
-          <div>
-            <Input
-              label={t('reservations.totalAmount')}
-              type="number"
-              value={formData.total_amount}
-              onChange={(e) => handleTotalAmountChange(e.target.value)}
-              required
-              placeholder="Final price to be charged (auto-calculated from discount or enter manually)"
-            />
-            {formData.total_amount && (
-              <p className="text-xs text-gray-600 mt-1">
-                Preview: {formatCurrency(parseFloat(formData.total_amount))}
-              </p>
-            )}
-          </div>
+          <Input
+            label={t('reservations.totalAmount')}
+            type="number"
+            value={formData.total_amount}
+            onChange={(e) => handleTotalAmountChange(e.target.value)}
+            required
+            placeholder="Final price to be charged (auto-calculated from discount or enter manually)"
+            helpText={formData.total_amount ? formatCurrency(parseFloat(formData.total_amount)) : ''}
+          />
 
           <Input
             label={t('reservations.specialRequests')}
