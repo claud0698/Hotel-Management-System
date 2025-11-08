@@ -308,7 +308,17 @@
     "children": "Children",
     "ratePerNight": "Rate per Night",
     "subtotal": "Subtotal",
-    "discountAmount": "Discount",
+    "discountAmount": "Discount (IDR)",
+    "discountPercent": "Discount (%)",
+    "bookingSource": "Booking Source",
+    "source": {
+      "direct": "Direct",
+      "ota": "OTA (Online Travel Agency)",
+      "phone": "Phone",
+      "email": "Email",
+      "corporate": "Corporate",
+      "other": "Other"
+    },
     "totalAmount": "Total Amount",
     "depositAmount": "Deposit Amount",
     "specialRequests": "Special Requests",
@@ -333,6 +343,8 @@
     "selectGuest": "Select guest",
     "selectRoomType": "Select room type",
     "selectRoom": "Select room",
+    "nightlyRate": "Nightly Rate",
+    "rateAutoPopulated": "Automatically populated from selected room",
     "placeholders": {
       "specialRequests": "Any special requests or notes"
     }

@@ -54,6 +54,9 @@ export function ReservationsPage() {
     room_id: '',
     check_in_date: '',
     check_out_date: '',
+    nightly_rate: '',
+    discount_amount: '',
+    booking_source: 'direct',
     total_amount: '',
     notes: '',
   });
@@ -87,6 +90,9 @@ export function ReservationsPage() {
         room_id: reservation.room_id.toString(),
         check_in_date: reservation.check_in_date.split('T')[0],
         check_out_date: reservation.check_out_date.split('T')[0],
+        nightly_rate: reservation.rate_per_night?.toString() || '',
+        discount_amount: reservation.discount_amount?.toString() || '',
+        booking_source: reservation.booking_source || 'direct',
         total_amount: reservation.total_amount.toString(),
         notes: reservation.notes || '',
       });
@@ -97,11 +103,26 @@ export function ReservationsPage() {
         room_id: '',
         check_in_date: '',
         check_out_date: '',
+        nightly_rate: '',
+        discount_amount: '',
+        booking_source: 'direct',
         total_amount: '',
         notes: '',
       });
     }
     setIsModalOpen(true);
+  };
+
+  // Handle room selection and auto-populate rate
+  const handleRoomChange = (roomId: string) => {
+    setFormData({ ...formData, room_id: roomId });
+    if (roomId) {
+      const selectedRoom = rooms.find(r => r.id.toString() === roomId);
+      if (selectedRoom) {
+        const rate = selectedRoom.nightly_rate || selectedRoom.room_type?.default_rate || 0;
+        setFormData(prev => ({ ...prev, nightly_rate: rate.toString() }));
+      }
+    }
   };
 
   const handleCloseModal = () => {
@@ -436,18 +457,18 @@ export function ReservationsPage() {
           />
 
           <Select
-            label="Room"
+            label={t('reservations.room')}
             options={rooms.map((r) => ({
               value: r.id,
               label: `${r.room_number} (${r.room_type?.name || 'Unknown'})`,
             }))}
             value={formData.room_id}
-            onChange={(e) => setFormData({ ...formData, room_id: e.target.value })}
+            onChange={(e) => handleRoomChange(e.target.value)}
             required
           />
 
           <Input
-            label="Check-in Date"
+            label={t('reservations.checkInDate')}
             type="date"
             value={formData.check_in_date}
             onChange={(e) => setFormData({ ...formData, check_in_date: e.target.value })}
@@ -455,15 +476,52 @@ export function ReservationsPage() {
           />
 
           <Input
-            label="Check-out Date"
+            label={t('reservations.checkOutDate')}
             type="date"
             value={formData.check_out_date}
             onChange={(e) => setFormData({ ...formData, check_out_date: e.target.value })}
             required
           />
 
+          {/* Nightly Rate - Auto-populated from selected room */}
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+            <Input
+              label={t('reservations.nightlyRate')}
+              type="number"
+              value={formData.nightly_rate}
+              onChange={(e) => setFormData({ ...formData, nightly_rate: e.target.value })}
+              disabled
+              placeholder="Automatically populated from selected room"
+            />
+            <p className="text-xs text-gray-600 mt-2">{t('reservations.rateAutoPopulated')}</p>
+          </div>
+
+          {/* Discount Amount */}
           <Input
-            label="Total Amount (IDR)"
+            label={t('reservations.discountAmount')}
+            type="number"
+            value={formData.discount_amount}
+            onChange={(e) => setFormData({ ...formData, discount_amount: e.target.value })}
+            placeholder="Optional discount in IDR"
+          />
+
+          {/* Booking Source */}
+          <Select
+            label={t('reservations.bookingSource')}
+            options={[
+              { value: 'direct', label: t('reservations.source.direct') },
+              { value: 'ota', label: t('reservations.source.ota') },
+              { value: 'phone', label: t('reservations.source.phone') },
+              { value: 'email', label: t('reservations.source.email') },
+              { value: 'corporate', label: t('reservations.source.corporate') },
+              { value: 'other', label: t('reservations.source.other') },
+            ]}
+            value={formData.booking_source}
+            onChange={(e) => setFormData({ ...formData, booking_source: e.target.value })}
+          />
+
+          <Input
+            label={t('reservations.totalAmount')}
             type="number"
             value={formData.total_amount}
             onChange={(e) => setFormData({ ...formData, total_amount: e.target.value })}
@@ -471,10 +529,10 @@ export function ReservationsPage() {
           />
 
           <Input
-            label="Notes"
+            label={t('reservations.specialRequests')}
             value={formData.notes}
             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-            placeholder="Optional notes about the reservation"
+            placeholder={t('reservations.placeholders.specialRequests')}
           />
         </form>
       </Modal>

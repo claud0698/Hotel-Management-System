@@ -308,7 +308,17 @@
     "children": "Anak-anak",
     "ratePerNight": "Harga per Malam",
     "subtotal": "Subtotal",
-    "discountAmount": "Diskon",
+    "discountAmount": "Diskon (IDR)",
+    "discountPercent": "Diskon (%)",
+    "bookingSource": "Sumber Pemesanan",
+    "source": {
+      "direct": "Langsung",
+      "ota": "OTA (Agen Perjalanan Online)",
+      "phone": "Telepon",
+      "email": "Email",
+      "corporate": "Korporat",
+      "other": "Lainnya"
+    },
     "totalAmount": "Jumlah Total",
     "depositAmount": "Jumlah Deposit",
     "specialRequests": "Permintaan Khusus",
@@ -333,6 +343,8 @@
     "selectGuest": "Pilih tamu",
     "selectRoomType": "Pilih jenis kamar",
     "selectRoom": "Pilih kamar",
+    "nightlyRate": "Harga Malam",
+    "rateAutoPopulated": "Secara otomatis diisi dari kamar yang dipilih",
     "placeholders": {
       "specialRequests": "Permintaan atau catatan khusus apapun"
     }
