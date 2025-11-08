@@ -375,6 +375,7 @@ class Reservation(Base):
     discount_amount = Column(Numeric(12, 2), default=0)
     discount_id = Column(Integer, ForeignKey("discounts.id"))
     total_amount = Column(Numeric(12, 2), nullable=False)
+    deposit_amount = Column(Numeric(12, 2), default=0)  # Security/holding deposit (refundable at checkout)
     special_requests = Column(Text)
     status = Column(String(20), default='confirmed', index=True)  # confirmed, checked_in, checked_out, cancelled
     booking_source = Column(String(50))
@@ -383,6 +384,7 @@ class Reservation(Base):
     checked_in_by = Column(Integer, ForeignKey("users.id"))  # Receptionist who did check-in
     checked_in_at = Column(DateTime)
     checked_out_at = Column(DateTime)
+    deposit_returned_at = Column(DateTime)  # When deposit was settled/returned
     is_archived = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -432,6 +434,7 @@ class Reservation(Base):
             "subtotal": float(self.subtotal) if self.subtotal else 0,
             "discount_amount": float(self.discount_amount) if self.discount_amount else 0,
             "total_amount": float(self.total_amount) if self.total_amount else 0,
+            "deposit_amount": float(self.deposit_amount) if self.deposit_amount else 0,
             "special_requests": self.special_requests,
             "status": self.status,
             "booking_source": self.booking_source,
@@ -441,6 +444,7 @@ class Reservation(Base):
             "checked_in_by": self.checked_in_by,
             "checked_in_by_name": self.checked_in_by_user.username if self.checked_in_by_user else None,
             "checked_out_at": self.checked_out_at.isoformat() if self.checked_out_at else None,
+            "deposit_returned_at": self.deposit_returned_at.isoformat() if self.deposit_returned_at else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
@@ -460,6 +464,7 @@ class Payment(Base):
     payment_date = Column(Date, nullable=False, index=True)
     amount = Column(Numeric(12, 2), nullable=False)
     payment_method = Column(String(20), nullable=False, index=True)  # cash, credit_card, debit_card, bank_transfer, e_wallet, other
+    payment_type = Column(String(20), default='full', index=True)  # full, downpayment, deposit, adjustment
     reference_number = Column(String(100))
     transaction_id = Column(String(100), index=True)
     notes = Column(Text)
@@ -473,6 +478,7 @@ class Payment(Base):
 
     __table_args__ = (
         CheckConstraint("payment_method IN ('cash', 'credit_card', 'debit_card', 'bank_transfer', 'e_wallet', 'other')"),
+        CheckConstraint("payment_type IN ('full', 'downpayment', 'deposit', 'adjustment')"),
     )
 
     # Relationships
@@ -488,6 +494,7 @@ class Payment(Base):
             "payment_date": self.payment_date.isoformat() if self.payment_date else None,
             "amount": float(self.amount) if self.amount else 0,
             "payment_method": self.payment_method,
+            "payment_type": self.payment_type,
             "reference_number": self.reference_number,
             "transaction_id": self.transaction_id,
             "notes": self.notes,

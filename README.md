@@ -359,6 +359,34 @@ Conflict = (check_in < existing.check_out) AND (check_out > existing.check_in)
 4. Update reservation status → checked_out
 5. Update room status → available
 
+### Deposit Management
+**Security deposits are held at check-in and settled at checkout**
+
+#### Default Deposit Values
+- **Default**: 0% of total (no deposit required)
+- **Customizable**: Admin can set any deposit amount per reservation
+- **Frontend behavior**: Always show default in form, allow override
+- **Refundable**: Deposits are fully refundable if all charges are paid
+
+#### Deposit Settlement at Checkout
+```
+If balance owed > 0:
+  - Apply deposit to balance
+  - Refund any excess
+  Example: 500,000 deposit, 100,000 balance → Refund 400,000
+
+If balance owed ≤ 0:
+  - Return full deposit
+  Example: 500,000 deposit, fully paid → Refund 500,000
+```
+
+#### Frontend Implementation Notes
+- **Reservation form**: Set default deposit to 0, allow manual override
+- **Check-in screen**: Display deposit amount held
+- **Check-out screen**: Show settlement calculation
+- **Balance endpoint**: Returns deposit_amount and final_balance_after_deposit
+- **Always reset to default**: After custom deposit, next reservation defaults to 0
+
 ---
 
 ## 🔐 Security

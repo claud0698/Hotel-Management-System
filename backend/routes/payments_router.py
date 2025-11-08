@@ -1,17 +1,26 @@
 """
 Payment management routes for Hotel Management System
+
+Handles all payment-related endpoints:
+- POST /api/payments - Record new payment
+- GET /api/payments - List payments with filtering
+- GET /api/payments/{id} - Get payment details
+- PUT /api/payments/{id} - Update payment
+- DELETE /api/payments/{id} - Delete/void payment
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 from typing import Optional
+from decimal import Decimal
 
-from models import Payment, Reservation, BookingChannel
+from models import Payment, Reservation
+from schemas import PaymentCreate, PaymentUpdate
 from security import get_current_user
 from database import get_db
 
-router = APIRouter()
+router = APIRouter(prefix="/api/payments", tags=["Payments"])
 
 
 @router.get("", response_model=dict)
@@ -65,29 +74,44 @@ async def get_payment(
 
 @router.post("", response_model=dict, status_code=status.HTTP_201_CREATED)
 async def create_payment(
-    payment_data: dict,
+    payment_data: PaymentCreate,
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Create a new payment"""
+    """
+    Record a new payment for a reservation.
+
+    **Request Body**:
+    - reservation_id: Reservation ID (required)
+    - amount: Payment amount (required, > 0)
+    - payment_method: cash, credit_card, debit_card, bank_transfer, e_wallet, other
+    - payment_date: Date of payment (required)
+    - reference_number: Optional reference (card number, transfer ID, etc.)
+    - notes: Optional notes
+
+    **Returns**: Created payment with ID and details
+    """
     # Verify reservation exists
     reservation = db.query(Reservation).filter(
-        Reservation.id == payment_data.get("reservation_id")
+        Reservation.id == payment_data.reservation_id
     ).first()
 
     if not reservation:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Reservation not found"
+            detail=f"Reservation with ID {payment_data.reservation_id} not found"
         )
 
     # Create payment
     payment = Payment(
-        reservation_id=payment_data.get("reservation_id"),
-        amount=payment_data.get("amount", 0),
-        status=payment_data.get("status", "pending"),
-        payment_method=payment_data.get("payment_method"),
-        notes=payment_data.get("notes")
+        reservation_id=payment_data.reservation_id,
+        amount=payment_data.amount,
+        payment_method=payment_data.payment_method,
+        payment_type=payment_data.payment_type,
+        payment_date=payment_data.payment_date,
+        reference_number=payment_data.reference_number,
+        notes=payment_data.notes,
+        created_by=current_user.get("user_id")
     )
 
     db.add(payment)
@@ -95,7 +119,7 @@ async def create_payment(
     db.refresh(payment)
 
     return {
-        "message": "Payment created successfully",
+        "message": "Payment recorded successfully",
         "payment": payment.to_dict()
     }
 

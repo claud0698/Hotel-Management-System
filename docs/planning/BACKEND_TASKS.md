@@ -1,24 +1,24 @@
 # Backend Development Tasks - Hotel Management System MVP v1.0
 
-**Version**: 1.1
-**Last Updated**: November 8, 2025
-**Progress**: 45% Complete
-**Estimated Timeline**: 3-4 weeks remaining (backend only)
+**Version**: 1.2
+**Last Updated**: November 8, 2025 (Pre-order Booking Phase)
+**Progress**: 65% Complete
+**Estimated Timeline**: 2 weeks remaining (backend only)
 
 ---
 
 ## ⚡ Quick Summary - What's Done / What's Left
 
-### ✅ COMPLETE (Phases 1-5)
+### ✅ COMPLETE (Phases 1-7)
 - Phase 1: Database models, JWT (16h expiration), User management ✅
 - Phase 2: Room types, Room CRUD, Availability checking ✅
 - Phase 3: Guest CRUD, ID photo upload, Search ✅
 - Phase 4: Reservation CRUD, Confirmation numbers, Filters ✅
 - Phase 5: **Check-in (with receptionist tracking), Check-out, Arrivals/departures** ✅
+- **Phase 6: Payment Recording & Downpayments** (5 hours) - Record payments, downpayments, balance calculation ✅
+- **Phase 7: Pre-order Booking & Dashboard** (8 hours) - Availability checking, date validation, downpayments ✅
 
-### ⏳ REMAINING (Phases 6-9)
-- **Phase 6: Payment Recording** (4 hours) - Record payments, balance calculation
-- **Phase 7: Dashboard** (9 hours) - Metrics & summary
+### ⏳ REMAINING (Phases 8-9)
 - **Phase 8: Testing** (15 hours) - API tests, validation, error handling
 - **Phase 9: Deploy** (9 hours) - Alembic migrations, config, docs
 
@@ -822,6 +822,104 @@ def calculate_balance(reservation_id, db):
 
 **Files to Modify**:
 - `backend/routes/dashboard_router.py`
+
+---
+
+## **PRE-ORDER BOOKING SYSTEM (Integrated in Phases 4-7)**
+
+### ✅ COMPLETED FEATURES
+
+**1. Availability Checking**
+- ✅ New endpoint: `GET /api/reservations/availability`
+- ✅ Query params: `room_type_id`, `check_in_date`, `check_out_date`
+- ✅ Overlap detection: `not (res.check_out <= check_in OR res.check_in >= check_out)`
+- ✅ Returns: available_rooms, total_rooms, is_available, message
+
+**2. Date Validation**
+- ✅ Check-in date cannot be in the past
+- ✅ Check-out date must be after check-in date
+- ✅ Date parsing: YYYY-MM-DD format (ISO 8601)
+- ✅ Prevents creation of invalid reservations
+
+**3. Double-Booking Prevention**
+- ✅ Counts overlapping confirmed/checked_in reservations
+- ✅ Returns 409 Conflict if no rooms available
+- ✅ Prevents accepting booking for unavailable dates
+- ✅ Works with multiple rooms of same type
+
+**4. Downpayment Support**
+- ✅ Added `payment_type` field to Payment model
+- ✅ Values: 'full', 'downpayment', 'deposit', 'adjustment'
+- ✅ Updated PaymentCreate schema with payment_type
+- ✅ Allows tracking partial payments for pre-orders
+
+**5. Pre-order Booking Flow**
+```
+1. Check Availability
+   GET /api/reservations/availability?room_type_id=1&check_in_date=2025-12-20&check_out_date=2025-12-25
+
+2. Create Reservation (if available)
+   POST /api/reservations
+   - check_in_date: 2025-12-20 (future date)
+   - check_out_date: 2025-12-25
+   - status: 'confirmed' (not checked_in yet)
+
+3. Record Downpayment (optional)
+   POST /api/payments
+   - payment_type: 'downpayment'
+   - amount: 50% of total_amount
+   - notes: "50% deposit for pre-order booking"
+
+4. Guest checks in later
+   POST /api/reservations/{id}/check-in
+   - Remaining balance calculated automatically
+   - Payment status shown to receptionist
+```
+
+**6. Payment Calculation**
+- ✅ `reservation.calculate_total_paid()` - sums all non-refund, non-voided payments
+- ✅ `reservation.calculate_balance()` - total_amount minus total_paid
+- ✅ Downpayments apply to final bill
+- ✅ Balance endpoint shows current payment status
+
+### Key Implementation Details
+
+**Reservation Status Values**:
+- `confirmed` - Booking confirmed (not checked in yet, can be pre-order)
+- `checked_in` - Guest currently in hotel
+- `checked_out` - Guest left
+- `cancelled` - Booking cancelled
+
+**Availability Query Logic**:
+```sql
+-- Find overlapping reservations
+SELECT COUNT(*)
+FROM reservations
+WHERE room_type_id = ?
+  AND status IN ('confirmed', 'checked_in')
+  AND NOT (check_out_date <= ? OR check_in_date >= ?)
+```
+
+**Payment Types for Pre-orders**:
+- `downpayment` - Advance deposit (25-50% of total)
+- `deposit` - Security deposit (refundable)
+- `full` - Full payment received
+- `adjustment` - Any adjustments/corrections
+
+### Files Modified
+
+- ✅ `backend/models.py` - Added payment_type field to Payment
+- ✅ `backend/schemas.py` - Updated PaymentCreate/PaymentUpdate
+- ✅ `backend/routes/reservations_router.py` - Added availability endpoint + date validation
+- ✅ `backend/routes/payments_router.py` - Added payment_type support
+- ✅ `backend/routes/dashboard_router.py` - Already supports pre-order metrics
+
+### Why Availability Checking Matters
+
+1. **Prevents double-booking**: Without this, 2 reservations could be confirmed for the same room on same dates
+2. **Supports future bookings**: Hotels take reservations months in advance - need to check future availability
+3. **Real-time inventory**: Always know how many rooms are actually available for any date
+4. **Business intelligence**: Can reject overbooking attempts automatically
 
 ---
 

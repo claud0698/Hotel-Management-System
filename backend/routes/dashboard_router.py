@@ -1,34 +1,113 @@
 """
 Dashboard and analytics routes for Hotel Management System
+
+Provides operational metrics and reporting:
+- GET /api/dashboard/today - Today's summary (arrivals, departures, occupancy)
+- GET /api/dashboard/metrics - Period metrics (start_date, end_date, defaults to current month)
+- GET /api/dashboard/summary - Summary with upcoming check-ins and distributions
+- GET /api/dashboard/revenue - Revenue breakdown by day and room type
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func
-from datetime import datetime, timezone, timedelta
+from sqlalchemy import func, and_
+from datetime import datetime, timezone, timedelta, date
 from typing import Optional
 
 from models import Room, Reservation, Payment, RoomType, Guest
 from security import get_current_user
 from database import get_db
 
-router = APIRouter()
+router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
+
+
+@router.get("/today", response_model=dict)
+async def get_today_metrics(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get today's operational summary.
+
+    **Returns**:
+    - arrivals_today: Guests checking in today
+    - departures_today: Guests checking out today
+    - in_house: Currently checked-in guests
+    - available_rooms: Rooms available right now
+    - total_rooms: Total room count
+    - occupancy_rate: Current occupancy percentage
+    - rooms_by_status: Breakdown by status (available, occupied, out_of_order)
+    """
+    now = datetime.now(timezone.utc)
+    today = now.date()
+
+    # Count today's arrivals (confirmed reservations with check_in = today)
+    arrivals_today = db.query(Reservation).filter(
+        Reservation.check_in_date == today,
+        Reservation.status == 'confirmed'
+    ).count()
+
+    # Count today's departures (checked-in reservations with check_out = today)
+    departures_today = db.query(Reservation).filter(
+        Reservation.check_out_date == today,
+        Reservation.status == 'checked_in'
+    ).count()
+
+    # Count in-house guests (currently checked-in)
+    in_house = db.query(Reservation).filter(
+        Reservation.status == 'checked_in'
+    ).count()
+
+    # Room status breakdown
+    total_rooms = db.query(Room).count()
+    available_rooms = db.query(Room).filter(Room.status == 'available').count()
+    occupied_rooms = db.query(Room).filter(Room.status == 'occupied').count()
+    out_of_order_rooms = db.query(Room).filter(Room.status == 'out_of_order').count()
+
+    occupancy_rate = (occupied_rooms / total_rooms * 100) if total_rooms > 0 else 0.0
+
+    return {
+        "date": today.isoformat(),
+        "arrivals_today": arrivals_today,
+        "departures_today": departures_today,
+        "in_house": in_house,
+        "available_rooms": available_rooms,
+        "total_rooms": total_rooms,
+        "occupancy_rate": round(occupancy_rate, 2),
+        "rooms_by_status": {
+            "available": available_rooms,
+            "occupied": occupied_rooms,
+            "out_of_order": out_of_order_rooms
+        }
+    }
 
 
 @router.get("/metrics", response_model=dict)
 async def get_metrics(
-    start_date: Optional[str] = Query(None),
-    end_date: Optional[str] = Query(None),
+    start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD), defaults to 1st of current month"),
+    end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD), defaults to 1st of next month"),
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Get dashboard metrics for a date range"""
+    """
+    Get dashboard metrics for a date range.
+
+    **Query Parameters**:
+    - start_date: Start date in YYYY-MM-DD format
+    - end_date: End date in YYYY-MM-DD format
+    - Defaults to current calendar month if not specified
+
+    **Returns**:
+    - Occupancy metrics (rooms, occupancy rate)
+    - Payment metrics (total income, pending, overdue)
+    - Reservation count in period
+    """
     # Default to current month
     now = datetime.now(timezone.utc)
     if not start_date:
         start = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
     else:
-        start = datetime.fromisoformat(start_date)
+        start = datetime.fromisoformat(start_date).replace(tzinfo=timezone.utc)
 
     if not end_date:
         if now.month == 12:
@@ -36,50 +115,41 @@ async def get_metrics(
         else:
             end = datetime(now.year, now.month + 1, 1, tzinfo=timezone.utc)
     else:
-        end = datetime.fromisoformat(end_date)
+        end = datetime.fromisoformat(end_date).replace(tzinfo=timezone.utc)
 
-    # Room metrics
+    # Room metrics (current state, not historical)
     total_rooms = db.query(Room).count()
-
-    # Occupied rooms - count active reservations
-    occupied_rooms = db.query(func.count(Room.id)).join(
-        Reservation, Room.id == Reservation.room_id
-    ).filter(
-        Reservation.check_in_date <= now,
-        Reservation.check_out_date >= now,
-        Reservation.status == 'confirmed'
-    ).scalar() or 0
-
+    occupied_rooms = db.query(Room).filter(Room.status == 'occupied').count()
     available_rooms = total_rooms - occupied_rooms
     occupancy_rate = (occupied_rooms / total_rooms * 100) if total_rooms > 0 else 0
 
-    # Payment metrics
-    paid_payments = db.query(func.coalesce(func.sum(Payment.amount), 0)).filter(
-        Payment.status == 'completed',
-        Payment.paid_at >= start,
-        Payment.paid_at < end
+    # Payment metrics (for the period)
+    total_revenue = db.query(func.coalesce(func.sum(Payment.amount), 0)).filter(
+        Payment.payment_date >= start.date(),
+        Payment.payment_date < end.date()
     ).scalar() or 0.0
 
     pending_payments = db.query(Payment).filter(
-        Payment.status == 'pending'
+        Payment.payment_date >= start.date(),
+        Payment.payment_date < end.date()
     ).count()
 
-    # Overdue payments
-    overdue_payments = db.query(func.coalesce(func.sum(Payment.amount), 0)).filter(
-        Payment.status == 'pending',
-        Payment.due_date < now
-    ).scalar() or 0.0
+    # Reservation count in period
+    reservations_count = db.query(Reservation).filter(
+        Reservation.created_at >= start,
+        Reservation.created_at < end
+    ).count()
 
     return {
+        "period_start": start.isoformat(),
+        "period_end": end.isoformat(),
         "total_rooms": total_rooms,
         "occupied_rooms": occupied_rooms,
         "available_rooms": available_rooms,
         "occupancy_rate": round(occupancy_rate, 2),
-        "total_income": float(paid_payments),
-        "pending_payments": pending_payments,
-        "overdue_amount": float(overdue_payments),
-        "start_date": start.isoformat(),
-        "end_date": end.isoformat()
+        "total_revenue": float(total_revenue),
+        "payment_count": pending_payments,
+        "reservations_count": reservations_count
     }
 
 

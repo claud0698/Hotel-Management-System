@@ -237,24 +237,25 @@ class TenantResponse(BaseModel):
 # ============== PAYMENT SCHEMAS ==============
 
 class PaymentCreate(BaseModel):
-    """Payment creation schema"""
-    tenant_id: int
+    """Payment creation schema for hotel reservations"""
+    reservation_id: int
     amount: float = Field(..., gt=0)
-    due_date: str
-    status: Optional[str] = Field(default="pending", max_length=20)
-    payment_method: Optional[str] = None
-    receipt_number: Optional[str] = None
+    payment_date: str  # ISO format: YYYY-MM-DD
+    payment_method: str = Field(..., max_length=20)  # cash, credit_card, debit_card, bank_transfer, e_wallet, other
+    payment_type: Optional[str] = Field(default="full", max_length=20)  # full, downpayment, deposit, adjustment
+    reference_number: Optional[str] = None
     notes: Optional[str] = None
 
     class Config:
         json_schema_extra = {
             "example": {
-                "tenant_id": 1,
-                "amount": 1500000,
-                "due_date": "2024-11-24T00:00:00",
-                "status": "pending",
-                "payment_method": "transfer",
-                "receipt_number": "RCP001"
+                "reservation_id": 1,
+                "amount": 500000,
+                "payment_date": "2025-11-08",
+                "payment_method": "bank_transfer",
+                "payment_type": "downpayment",
+                "reference_number": "TRF123456",
+                "notes": "50% downpayment for pre-order booking"
             }
         }
 
@@ -262,17 +263,17 @@ class PaymentCreate(BaseModel):
 class PaymentUpdate(BaseModel):
     """Payment update schema"""
     amount: Optional[float] = None
-    due_date: Optional[str] = None
-    status: Optional[str] = None
+    payment_date: Optional[str] = None
     payment_method: Optional[str] = None
-    receipt_number: Optional[str] = None
+    payment_type: Optional[str] = None
+    reference_number: Optional[str] = None
     notes: Optional[str] = None
 
     class Config:
         json_schema_extra = {
             "example": {
-                "status": "paid",
-                "payment_method": "cash"
+                "payment_method": "cash",
+                "reference_number": "RECEIPT-001"
             }
         }
 
@@ -594,6 +595,7 @@ class ReservationCreate(BaseModel):
     subtotal: float = Field(..., ge=0)
     discount_amount: float = Field(default=0.0, ge=0)
     total_amount: float = Field(..., gt=0)
+    deposit_amount: float = Field(default=0.0, ge=0)  # Security deposit (refundable at checkout)
     special_requests: Optional[str] = None
 
     class Config:
@@ -609,6 +611,7 @@ class ReservationCreate(BaseModel):
                 "subtotal": 1500000,
                 "discount_amount": 100000,
                 "total_amount": 1400000,
+                "deposit_amount": 500000,
                 "special_requests": "Late check-in, breakfast included"
             }
         }
@@ -624,6 +627,7 @@ class ReservationUpdate(BaseModel):
     subtotal: Optional[float] = Field(None, ge=0)
     discount_amount: Optional[float] = Field(None, ge=0)
     total_amount: Optional[float] = Field(None, gt=0)
+    deposit_amount: Optional[float] = Field(None, ge=0)
     special_requests: Optional[str] = None
     status: Optional[str] = None
 
@@ -631,6 +635,7 @@ class ReservationUpdate(BaseModel):
         json_schema_extra = {
             "example": {
                 "special_requests": "Early checkout needed",
+                "deposit_amount": 250000,
                 "status": "confirmed"
             }
         }
@@ -651,12 +656,14 @@ class ReservationResponse(BaseModel):
     subtotal: float
     discount_amount: float
     total_amount: float
+    deposit_amount: float
     special_requests: Optional[str] = None
     status: str
     checked_in_at: Optional[str] = None
     checked_in_by: Optional[int] = None
     checked_in_by_name: Optional[str] = None
     checked_out_at: Optional[str] = None
+    deposit_returned_at: Optional[str] = None
     created_by: Optional[int] = None
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
@@ -678,12 +685,14 @@ class ReservationResponse(BaseModel):
                 "subtotal": 1500000,
                 "discount_amount": 100000,
                 "total_amount": 1400000,
+                "deposit_amount": 500000,
                 "special_requests": "Late check-in, breakfast included",
                 "status": "checked_in",
                 "checked_in_at": "2025-11-10T15:30:00",
                 "checked_in_by": 2,
                 "checked_in_by_name": "receptionist_john",
                 "checked_out_at": None,
+                "deposit_returned_at": None,
                 "created_by": 1,
                 "created_at": "2025-11-09T10:00:00",
                 "updated_at": "2025-11-10T15:30:00"
