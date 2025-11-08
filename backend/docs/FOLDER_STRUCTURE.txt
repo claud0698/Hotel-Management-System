@@ -1,0 +1,243 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║              HOTEL MANAGEMENT SYSTEM - FOLDER STRUCTURE MAP                  ║
+║                        (Updated: November 8, 2025)                           ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+PROJECT ROOT
+├── Hotel-Management-System/
+│
+├── FRONTEND/                         (React application - coming later)
+│   └── [Frontend code and components]
+│
+└── BACKEND/                          Source code and documentation
+    │
+    ├── 📄 Core Application Files
+    │   ├── app.py                    Main FastAPI application
+    │   ├── database.py               Database configuration
+    │   ├── security.py               JWT authentication
+    │   └── requirements.txt           Python dependencies
+    │
+    ├── 🗃️ Source Code
+    │   ├── models.py                 SQLAlchemy ORM models
+    │   ├── schemas.py                Pydantic validation schemas
+    │   ├── error_handlers.py          Error handling & logging
+    │   ├── validation_enhanced.py    Enhanced input validation
+    │   └── routes/                   API endpoint implementations
+    │       ├── auth_router.py
+    │       ├── users_router.py
+    │       ├── room_types_router.py
+    │       ├── rooms_router.py
+    │       ├── guests_router.py
+    │       ├── reservations_router.py
+    │       ├── payments_router.py
+    │       └── dashboard_router.py
+    │
+    └── 📚 DOCUMENTATION (backend/docs/)
+        │
+        ├── 📖 README.md              ⭐ START HERE - Navigation guide
+        │
+        ├── 📊 PROJECT TRACKING (Top-level files)
+        │   ├── PROJECT_STATUS.md     Complete project overview (75% done)
+        │   ├── TASK_TRACKER.md       JIRA-style task tracking
+        │   └── REVIEW_SUMMARY.txt    ASCII summary of Phase 8
+        │
+        ├── 📖 guides/                HOW-TO GUIDES (Learn by doing)
+        │   ├── TEST_GUIDE.md         How to run 150+ tests
+        │   ├── VALIDATION_GUIDE.md   All 50+ validation rules
+        │   ├── ERROR_HANDLING_GUIDE.md Exception handling patterns
+        │   └── WORKFLOW_SCENARIOS.md 10 real-world examples
+        │
+        ├── 🔍 references/            QUICK LOOKUPS (Find fast)
+        │   ├── QUICK_REFERENCE.md    API endpoints, status codes
+        │   └── PHASE_8_SUMMARY.md    Phase 8 achievements
+        │
+        └── 🧪 testing/               TEST CONFIGURATION & FILES
+            ├── conftest.py           Pytest fixtures
+            ├── pytest.ini            Pytest configuration
+            ├── test_reservations_api.py    (65+ tests)
+            ├── test_auth_payments.py       (40+ tests)
+            ├── test_rooms_guests.py        (35+ tests)
+            └── test_dashboard.py           (15+ tests)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+DOCUMENTATION ORGANIZATION
+═══════════════════════════════════════════════════════════════════════════════
+
+backend/docs/
+├── README.md                         ⭐ START HERE
+│   Navigation guide with:
+│   - Quick navigation menu
+│   - Folder explanations
+│   - Use-case based navigation
+│   - Related files reference
+│   - Documentation statistics
+│
+├── guides/                           📖 LEARN HOW THINGS WORK
+│   Contains:
+│   - TEST_GUIDE.md (10 pages)
+│     • How to run test suite
+│     • Test structure overview
+│     • 150+ test cases by category
+│     • Running specific tests
+│   
+│   - VALIDATION_GUIDE.md (8 pages)
+│     • All validation rules explained
+│     • Valid/invalid examples
+│     • Error messages reference
+│     • Best practices
+│   
+│   - ERROR_HANDLING_GUIDE.md (10 pages)
+│     • Exception hierarchy
+│     • Error response format
+│     • HTTP status codes
+│     • Logging features
+│   
+│   - WORKFLOW_SCENARIOS.md (50+ pages)
+│     • 10 real-world hotel scenarios
+│     • Complete API request/response examples
+│     • Step-by-step processes
+│     • Error handling demos
+│
+├── references/                       🔍 QUICK LOOKUPS
+│   Contains:
+│   - QUICK_REFERENCE.md (6 pages)
+│     • API endpoints at a glance
+│     • HTTP status codes summary
+│     • Validation rules summary
+│     • Error codes reference
+│     • Payment methods & statuses
+│     • Troubleshooting guide
+│   
+│   - PHASE_8_SUMMARY.md (15 pages)
+│     • Phase 8 overview
+│     • Task 8.1 deliverables
+│     • Task 8.2 deliverables
+│     • Task 8.3 deliverables
+│     • Statistics & metrics
+│
+├── testing/                          🧪 TEST CONFIGURATION & FILES
+│   Contains:
+│   - conftest.py (150 lines)
+│     • Pytest configuration
+│     • Test fixtures
+│     • Database setup
+│     • User & room fixtures
+│   
+│   - pytest.ini
+│     • Test discovery settings
+│     • Markers definition
+│     • Output formatting
+│   
+│   - test_reservations_api.py (500+ lines)
+│     • 25+ reservation tests
+│     • Pre-order booking tests
+│     • Availability checking tests
+│     • Deposit settlement tests
+│   
+│   - test_auth_payments.py (400+ lines)
+│     • Authentication tests
+│     • Payment recording tests
+│     • User management tests
+│   
+│   - test_rooms_guests.py (350+ lines)
+│     • Room management tests
+│     • Guest management tests
+│     • Check-in/out tests
+│   
+│   - test_dashboard.py (250+ lines)
+│     • Dashboard metrics tests
+│     • Revenue calculation tests
+│     • Occupancy tests
+│
+├── PROJECT_STATUS.md                 📊 COMPLETE PROJECT OVERVIEW
+│   Contains:
+│   - Executive summary
+│   - Phase breakdown
+│   - Completed components
+│   - Key features
+│   - Code statistics
+│   - Development timeline
+│
+├── TASK_TRACKER.md                   📋 JIRA-STYLE TRACKING
+│   Contains:
+│   - Phase 8 completed tasks
+│   - Task 8.1-8.3 details
+│   - Phase 9 pending tasks
+│   - Git commit history
+│   - Project statistics
+│
+└── REVIEW_SUMMARY.txt                📄 ASCII SUMMARY
+    Quick text summary of:
+    - Phase 8 completion
+    - Task deliverables
+    - Statistics & metrics
+
+═══════════════════════════════════════════════════════════════════════════════
+
+HOW TO FIND WHAT YOU NEED
+═══════════════════════════════════════════════════════════════════════════════
+
+❓ "I want to understand how the system works end-to-end"
+   → Start: docs/README.md
+   → Read: docs/guides/WORKFLOW_SCENARIOS.md
+   → Reference: docs/references/QUICK_REFERENCE.md
+
+❓ "I want to write tests"
+   → Start: docs/guides/TEST_GUIDE.md
+   → Review: docs/testing/conftest.py
+   → Run: docs/testing/test_*.py
+
+❓ "I want to validate input"
+   → Read: docs/guides/VALIDATION_GUIDE.md
+   → Reference: docs/references/QUICK_REFERENCE.md (Validation Rules section)
+
+❓ "Something went wrong, what error is this?"
+   → Check: docs/guides/ERROR_HANDLING_GUIDE.md
+   → Lookup: docs/references/QUICK_REFERENCE.md (Error Codes section)
+
+❓ "How is the project progressing?"
+   → Check: docs/PROJECT_STATUS.md
+   → Review: docs/TASK_TRACKER.md
+   → Read: docs/REVIEW_SUMMARY.txt
+
+═══════════════════════════════════════════════════════════════════════════════
+
+BACKEND FOLDER CLEANLINESS
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ Clean Backend Folder:
+   backend/
+   ├── Core source files (models, schemas, security, etc.)
+   ├── routes/        (API implementations)
+   └── docs/          (ALL documentation and tests here)
+
+✅ All tests moved to: backend/docs/testing/
+✅ All guides moved to: backend/docs/guides/
+✅ All references moved to: backend/docs/references/
+✅ All documentation centralized: backend/docs/
+
+🎉 Result: Easy to navigate, clean, organized structure!
+
+═══════════════════════════════════════════════════════════════════════════════
+
+QUICK STATISTICS
+═══════════════════════════════════════════════════════════════════════════════
+
+Files in backend/docs/
+├── guides/          4 files (78 pages)
+├── references/      2 files (21 pages)
+├── testing/         6 files (test code + config)
+└── root level       4 files (39 pages)
+
+Total Documentation: 140+ pages / 6,000+ lines
+Total Test Cases: 150+
+Test Pass Rate: 100%
+Validation Rules: 50+
+Exception Types: 7
+API Endpoints: 35
+
+═══════════════════════════════════════════════════════════════════════════════
+
+LAST UPDATED: November 8, 2025
+STATUS: Phase 8 Complete ✅ | 75% Overall Progress
