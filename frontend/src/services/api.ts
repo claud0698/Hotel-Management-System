@@ -11,75 +11,148 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
+// ==================== AUTHENTICATION ====================
 export interface LoginResponse {
   access_token: string;
   token_type: string;
-  user: {
-    id: number;
-    username: string;
-    created_at: string;
-  };
+  user: User;
 }
 
 export interface User {
   id: number;
   username: string;
+  email?: string;
+  full_name?: string;
+  phone?: string;
+  role: 'admin' | 'user';
+  status: 'active' | 'inactive';
+  last_login?: string;
   created_at: string;
+  updated_at: string;
 }
 
+// ==================== ROOM TYPES ====================
+export interface RoomType {
+  id: number;
+  name: string;
+  code: string;
+  description?: string;
+  base_capacity_adults: number;
+  base_capacity_children: number;
+  bed_config?: string;
+  default_rate: number;
+  amenities?: string;
+  max_occupancy: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// ==================== ROOMS ====================
 export interface Room {
   id: number;
   room_number: string;
-  floor: number;  // Floor 2 = A (Atas/Upper), Floor 1 = B (Bawah/Lower)
-  room_type: string;
-  monthly_rate: number;
-  status: 'available' | 'occupied' | 'maintenance';
-  amenities?: string;
-  current_tenant?: Tenant;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Tenant {
-  id: number;
-  name: string;
-  phone?: string;
-  email?: string;
-  id_number?: string;
-  move_in_date?: string;
-  move_out_date?: string;
-  current_room_id?: number;
-  status: 'active' | 'inactive' | 'moved_out';
+  floor: number;
+  room_type_id: number;
+  room_type?: RoomType;
+  status: 'available' | 'occupied' | 'out_of_order';
+  view_type?: string;
   notes?: string;
+  custom_rate?: number;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }
 
+export interface RoomImage {
+  id: number;
+  room_id: number;
+  image_type: 'main_photo' | 'bedroom' | 'bathroom' | 'living_area' | 'amenities' | 'other';
+  storage_location: 'local' | 's3' | 'gcs' | 'azure';
+  image_path: string;
+  file_size_bytes?: number;
+  mime_type?: string;
+  uploaded_by?: number;
+  display_order?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// ==================== GUESTS ====================
+export interface Guest {
+  id: number;
+  full_name: string;
+  email?: string;
+  phone?: string;
+  phone_country_code?: string;
+  id_type: 'passport' | 'driver_license' | 'national_id' | 'other';
+  id_number: string;
+  nationality?: string;
+  birth_date?: string;
+  is_vip: boolean;
+  notes?: string;
+  preferred_room_type_id?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GuestImage {
+  id: number;
+  guest_id: number;
+  image_type: 'id_photo' | 'passport' | 'other';
+  image_path: string;
+  storage_location: 'local' | 's3' | 'gcs' | 'azure';
+  uploaded_at: string;
+}
+
+// ==================== RESERVATIONS ====================
+export interface Reservation {
+  id: number;
+  guest_id: number;
+  guest?: Guest;
+  room_id: number;
+  room?: Room;
+  check_in_date: string;
+  check_out_date: string;
+  status: 'confirmed' | 'checked_in' | 'checked_out' | 'cancelled';
+  total_amount: number;
+  total_paid: number;
+  balance: number;
+  notes?: string;
+  checked_in_by?: number;
+  checked_out_by?: number;
+  checked_in_at?: string;
+  checked_out_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// ==================== PAYMENTS ====================
 export interface Payment {
   id: number;
-  tenant_id: number;
+  reservation_id: number;
+  reservation?: Reservation;
   amount: number;
-  due_date: string;
-  paid_date?: string;
-  status: 'pending' | 'paid' | 'overdue';
-  payment_method?: string;
-  receipt_number?: string;
+  payment_type: 'full' | 'downpayment' | 'deposit' | 'adjustment';
+  payment_method: 'cash' | 'card' | 'transfer' | 'check' | 'other';
+  reference_number?: string;
   notes?: string;
+  recorded_by?: number;
   created_at: string;
   updated_at: string;
 }
 
-export interface Expense {
+export interface PaymentAttachment {
   id: number;
-  date: string;
-  category: string;
-  amount: number;
-  description?: string;
-  receipt_url?: string;
-  created_at: string;
-  updated_at: string;
+  payment_id: number;
+  file_type: 'receipt' | 'invoice' | 'proof' | 'other';
+  file_path: string;
+  storage_location: 'local' | 's3' | 'gcs' | 'azure';
+  file_size_bytes?: number;
+  uploaded_at: string;
 }
 
+// ==================== DASHBOARD ====================
 export interface DashboardMetrics {
   total_rooms: number;
   occupied_rooms: number;
@@ -88,20 +161,16 @@ export interface DashboardMetrics {
   total_income: number;
   total_expenses: number;
   net_profit: number;
-  overdue_count: number;
-  overdue_amount: number;
-  pending_count: number;
   start_date: string;
   end_date: string;
 }
 
-export interface DashboardSummary {
-  recent_payments: Payment[];
-  recent_expenses: Expense[];
-  overdue_tenants: Array<{
-    tenant: Tenant;
-    payment: Payment;
-  }>;
+export interface DashboardToday {
+  occupancy_count: number;
+  check_ins_today: number;
+  check_outs_today: number;
+  revenue_today: number;
+  reservations_count: number;
 }
 
 class ApiClient {
@@ -254,48 +323,113 @@ class ApiClient {
     });
   }
 
-  // ==================== TENANTS ====================
+  // ==================== GUESTS ====================
 
-  async getTenants(): Promise<{ tenants: Tenant[] }> {
-    return this.request('/tenants');
+  async getGuests(): Promise<{ guests: Guest[] }> {
+    return this.request('/guests');
   }
 
-  async getTenant(tenantId: number): Promise<{ tenant: Tenant }> {
-    return this.request(`/tenants/${tenantId}`);
+  async getGuest(guestId: number): Promise<{ guest: Guest }> {
+    return this.request(`/guests/${guestId}`);
   }
 
-  async createTenant(data: Partial<Tenant>): Promise<{ message: string; tenant: Tenant }> {
-    return this.request('/tenants', {
+  async createGuest(data: Partial<Guest>): Promise<{ guest: Guest }> {
+    return this.request('/guests', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  async updateTenant(
-    tenantId: number,
-    data: Partial<Tenant>
-  ): Promise<{ message: string; tenant: Tenant }> {
-    return this.request(`/tenants/${tenantId}`, {
+  async updateGuest(
+    guestId: number,
+    data: Partial<Guest>
+  ): Promise<{ guest: Guest }> {
+    return this.request(`/guests/${guestId}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   }
 
-  async deleteTenant(tenantId: number): Promise<{ message: string }> {
-    return this.request(`/tenants/${tenantId}`, {
+  async deleteGuest(guestId: number): Promise<{ message: string }> {
+    return this.request(`/guests/${guestId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // ==================== RESERVATIONS ====================
+
+  async checkAvailability(
+    roomId: number,
+    checkInDate: string,
+    checkOutDate: string
+  ): Promise<{ available: boolean }> {
+    const params = new URLSearchParams();
+    params.append('room_id', roomId.toString());
+    params.append('check_in_date', checkInDate);
+    params.append('check_out_date', checkOutDate);
+    return this.request(`/reservations/availability?${params.toString()}`);
+  }
+
+  async getReservations(): Promise<{ reservations: Reservation[] }> {
+    return this.request('/reservations');
+  }
+
+  async getReservation(reservationId: number): Promise<{ reservation: Reservation }> {
+    return this.request(`/reservations/${reservationId}`);
+  }
+
+  async getReservationBalance(reservationId: number): Promise<{ balance: number; total_amount: number; total_paid: number }> {
+    return this.request(`/reservations/${reservationId}/balance`);
+  }
+
+  async createReservation(data: Partial<Reservation>): Promise<{ reservation: Reservation }> {
+    return this.request('/reservations', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateReservation(
+    reservationId: number,
+    data: Partial<Reservation>
+  ): Promise<{ reservation: Reservation }> {
+    return this.request(`/reservations/${reservationId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async checkInReservation(
+    reservationId: number,
+    notes?: string
+  ): Promise<{ reservation: Reservation }> {
+    return this.request(`/reservations/${reservationId}/check-in`, {
+      method: 'POST',
+      body: JSON.stringify({ notes }),
+    });
+  }
+
+  async checkOutReservation(
+    reservationId: number,
+    notes?: string
+  ): Promise<{ reservation: Reservation }> {
+    return this.request(`/reservations/${reservationId}/check-out`, {
+      method: 'POST',
+      body: JSON.stringify({ notes }),
+    });
+  }
+
+  async cancelReservation(reservationId: number): Promise<{ message: string }> {
+    return this.request(`/reservations/${reservationId}`, {
       method: 'DELETE',
     });
   }
 
   // ==================== PAYMENTS ====================
 
-  async getPayments(
-    tenantId?: number,
-    status?: string
-  ): Promise<{ payments: Payment[] }> {
+  async getPayments(reservationId?: number): Promise<{ payments: Payment[] }> {
     const params = new URLSearchParams();
-    if (tenantId) params.append('tenant_id', tenantId.toString());
-    if (status) params.append('status', status);
+    if (reservationId) params.append('reservation_id', reservationId.toString());
 
     const query = params.toString();
     return this.request(`/payments${query ? '?' + query : ''}`);
@@ -305,7 +439,7 @@ class ApiClient {
     return this.request(`/payments/${paymentId}`);
   }
 
-  async createPayment(data: Partial<Payment>): Promise<{ message: string; payment: Payment }> {
+  async createPayment(data: Partial<Payment>): Promise<{ payment: Payment }> {
     return this.request('/payments', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -315,72 +449,15 @@ class ApiClient {
   async updatePayment(
     paymentId: number,
     data: Partial<Payment>
-  ): Promise<{ message: string; payment: Payment }> {
+  ): Promise<{ payment: Payment }> {
     return this.request(`/payments/${paymentId}`, {
       method: 'PUT',
       body: JSON.stringify(data),
-    });
-  }
-
-  async markPaymentAsPaid(
-    paymentId: number,
-    paymentMethod?: string,
-    receiptNumber?: string
-  ): Promise<{ message: string; payment: Payment }> {
-    return this.request(`/payments/${paymentId}/mark-paid`, {
-      method: 'POST',
-      body: JSON.stringify({
-        payment_method: paymentMethod,
-        receipt_number: receiptNumber,
-      }),
     });
   }
 
   async deletePayment(paymentId: number): Promise<{ message: string }> {
     return this.request(`/payments/${paymentId}`, {
-      method: 'DELETE',
-    });
-  }
-
-  // ==================== EXPENSES ====================
-
-  async getExpenses(
-    category?: string,
-    startDate?: string,
-    endDate?: string
-  ): Promise<{ expenses: Expense[] }> {
-    const params = new URLSearchParams();
-    if (category) params.append('category', category);
-    if (startDate) params.append('start_date', startDate);
-    if (endDate) params.append('end_date', endDate);
-
-    const query = params.toString();
-    return this.request(`/expenses${query ? '?' + query : ''}`);
-  }
-
-  async getExpense(expenseId: number): Promise<{ expense: Expense }> {
-    return this.request(`/expenses/${expenseId}`);
-  }
-
-  async createExpense(data: Partial<Expense>): Promise<{ message: string; expense: Expense }> {
-    return this.request('/expenses', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async updateExpense(
-    expenseId: number,
-    data: Partial<Expense>
-  ): Promise<{ message: string; expense: Expense }> {
-    return this.request(`/expenses/${expenseId}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async deleteExpense(expenseId: number): Promise<{ message: string }> {
-    return this.request(`/expenses/${expenseId}`, {
       method: 'DELETE',
     });
   }
@@ -399,8 +476,8 @@ class ApiClient {
     return this.request(`/dashboard/metrics${query ? '?' + query : ''}`);
   }
 
-  async getDashboardSummary(): Promise<DashboardSummary> {
-    return this.request('/dashboard/summary');
+  async getDashboardToday(): Promise<DashboardToday> {
+    return this.request('/dashboard/today');
   }
 }
 

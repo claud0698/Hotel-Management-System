@@ -18,6 +18,8 @@ Learn how things work and how to use the system:
 - **[WORKFLOW_SCENARIOS.md](guides/WORKFLOW_SCENARIOS.md)** - 10 real-world hotel scenarios
 - **[MIGRATION_GUIDE.md](guides/MIGRATION_GUIDE.md)** - Database migration setup & usage
 - **[PERFORMANCE_OPTIMIZATION.md](guides/PERFORMANCE_OPTIMIZATION.md)** - System optimization techniques
+- **[ROOMS_RESERVATIONS_WORKFLOWS.md](guides/ROOMS_RESERVATIONS_WORKFLOWS.md)** - Complete rooms & reservations workflows with real-world scenarios (NEW)
+- **[API_EXAMPLES.md](guides/API_EXAMPLES.md)** - Complete curl & JSON examples for all endpoints (NEW)
 
 ### 🔍 [references/](references/) - Quick Reference & Specs
 
@@ -37,6 +39,7 @@ Test setup and configuration:
 - **[test_auth_payments.py](testing/test_auth_payments.py)** - Auth & payment tests (40+ tests)
 - **[test_rooms_guests.py](testing/test_rooms_guests.py)** - Room & guest tests (35+ tests)
 - **[test_dashboard.py](testing/test_dashboard.py)** - Dashboard tests (15+ tests)
+- **[test_integration_rooms_reservations.py](testing/test_integration_rooms_reservations.py)** - Integration tests for rooms & reservations workflows (NEW)
 
 ### 📋 Root Level - Project Tracking
 
@@ -88,17 +91,23 @@ Overview and tracking documents:
 1. Read: [PERFORMANCE_OPTIMIZATION.md](guides/PERFORMANCE_OPTIMIZATION.md) - Optimization techniques
 2. Check: [QUICK_REFERENCE.md](references/QUICK_REFERENCE.md) - Performance tips
 
+### "I want to understand Rooms & Reservations in detail"
+1. Start: [ROOMS_RESERVATIONS_WORKFLOWS.md](guides/ROOMS_RESERVATIONS_WORKFLOWS.md) - Complete workflows with 5 scenarios
+2. Review: [API_EXAMPLES.md](guides/API_EXAMPLES.md) - All endpoints with curl examples
+3. Test: [testing/test_integration_rooms_reservations.py](testing/test_integration_rooms_reservations.py) - 50+ integration tests
+4. Study: [QUICK_REFERENCE.md](references/QUICK_REFERENCE.md) - Endpoint specifications
+
 ---
 
 ## 📊 Documentation Statistics
 
 | Category | Guides | Tests | Pages | Status |
 |----------|--------|-------|-------|--------|
-| **Guides** | 6 files | - | 90+ | ✅ Complete |
+| **Guides** | 8 files | - | 130+ | ✅ Complete |
 | **References** | - | - | 25+ | ✅ Complete |
-| **Testing** | - | 6 files | 10+ | ✅ Complete |
+| **Testing** | - | 7 files | 40+ | ✅ Complete |
 | **Tracking** | - | - | 45+ | ✅ Complete |
-| **TOTAL** | 6 | 6 | 170+ | ✅ Complete |
+| **TOTAL** | 8 | 7 | 240+ | ✅ Complete |
 
 **Test Cases**: 150+
 **Validation Rules**: 50+
