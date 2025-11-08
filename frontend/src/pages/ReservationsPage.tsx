@@ -186,8 +186,8 @@ export function ReservationsPage() {
         check_in_date: new Date(formData.check_in_date).toISOString(),
         check_out_date: new Date(formData.check_out_date).toISOString(),
         total_amount: parseFloat(formData.total_amount),
+        booking_source: formData.booking_source || 'direct',
         notes: formData.notes || undefined,
-        // booking_source is sent if the backend supports it
         // discount_percent is NOT sent to backend - only the final total_amount matters
       };
 
