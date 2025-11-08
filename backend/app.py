@@ -73,17 +73,95 @@ def create_app():
             allow_headers=["*"],
         )
 
-    # Health check endpoint
+    # Comprehensive health check endpoint
     @app.get('/health')
     async def health():
-        """Health check endpoint for deployment monitoring"""
-        from database import DATABASE_URL
-        return {
+        """Comprehensive health check endpoint"""
+        from database import DATABASE_URL, SessionLocal
+        from models import User, RoomType, BookingChannel, Setting, Room, Reservation, Payment
+
+        health_data = {
             'status': 'ok',
+            'timestamp': datetime.utcnow().isoformat(),
             'environment': os.getenv('FLASK_ENV', 'development'),
-            'database': 'sqlite' if 'sqlite' in DATABASE_URL else 'postgresql',
-            'timestamp': datetime.utcnow().isoformat()
+            'database_type': 'postgresql' if 'postgresql' in DATABASE_URL else 'sqlite',
+            'checks': {
+                'database_connection': False,
+                'database_tables': False,
+                'initial_data': False,
+                'api_server': True,
+            },
+            'details': {}
         }
+
+        # Check database connection
+        try:
+            from sqlalchemy import text
+            db = SessionLocal()
+            db.execute(text('SELECT 1'))
+            db.close()
+            health_data['checks']['database_connection'] = True
+            health_data['details']['database_status'] = 'connected'
+        except Exception as e:
+            health_data['status'] = 'degraded'
+            health_data['details']['database_error'] = str(e)
+
+        # Check tables
+        try:
+            db = SessionLocal()
+            table_counts = {
+                'users': db.query(User).count(),
+                'room_types': db.query(RoomType).count(),
+                'booking_channels': db.query(BookingChannel).count(),
+                'settings': db.query(Setting).count(),
+                'rooms': db.query(Room).count(),
+                'reservations': db.query(Reservation).count(),
+                'payments': db.query(Payment).count(),
+            }
+            db.close()
+            health_data['checks']['database_tables'] = True
+            health_data['details']['table_counts'] = table_counts
+        except Exception as e:
+            health_data['status'] = 'degraded'
+            health_data['details']['tables_error'] = str(e)
+
+        # Check initial data
+        try:
+            db = SessionLocal()
+            user_count = db.query(User).count()
+            room_type_count = db.query(RoomType).count()
+            booking_channel_count = db.query(BookingChannel).count()
+            setting_count = db.query(Setting).count()
+            db.close()
+
+            has_admin = user_count >= 1
+            has_room_types = room_type_count >= 4
+            has_channels = booking_channel_count >= 5
+            has_settings = setting_count >= 8
+
+            health_data['checks']['initial_data'] = (
+                has_admin and has_room_types and has_channels and has_settings
+            )
+            health_data['details']['data_status'] = {
+                'admin_user': has_admin,
+                'room_types': has_room_types,
+                'booking_channels': has_channels,
+                'settings': has_settings,
+            }
+        except Exception as e:
+            health_data['status'] = 'degraded'
+            health_data['details']['data_error'] = str(e)
+
+        # Determine overall status
+        all_checks_passed = all(health_data['checks'].values())
+        if all_checks_passed:
+            health_data['status'] = 'healthy'
+        elif any(health_data['checks'].values()):
+            health_data['status'] = 'degraded'
+        else:
+            health_data['status'] = 'unhealthy'
+
+        return health_data
 
     # API root endpoint
     @app.get('/api')
